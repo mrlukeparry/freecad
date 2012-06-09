@@ -1423,20 +1423,20 @@ void ViewProviderSketch::updateColor(void)
         if (edit->SelConstraintSet.find(i) != edit->SelConstraintSet.end()) {
             m->diffuseColor = SelectColor;
             if (hasDatumLabel) {
-                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(4));
+                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(3));
                 l->textColor = SelectColor;
             }
         } else if (edit->PreselectConstraint == i) {
             m->diffuseColor = PreselectColor;
             if (hasDatumLabel) {
-                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(4));
+                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(3));
                 l->textColor = PreselectColor;
             }
         }
         else {
             m->diffuseColor = ConstrDimColor;
             if (hasDatumLabel) {
-                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(4));
+                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(3));
                 l->textColor = ConstrDimColor;
             }
         }
@@ -2078,7 +2078,7 @@ Restart:
                     SbVec3f p1_ = p1 + normproj12 * norm;
                     SbVec3f midpos = (p1_ + p2)/2;
 
-                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(4));
+                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(3));
                     if ((Constr->Type == DistanceX || Constr->Type == DistanceY) &&
                         Constr->FirstPos != Sketcher::none && Constr->Second == Constraint::GeoUndef)
                         // display negative sign for absolute coordinates
@@ -2091,7 +2091,7 @@ Restart:
 
                     // [FIX ME] Its an attempt to find the height of the text using the bounding box, but is in correct.
                     SoGetBoundingBoxAction bbAction(viewer->getViewportRegion());
-                    bbAction.apply(sep->getChild(4));
+                    bbAction.apply(sep->getChild(3));
 
                     float bx,by,bz;
                     bbAction.getBoundingBox().getSize(bx,by,bz);
@@ -2371,7 +2371,7 @@ Restart:
                     } else
                         break;
 
-                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(4));
+                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(3));
                     asciiText->string = SbString().sprintf("%.2f",Base::toDegrees<double>(std::abs(Constr->Value)));
 
                     // Get Bounding box dimensions for Datum text
@@ -2473,7 +2473,7 @@ Restart:
                     float length = Constr->LabelDistance;
                     SbVec3f pos = p2 + length*dir;
 
-                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(4));
+                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(3));
                     asciiText->string = SbString().sprintf("%.2f",Constr->Value);
 
                     // Get Bounding box dimensions for Datum text
@@ -2583,13 +2583,6 @@ void ViewProviderSketch::rebuildConstraintsVisual(void)
 
                     // Add the datum text
                     sep->addChild(new SoTransform());
-
-                    // add font for the datum text
-                    SoFont *font = new SoFont();
-                    font->size = 8.f;
-                    font->name = "FreeSans:bold, Helvetica, Arial, FreeSans:bold";
-
-                    sep->addChild(font);
 
                     SoDatumLabel *text = new SoDatumLabel();
                     //text->justification =  SoDatumLabel::CENTER;
