@@ -167,7 +167,7 @@ SoSeparator* ViewProvider2DObject::createGrid(void)
 
     // vertical lines
     float i;
-    for (i=MiX; i<MaX; i+=Step) {
+    for (i=MiX; i<=MaX; i+=Step) {
         /*float h=-0.5*dx + float(i) / gridsize * dx;*/
         vts->vertex.set1Value(vi++, i, MiY, zGrid);
         vts->vertex.set1Value(vi++, i,  MaY, zGrid);
@@ -175,7 +175,7 @@ SoSeparator* ViewProvider2DObject::createGrid(void)
     }
 
     // horizontal lines
-    for (i=MiY; i<MaY; i+=Step) {
+    for (i=MiY; i<=MaY; i+=Step) {
         //float v=-0.5*dy + float(i) / gridsize * dy;
         vts->vertex.set1Value(vi++, MiX, i, zGrid);
         vts->vertex.set1Value(vi++,  MaX, i, zGrid);
