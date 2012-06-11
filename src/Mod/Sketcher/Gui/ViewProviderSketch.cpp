@@ -1423,20 +1423,20 @@ void ViewProviderSketch::updateColor(void)
         if (edit->SelConstraintSet.find(i) != edit->SelConstraintSet.end()) {
             m->diffuseColor = SelectColor;
             if (hasDatumLabel) {
-                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(3));
+                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(2));
                 l->textColor = SelectColor;
             }
         } else if (edit->PreselectConstraint == i) {
             m->diffuseColor = PreselectColor;
             if (hasDatumLabel) {
-                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(3));
+                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(2));
                 l->textColor = PreselectColor;
             }
         }
         else {
             m->diffuseColor = ConstrDimColor;
             if (hasDatumLabel) {
-                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(3));
+                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(2));
                 l->textColor = ConstrDimColor;
             }
         }
@@ -2061,14 +2061,31 @@ Restart:
                     SbVec3f p2(pnt2.x,pnt2.y,zConstr);
 
                     SbVec3f dir, norm;
-                    if (Constr->Type == Distance)
+
+                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(2));
+                    if ((Constr->Type == DistanceX || Constr->Type == DistanceY) &&
+                        Constr->FirstPos != Sketcher::none && Constr->Second == Constraint::GeoUndef)
+                        // display negative sign for absolute coordinates
+                        asciiText->string = SbString().sprintf("%.2f",Constr->Value);
+                    else // hide negative sign
+                        asciiText->string = SbString().sprintf("%.2f",std::abs(Constr->Value));
+
+                    float length = Constr->LabelDistance;
+                    if (Constr->Type == Distance) {
                         dir = (p2-p1);
-                    else if (Constr->Type == DistanceX)
+                        asciiText->datumtype = SoDatumLabel::DISTANCE;
+                    } else if (Constr->Type == DistanceX) { 
                         dir = SbVec3f( (pnt2.x - pnt1.x >= FLT_EPSILON) ? 1 : -1, 0, 0);
-                    else if (Constr->Type == DistanceY)
+                        asciiText->datumtype = SoDatumLabel::DISTANCEX;
+                    } else if (Constr->Type == DistanceY) {
                         dir = SbVec3f(0, (pnt2.y - pnt1.y >= FLT_EPSILON) ? 1 : -1, 0);
+                        asciiText->datumtype = SoDatumLabel::DISTANCEY;
+                    }
+
                     dir.normalize();
                     norm = SbVec3f (-dir[1],dir[0],0);
+
+                    float direct = (length * norm).dot(norm);
 
                     // when the datum line is not parallel to p1-p2 the projection of
                     // p1-p2 on norm is not zero, p2 is considered as reference and p1
@@ -2078,30 +2095,13 @@ Restart:
                     SbVec3f p1_ = p1 + normproj12 * norm;
                     SbVec3f midpos = (p1_ + p2)/2;
 
-                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(3));
-                    if ((Constr->Type == DistanceX || Constr->Type == DistanceY) &&
-                        Constr->FirstPos != Sketcher::none && Constr->Second == Constraint::GeoUndef)
-                        // display negative sign for absolute coordinates
-                        asciiText->string = SbString().sprintf("%.2f",Constr->Value);
-                    else // hide negative sign
-                        asciiText->string = SbString().sprintf("%.2f",std::abs(Constr->Value));
+                    asciiText->pnts.setNum(2);
+                    SbVec3f *verts = asciiText->pnts.startEditing();
 
-                    // Get Bounding box dimensions for Datum text
-                    Gui::View3DInventorViewer *viewer = static_cast<Gui::View3DInventor *>(mdi)->getViewer();
+                    verts[0] = p1_;
+                    verts[1] = p2;
 
-                    // [FIX ME] Its an attempt to find the height of the text using the bounding box, but is in correct.
-                    SoGetBoundingBoxAction bbAction(viewer->getViewportRegion());
-                    bbAction.apply(sep->getChild(3));
-
-                    float bx,by,bz;
-                    bbAction.getBoundingBox().getSize(bx,by,bz);
-                    SbVec3f textBB(bx,by,bz);
-                    // bbAction.setCenter(, true)
-                    // This is the bounding box containing the width and height of text
-
-                    SbVec3f textBBCenter = bbAction.getBoundingBox().getCenter();
-
-                    float length = Constr->LabelDistance;
+                    asciiText->pnts.finishEditing();
 
                     // Get magnitude of angle between horizontal
                     double angle = atan2f(dir[1],dir[0]);
@@ -2113,41 +2113,14 @@ Restart:
                         angle += M_PI;
                         flip = true;
                     }
-
-                    SbVec3f textpos = midpos + norm * (length + ( (flip ? 1:-1) * textBBCenter[1] / 4));
+                    asciiText->param1 = (flip) ? -direct : direct;
 
                     // set position and rotation of Datums Text
-                    SoTransform *transform = dynamic_cast<SoTransform *>(sep->getChild(2));
+                    SoTransform *transform = dynamic_cast<SoTransform *>(sep->getChild(1));
                     transform->rotation.setValue(SbVec3f(0, 0, 1), (float)angle);
-                    transform->translation.setValue(textpos);
+                    transform->translation.setValue(midpos);
 
-                    // Get the datum nodes
-                    SoSeparator *sepDatum = dynamic_cast<SoSeparator *>(sep->getChild(1));
-                    SoCoordinate3 *datumCord = dynamic_cast<SoCoordinate3 *>(sepDatum->getChild(0));
 
-                    // [Fixme] This should be made neater - compute the vertical datum line length
-                    float offset1 = (length + normproj12 < 0) ? -0.5  : 0.5;
-                    float offset2 = (length < 0) ? -0.5  : 0.5;
-                    offset1 *= getScaleFactor();
-                    offset2 *= getScaleFactor();
-                    // Calculate coordinates for perpendicular datum lines
-                    datumCord->point.set1Value(0,p1);
-                    datumCord->point.set1Value(1,p1_ + norm * (length + offset1));
-                    datumCord->point.set1Value(2,p2);
-                    datumCord->point.set1Value(3,p2  + norm * (length + offset2));
-
-                    // Calculate the coordinates for the parallel datum lines
-                    datumCord->point.set1Value(4,p1_    + norm * length);
-                    datumCord->point.set1Value(5,midpos + norm * length - dir * (textBB[0]/1.7f) );
-                    datumCord->point.set1Value(6,midpos + norm * length + dir * (textBB[0]/1.7f) );
-                    datumCord->point.set1Value(7,p2     + norm * length);
-
-                    // Use the coordinates calculated earlier to the lineset
-                    SoLineSet *datumLineSet = dynamic_cast<SoLineSet *>(sepDatum->getChild(1));
-                    datumLineSet->numVertices.set1Value(0,2);
-                    datumLineSet->numVertices.set1Value(1,2);
-                    datumLineSet->numVertices.set1Value(2,2);
-                    datumLineSet->numVertices.set1Value(3,2);
                 }
                 break;
             case PointOnObject:
@@ -2379,7 +2352,7 @@ Restart:
 
                     // [FIX ME] Its an attempt to find the height of the text using the bounding box, but is in correct.
                     SoGetBoundingBoxAction bbAction(viewer->getViewportRegion());
-                    bbAction.apply(sep->getChild(4));
+                    bbAction.apply(sep->getChild(3));
 
                     float bx,by,bz;
                     bbAction.getBoundingBox().getSize(bx,by,bz);
@@ -2466,32 +2439,20 @@ Restart:
                     SbVec3f p1(pnt1.x,pnt1.y,zConstr);
                     SbVec3f p2(pnt2.x,pnt2.y,zConstr);
 
+                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(2));
+                    asciiText->string       = SbString().sprintf("%.2f",Constr->Value);
+                    asciiText->datumtype    = SoDatumLabel::RADIUS;
+                    asciiText->param1       = Constr->LabelDistance;
+
+                    asciiText->pnts.setNum(2);
+                    SbVec3f *verts = asciiText->pnts.startEditing();
+
+                    verts[0] = p1;
+                    verts[1] = p2;
+
+                    asciiText->pnts.finishEditing();
+
                     SbVec3f dir = (p2-p1);
-                    dir.normalize();
-                    SbVec3f norm (-dir[1],dir[0],0);
-
-                    float length = Constr->LabelDistance;
-                    SbVec3f pos = p2 + length*dir;
-
-                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(3));
-                    asciiText->string = SbString().sprintf("%.2f",Constr->Value);
-
-                    // Get Bounding box dimensions for Datum text
-                    Gui::MDIView *mdi = Gui::Application::Instance->activeDocument()->getActiveView();
-                    Gui::View3DInventorViewer *viewer = static_cast<Gui::View3DInventor *>(mdi)->getViewer();
-
-                    // [FIX ME] Its an attempt to find the height of the text using the bounding box, but is in correct.
-                    SoGetBoundingBoxAction bbAction(viewer->getViewportRegion());
-                    bbAction.apply(sep->getChild(3));
-
-                    float bx=0,by=0,bz=0;
-                    SbBox3f bbox = bbAction.getBoundingBox();
-                    if (!bbox.isEmpty())
-                        bbox.getSize(bx,by,bz);
-                    SbVec3f textBB(bx,by,bz);
-
-                    SbVec3f textBBCenter = bbAction.getBoundingBox().getCenter();
-
                     // Get magnitude of angle between horizontal
                     double angle = atan2f(dir[1],dir[0]);
                     bool flip=false;
@@ -2503,31 +2464,14 @@ Restart:
                         flip = true;
                     }
 
-                    SbVec3f textpos = pos + norm * ( (flip ? 1:-1) * textBBCenter[1] / 1.7f);
+                    // NEED TO CHECK WHERE THIS GOES
+                    SbVec3f textpos = p1;
 
                     // set position and rotation of Datums Text
-                    SoTransform *transform = dynamic_cast<SoTransform *>(sep->getChild(2));
+                    SoTransform *transform = dynamic_cast<SoTransform *>(sep->getChild(1));
                     transform->rotation.setValue(SbVec3f(0, 0, 1), (float)angle);
                     transform->translation.setValue(textpos);
 
-                    // Get the datum nodes
-                    SoSeparator *sepDatum = dynamic_cast<SoSeparator *>(sep->getChild(1));
-                    SoCoordinate3 *datumCord = dynamic_cast<SoCoordinate3 *>(sepDatum->getChild(0));
-
-                    SbVec3f p3 = pos + dir * (6+textBB[0]/1.7f);
-                    if ((p3-p1).length() > (p2-p1).length())
-                        p2 = p3;
-
-                    // Calculate the coordinates for the parallel datum lines
-                    datumCord->point.set1Value(0,p1);
-                    datumCord->point.set1Value(1,pos - dir * (1+textBB[0]/1.7f) );
-                    datumCord->point.set1Value(2,pos + dir * (1+textBB[0]/1.7f) );
-                    datumCord->point.set1Value(3,p2);
-
-                    // Use the coordinates calculated earlier to the lineset
-                    SoLineSet *datumLineSet = dynamic_cast<SoLineSet *>(sepDatum->getChild(1));
-                    datumLineSet->numVertices.set1Value(0,2);
-                    datumLineSet->numVertices.set1Value(1,2);
                 }
                 break;
             case Coincident: // nothing to do for coincident
@@ -2574,18 +2518,11 @@ void ViewProviderSketch::rebuildConstraintsVisual(void)
             case Radius:
             case Angle:
                 {
-                    SoSeparator *sepDatum = new SoSeparator();
-                    sepDatum->addChild(new SoCoordinate3());
-                    SoLineSet *lineSet = new SoLineSet;
-                    sepDatum->addChild(lineSet);
-
-                    sep->addChild(sepDatum);
-
                     // Add the datum text
                     sep->addChild(new SoTransform());
 
                     SoDatumLabel *text = new SoDatumLabel();
-                    //text->justification =  SoDatumLabel::CENTER;
+
                     text->string = "";
                     text->textColor = ConstrDimColor;
                     sep->addChild(text);
@@ -2855,18 +2792,40 @@ void ViewProviderSketch::createEditInventorNodes(void)
     pcRoot->addChild(edit->EditRoot);
     edit->EditRoot->renderCaching = SoSeparator::OFF ;
 
+    SoDrawStyle *DrawStyle = new SoDrawStyle;
+    SoMaterialBinding *MtlBind = new SoMaterialBinding;
+
+    // stuff for the edit coordinates ++++++++++++++++++++++++++++++++++++++
+    SoMaterial *EditMaterials = new SoMaterial;
+    EditMaterials->diffuseColor = SbColor(0,0,1);
+    edit->EditRoot->addChild(EditMaterials);
+
+    SoSeparator *Coordsep = new SoSeparator();
+    Coordsep->renderCaching = SoSeparator::OFF;
+    SoFont *font = new SoFont();
+    font->size = 15.0;
+    Coordsep->addChild(font);
+
+    edit->textPos = new SoTranslation();
+    Coordsep->addChild(edit->textPos);
+
+    edit->textX = new SoText2();
+    edit->textX->justification = SoText2::LEFT;
+    edit->textX->string = "";
+    Coordsep->addChild(edit->textX);
+    edit->EditRoot->addChild(Coordsep);
+
     // stuff for the points ++++++++++++++++++++++++++++++++++++++
     edit->PointsMaterials = new SoMaterial;
     edit->EditRoot->addChild(edit->PointsMaterials);
 
-    SoMaterialBinding *MtlBind = new SoMaterialBinding;
     MtlBind->value = SoMaterialBinding::PER_VERTEX;
     edit->EditRoot->addChild(MtlBind);
 
     edit->PointsCoordinate = new SoCoordinate3;
     edit->EditRoot->addChild(edit->PointsCoordinate);
 
-    SoDrawStyle *DrawStyle = new SoDrawStyle;
+
     DrawStyle->pointSize = 8;
     edit->EditRoot->addChild(DrawStyle);
     edit->PointSet = new SoMarkerSet;
@@ -2928,35 +2887,12 @@ void ViewProviderSketch::createEditInventorNodes(void)
     edit->EditCurveSet = new SoLineSet;
     edit->EditRoot->addChild(edit->EditCurveSet);
 
-    // stuff for the edit coordinates ++++++++++++++++++++++++++++++++++++++
-    SoMaterial *EditMaterials = new SoMaterial;
-    EditMaterials->diffuseColor = SbColor(0,0,1);
-    edit->EditRoot->addChild(EditMaterials);
-
-    SoSeparator *Coordsep = new SoSeparator();
-    // no caching for fluctuand data structures
-    Coordsep->renderCaching = SoSeparator::OFF;
-
-    SoFont *font = new SoFont();
-    font->size = 15.0;
-    Coordsep->addChild(font);
-
-    edit->textPos = new SoTranslation();
-    Coordsep->addChild(edit->textPos);
-
-    edit->textX = new SoText2();
-    edit->textX->justification = SoText2::LEFT;
-    edit->textX->string = "";
-    Coordsep->addChild(edit->textX);
-    edit->EditRoot->addChild(Coordsep);
-
     // group node for the Constraint visual +++++++++++++++++++++++++++++++++++
     MtlBind = new SoMaterialBinding;
     MtlBind->value = SoMaterialBinding::OVERALL ;
     edit->EditRoot->addChild(MtlBind);
 
     // add font for the text shown constraints
-    font = new SoFont();
     font->size = 8.0;
     edit->EditRoot->addChild(font);
 
