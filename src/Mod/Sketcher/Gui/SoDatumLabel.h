@@ -75,8 +75,7 @@ protected:
 
 private:
     void drawImage();
-    float bbx;
-    float bby;
+    SbBox3f bbox;
     float imgWidth;
     float imgHeight;
 };

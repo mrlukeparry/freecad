@@ -1423,20 +1423,20 @@ void ViewProviderSketch::updateColor(void)
         if (edit->SelConstraintSet.find(i) != edit->SelConstraintSet.end()) {
             m->diffuseColor = SelectColor;
             if (hasDatumLabel) {
-                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(2));
+                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(1));
                 l->textColor = SelectColor;
             }
         } else if (edit->PreselectConstraint == i) {
             m->diffuseColor = PreselectColor;
             if (hasDatumLabel) {
-                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(2));
+                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(1));
                 l->textColor = PreselectColor;
             }
         }
         else {
             m->diffuseColor = ConstrDimColor;
             if (hasDatumLabel) {
-                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(2));
+                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(1));
                 l->textColor = ConstrDimColor;
             }
         }
@@ -2057,12 +2057,7 @@ Restart:
                     } else
                         break;
 
-                    SbVec3f p1(pnt1.x,pnt1.y,zConstr);
-                    SbVec3f p2(pnt2.x,pnt2.y,zConstr);
-
-                    SbVec3f dir, norm;
-
-                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(2));
+                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(1));
                     if ((Constr->Type == DistanceX || Constr->Type == DistanceY) &&
                         Constr->FirstPos != Sketcher::none && Constr->Second == Constraint::GeoUndef)
                         // display negative sign for absolute coordinates
@@ -2070,57 +2065,24 @@ Restart:
                     else // hide negative sign
                         asciiText->string = SbString().sprintf("%.2f",std::abs(Constr->Value));
 
-                    float length = Constr->LabelDistance;
-                    if (Constr->Type == Distance) {
-                        dir = (p2-p1);
+                    if (Constr->Type == Distance)
                         asciiText->datumtype = SoDatumLabel::DISTANCE;
-                    } else if (Constr->Type == DistanceX) { 
-                        dir = SbVec3f( (pnt2.x - pnt1.x >= FLT_EPSILON) ? 1 : -1, 0, 0);
+                    else if (Constr->Type == DistanceX)
                         asciiText->datumtype = SoDatumLabel::DISTANCEX;
-                    } else if (Constr->Type == DistanceY) {
-                        dir = SbVec3f(0, (pnt2.y - pnt1.y >= FLT_EPSILON) ? 1 : -1, 0);
-                        asciiText->datumtype = SoDatumLabel::DISTANCEY;
-                    }
+                    else if (Constr->Type == DistanceY)
+                         asciiText->datumtype = SoDatumLabel::DISTANCEY;
 
-                    dir.normalize();
-                    norm = SbVec3f (-dir[1],dir[0],0);
-
-                    float direct = (length * norm).dot(norm);
-
-                    // when the datum line is not parallel to p1-p2 the projection of
-                    // p1-p2 on norm is not zero, p2 is considered as reference and p1
-                    // is replaced by its projection p1_
-                    float normproj12 = (p2-p1).dot(norm);
-
-                    SbVec3f p1_ = p1 + normproj12 * norm;
-                    SbVec3f midpos = (p1_ + p2)/2;
-
+                    // Assign the Datum Points
                     asciiText->pnts.setNum(2);
                     SbVec3f *verts = asciiText->pnts.startEditing();
 
-                    verts[0] = p1_;
-                    verts[1] = p2;
+                    verts[0] = SbVec3f (pnt1.x,pnt1.y,zConstr);
+                    verts[1] = SbVec3f (pnt2.x,pnt2.y,zConstr);
 
                     asciiText->pnts.finishEditing();
 
-                    // Get magnitude of angle between horizontal
-                    double angle = atan2f(dir[1],dir[0]);
-                    bool flip=false;
-                    if (angle > M_PI_2+M_PI/12) {
-                        angle -= M_PI;
-                        flip = true;
-                    } else if (angle <= -M_PI_2+M_PI/12) {
-                        angle += M_PI;
-                        flip = true;
-                    }
-                    asciiText->param1 = (flip) ? -direct : direct;
-
-                    // set position and rotation of Datums Text
-                    SoTransform *transform = dynamic_cast<SoTransform *>(sep->getChild(1));
-                    transform->rotation.setValue(SbVec3f(0, 0, 1), (float)angle);
-                    transform->translation.setValue(midpos);
-
-
+                    //Assign the Label Distance
+                    asciiText->param1 = Constr->LabelDistance;
                 }
                 break;
             case PointOnObject:
@@ -2439,7 +2401,7 @@ Restart:
                     SbVec3f p1(pnt1.x,pnt1.y,zConstr);
                     SbVec3f p2(pnt2.x,pnt2.y,zConstr);
 
-                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(2));
+                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(1));
                     asciiText->string       = SbString().sprintf("%.2f",Constr->Value);
                     asciiText->datumtype    = SoDatumLabel::RADIUS;
                     asciiText->param1       = Constr->LabelDistance;
@@ -2451,27 +2413,6 @@ Restart:
                     verts[1] = p2;
 
                     asciiText->pnts.finishEditing();
-
-                    SbVec3f dir = (p2-p1);
-                    // Get magnitude of angle between horizontal
-                    double angle = atan2f(dir[1],dir[0]);
-                    bool flip=false;
-                    if (angle > M_PI_2+M_PI/12) {
-                        angle -= M_PI;
-                        flip = true;
-                    } else if (angle <= -M_PI_2+M_PI/12) {
-                        angle += M_PI;
-                        flip = true;
-                    }
-
-                    // NEED TO CHECK WHERE THIS GOES
-                    SbVec3f textpos = p1;
-
-                    // set position and rotation of Datums Text
-                    SoTransform *transform = dynamic_cast<SoTransform *>(sep->getChild(1));
-                    transform->rotation.setValue(SbVec3f(0, 0, 1), (float)angle);
-                    transform->translation.setValue(textpos);
-
                 }
                 break;
             case Coincident: // nothing to do for coincident
@@ -2518,11 +2459,7 @@ void ViewProviderSketch::rebuildConstraintsVisual(void)
             case Radius:
             case Angle:
                 {
-                    // Add the datum text
-                    sep->addChild(new SoTransform());
-
                     SoDatumLabel *text = new SoDatumLabel();
-
                     text->string = "";
                     text->textColor = ConstrDimColor;
                     sep->addChild(text);
