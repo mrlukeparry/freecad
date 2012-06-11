@@ -64,6 +64,7 @@ public:
     SoSFInt32  size;
     SoSFFloat  param1;
     SoSFFloat  param2;
+    SoSFFloat  param3;
     SoMFVec3f  pnts;
     SoSFImage  image;
 

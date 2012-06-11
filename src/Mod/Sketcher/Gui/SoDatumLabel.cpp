@@ -342,6 +342,59 @@ void SoDatumLabel::generatePrimitives(SoAction * action)
         shapeVertex(&pv);
 
         this->endShape();
+      } else if (this->datumtype.getValue() == ANGLE) {
+
+        // Only the angle intersection point is needed
+        SbVec3f p0 = pnts[0];
+
+        // Load the Paramaters
+        float length     = this->param1.getValue();
+        float startangle = this->param2.getValue();
+        float range      = this->param3.getValue();
+        float endangle   = startangle + range;
+
+        float r = 2*length;
+
+        // Useful Information
+        // v0 - vector for text position
+        // p0 - vector for angle intersect
+        SbVec3f v0(cos(startangle+range/2),sin(startangle+range/2),0);
+
+
+
+        SbVec3f textOffset = p0 + v0 * r;
+        
+        SbVec3f img1 = SbVec3f(-this->imgWidth / 2, -this->imgHeight / 2, 0.f);
+        SbVec3f img2 = SbVec3f(-this->imgWidth / 2,  this->imgHeight / 2, 0.f);
+        SbVec3f img3 = SbVec3f( this->imgWidth / 2, -this->imgHeight / 2, 0.f);
+        SbVec3f img4 = SbVec3f( this->imgWidth / 2,  this->imgHeight / 2, 0.f);
+
+        img1 += textOffset;
+        img2 += textOffset;
+        img3 += textOffset;
+        img4 += textOffset;
+
+        // Primitive Shape is only for text as this should only be selectable
+        SoPrimitiveVertex pv;
+
+        this->beginShape(action, QUADS);
+
+        pv.setNormal( SbVec3f(0.f, 0.f, 1.f) );
+
+        // Set coordinates
+        pv.setPoint( img1 );
+        shapeVertex(&pv);
+
+        pv.setPoint( img2 );
+        shapeVertex(&pv);
+
+        pv.setPoint( img3 );
+        shapeVertex(&pv);
+
+        pv.setPoint( img4 );
+        shapeVertex(&pv);
+
+        this->endShape();
     }
 
 }
@@ -374,8 +427,6 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
 
     // Get the points stored
     const SbVec3f *pnts = this->pnts.getValues(0);
-    SbVec3f p1 = pnts[0];
-    SbVec3f p2 = pnts[1];
 
     state->push();
 
@@ -387,6 +438,7 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
         {
         float length = this->param1.getValue();
         const SbVec3f *pnts = this->pnts.getValues(0);
+
         SbVec3f p1 = pnts[0];
         SbVec3f p2 = pnts[1];
 
@@ -505,6 +557,10 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
         this->bbox.setBounds(SbVec3f(minX, minY, 0.f), SbVec3f (maxX, maxY, 0.f));
 
     } else if (this->datumtype.getValue() == RADIUS) {
+        // Get the Points
+        SbVec3f p1 = pnts[0];
+        SbVec3f p2 = pnts[1];
+        
         SbVec3f dir = (p2-p1);
         dir.normalize();
         SbVec3f norm (-dir[1],dir[0],0);
@@ -583,7 +639,109 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
         }
         //Store the bounding box
         this->bbox.setBounds(SbVec3f(minX, minY, 0.f), SbVec3f (maxX, maxY, 0.f));
+    } else if (this->datumtype.getValue() == ANGLE) {
+        // Only the angle intersection point is needed
+        SbVec3f p0 = pnts[0];
 
+        // Load the Paramaters
+        float length     = this->param1.getValue();
+        float startangle = this->param2.getValue();
+        float range      = this->param3.getValue();
+        float endangle   = startangle + range;
+
+        
+        float r = 2*length;
+
+        // Set the Text label angle to zero
+        angle = 0.f;
+
+        // Useful Information
+        // v0 - vector for text position
+        // p0 - vector for angle intersect
+        SbVec3f v0(cos(startangle+range/2),sin(startangle+range/2),0);
+
+        // leave some space for the text
+        if (range >= 0)
+            range = std::max(0.2f*range, range - this->imgWidth/(2*r));
+        else
+            range = std::min(0.2f*range, range + this->imgWidth/(2*r));
+
+        int countSegments = std::max(6, abs(int(50.0 * range / (2 * M_PI))));
+        double segment = range / (2*countSegments-2);
+
+        textOffset = p0 + v0 * r;
+
+        float margin = 0.01f;
+        margin *= scale;
+        
+          // Get the colour
+        const SbColor& t = textColor.getValue();
+
+        // Set GL Properties
+        glLineWidth(2.f);
+        glColor3f(t[0], t[1], t[2]);
+
+        // Draw
+        glBegin(GL_LINE_STRIP);
+
+        int i=0;
+        
+        for (; i < countSegments; i++) {
+            double theta = startangle + segment*i;
+            SbVec3f v1 = p0+SbVec3f(r*cos(theta),r*sin(theta),0);
+            glVertex2f(v1[0],v1[1]);
+        }
+        glEnd();
+
+        glBegin(GL_LINE_STRIP);
+        i=0;
+        int j=2*countSegments-1;
+        for (; i < countSegments; i++, j--) {
+            double theta = endangle - segment*i;
+            SbVec3f v1 = p0+SbVec3f(r*cos(theta),r*sin(theta),0);
+            glVertex2f(v1[0],v1[1]);
+        }
+        glEnd();
+
+        // Direction vectors for start and end lines
+        SbVec3f v1(cos(startangle),sin(startangle),0);
+        SbVec3f v2(cos(endangle),sin(endangle),0);
+
+        SbVec3f pnt1 = p0+(r-margin)*v1;
+        SbVec3f pnt2 = p0+(r+margin)*v1;
+        SbVec3f pnt3 = p0+(r-margin)*v2;
+        SbVec3f pnt4 = p0+(r+margin)*v2;
+        
+        glBegin(GL_LINES);
+        glVertex2f(pnt1[0],pnt1[1]);
+        glVertex2f(pnt2[0],pnt2[1]);
+        glEnd();
+
+        glBegin(GL_LINES);
+        glVertex2f(pnt3[0],pnt3[1]);
+        glVertex2f(pnt4[0],pnt4[1]);
+        glEnd();
+
+        // BOUNDING BOX CALCULATION - IMPORTANT
+        // Finds the mins and maxes
+        // We may need to include the text position too
+
+        std::vector<SbVec3f> corners;
+        corners.push_back(pnt1);
+        corners.push_back(pnt2);
+        corners.push_back(pnt3);
+        corners.push_back(pnt4);
+
+        float minX = pnt1[0], minY = pnt1[1], maxX = pnt1[0] , maxY = pnt1[1];
+        for (std::vector<SbVec3f>::iterator it=corners.begin(); it != corners.end(); ++it) {
+            minX = ((*it)[0] < minX) ? (*it)[0] : minX;
+            minY = ((*it)[1] < minY) ? (*it)[1] : minY;
+            maxX = ((*it)[0] > maxX) ? (*it)[0] : maxX;
+            maxY = ((*it)[1] > maxY) ? (*it)[1] : maxY;
+        }
+        //Store the bounding box
+        this->bbox.setBounds(SbVec3f(minX, minY, 0.f), SbVec3f (maxX, maxY, 0.f));
+        
     }
 
     glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);

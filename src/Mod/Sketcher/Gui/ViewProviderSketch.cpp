@@ -2306,68 +2306,20 @@ Restart:
                     } else
                         break;
 
-                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(3));
-                    asciiText->string = SbString().sprintf("%.2f",Base::toDegrees<double>(std::abs(Constr->Value)));
+                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(1));
+                    asciiText->string    = SbString().sprintf("%.2f",Base::toDegrees<double>(std::abs(Constr->Value)));
+                    asciiText->datumtype = SoDatumLabel::ANGLE;
+                    asciiText->param1    = Constr->LabelDistance;
+                    asciiText->param2    = startangle;
+                    asciiText->param3    = range;
 
-                    // Get Bounding box dimensions for Datum text
-                    Gui::View3DInventorViewer *viewer = static_cast<Gui::View3DInventor *>(mdi)->getViewer();
+                    asciiText->pnts.setNum(2);
+                    SbVec3f *verts = asciiText->pnts.startEditing();
 
-                    // [FIX ME] Its an attempt to find the height of the text using the bounding box, but is in correct.
-                    SoGetBoundingBoxAction bbAction(viewer->getViewportRegion());
-                    bbAction.apply(sep->getChild(3));
+                    verts[0] = p0;
 
-                    float bx,by,bz;
-                    bbAction.getBoundingBox().getSize(bx,by,bz);
-                    SbVec3f textBB(bx,by,bz);
+                    asciiText->pnts.finishEditing();
 
-                    SbVec3f textBBCenter = bbAction.getBoundingBox().getCenter();
-
-                    float length = Constr->LabelDistance;
-                    float r = 2*length;
-
-                    SbVec3f v0(cos(startangle+range/2),sin(startangle+range/2),0);
-                    SbVec3f textpos = p0 + v0 * r - SbVec3f(0,1,0) * textBBCenter[1]/4;
-
-                    // leave some space for the text
-                    if (range >= 0)
-                        range = std::max(0.2*range, range - textBB[0]/(2*r));
-                    else
-                        range = std::min(0.2*range, range + textBB[0]/(2*r));
-
-                    int countSegments = std::max(6, abs(int(50.0 * range / (2 * M_PI))));
-                    double segment = range / (2*countSegments-2);
-
-                    // set position and rotation of Datums Text
-                    SoTransform *transform = dynamic_cast<SoTransform *>(sep->getChild(2));
-                    transform->translation.setValue(textpos);
-
-                    // Get the datum nodes
-                    SoSeparator *sepDatum = dynamic_cast<SoSeparator *>(sep->getChild(1));
-                    SoCoordinate3 *datumCord = dynamic_cast<SoCoordinate3 *>(sepDatum->getChild(0));
-
-                    datumCord->point.setNum(2*countSegments+4);
-                    int i=0;
-                    int j=2*countSegments-1;
-                    for (; i < countSegments; i++, j--) {
-                        double angle = startangle + segment*i;
-                        datumCord->point.set1Value(i,p0+SbVec3f(r*cos(angle),r*sin(angle),0));
-                        angle = endangle - segment*i;
-                        datumCord->point.set1Value(j,p0+SbVec3f(r*cos(angle),r*sin(angle),0));
-                    }
-                    SbVec3f v1(cos(startangle),sin(startangle),0);
-                    SbVec3f v2(cos(endangle),sin(endangle),0);
-                    float sf = getScaleFactor();
-                    datumCord->point.set1Value(2*countSegments  ,p0+(r-0.5f * sf)*v1);
-                    datumCord->point.set1Value(2*countSegments+1,p0+(r+0.5f * sf)*v1);
-                    datumCord->point.set1Value(2*countSegments+2,p0+(r-0.5f * sf)*v2);
-                    datumCord->point.set1Value(2*countSegments+3,p0+(r+0.5f * sf)*v2);
-
-                    // Use the coordinates calculated earlier to the lineset
-                    SoLineSet *datumLineSet = dynamic_cast<SoLineSet *>(sepDatum->getChild(1));
-                    datumLineSet->numVertices.set1Value(0,countSegments);
-                    datumLineSet->numVertices.set1Value(1,countSegments);
-                    datumLineSet->numVertices.set1Value(2,2);
-                    datumLineSet->numVertices.set1Value(3,2);
                 }
                 break;
             case Radius:
