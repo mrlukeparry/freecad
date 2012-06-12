@@ -1419,24 +1419,28 @@ void ViewProviderSketch::updateColor(void)
                               type == Sketcher::Radius ||
                               type == Sketcher::Distance || type == Sketcher::DistanceX || type == Sketcher::DistanceY);
 
-        // Non DatumLabel Nodes will have a material
+        // Non DatumLabel Nodes will have a material excluding coincident 
+        bool hasMaterial = false;
+
         SoMaterial *m;
-        if(!hasDatumLabel)
+        if(!hasDatumLabel && type != Sketcher::Coincident) {
+          hasMaterial = true;
           m = dynamic_cast<SoMaterial *>(s->getChild(0));
+        }
 
         if (edit->SelConstraintSet.find(i) != edit->SelConstraintSet.end()) {
 
             if (hasDatumLabel) {
                 SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(0));
                 l->textColor = SelectColor;
-            } else 
+            } else if(hasMaterial) 
               m->diffuseColor = SelectColor;
 
         } else if (edit->PreselectConstraint == i) {
             if (hasDatumLabel) {
                 SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(0));
                 l->textColor = PreselectColor;
-            } else
+            } else if(hasMaterial)
               m->diffuseColor = PreselectColor;
         }
         else {
@@ -1444,7 +1448,7 @@ void ViewProviderSketch::updateColor(void)
             if (hasDatumLabel) {
                 SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(0));
                 l->textColor = ConstrDimColor;
-            } else
+            } else if(hasMaterial)
               m->diffuseColor = ConstrDimColor;
         }
     }
