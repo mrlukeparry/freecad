@@ -1412,7 +1412,6 @@ void ViewProviderSketch::updateColor(void)
     // colors of the constraints
     for (int i=0; i < edit->constrGroup->getNumChildren(); i++) {
         SoSeparator *s = dynamic_cast<SoSeparator *>(edit->constrGroup->getChild(i));
-        SoMaterial *m = dynamic_cast<SoMaterial *>(s->getChild(0));
 
         // Check Constraint Type
         ConstraintType type = getSketchObject()->Constraints.getValues()[i]->Type;
@@ -1420,25 +1419,33 @@ void ViewProviderSketch::updateColor(void)
                               type == Sketcher::Radius ||
                               type == Sketcher::Distance || type == Sketcher::DistanceX || type == Sketcher::DistanceY);
 
+        // Non DatumLabel Nodes will have a material
+        SoMaterial *m;
+        if(!hasDatumLabel)
+          m = dynamic_cast<SoMaterial *>(s->getChild(0));
+
         if (edit->SelConstraintSet.find(i) != edit->SelConstraintSet.end()) {
-            m->diffuseColor = SelectColor;
+
             if (hasDatumLabel) {
-                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(1));
+                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(0));
                 l->textColor = SelectColor;
-            }
+            } else 
+              m->diffuseColor = SelectColor;
+
         } else if (edit->PreselectConstraint == i) {
-            m->diffuseColor = PreselectColor;
             if (hasDatumLabel) {
-                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(1));
+                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(0));
                 l->textColor = PreselectColor;
-            }
+            } else
+              m->diffuseColor = PreselectColor;
         }
         else {
-            m->diffuseColor = ConstrDimColor;
+
             if (hasDatumLabel) {
-                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(1));
+                SoDatumLabel *l = dynamic_cast<SoDatumLabel *>(s->getChild(0));
                 l->textColor = ConstrDimColor;
-            }
+            } else
+              m->diffuseColor = ConstrDimColor;
         }
     }
 
@@ -2057,7 +2064,7 @@ Restart:
                     } else
                         break;
 
-                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(1));
+                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(0));
                     if ((Constr->Type == DistanceX || Constr->Type == DistanceY) &&
                         Constr->FirstPos != Sketcher::none && Constr->Second == Constraint::GeoUndef)
                         // display negative sign for absolute coordinates
@@ -2306,7 +2313,7 @@ Restart:
                     } else
                         break;
 
-                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(1));
+                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(0));
                     asciiText->string    = SbString().sprintf("%.2f",Base::toDegrees<double>(std::abs(Constr->Value)));
                     asciiText->datumtype = SoDatumLabel::ANGLE;
                     asciiText->param1    = Constr->LabelDistance;
@@ -2353,7 +2360,7 @@ Restart:
                     SbVec3f p1(pnt1.x,pnt1.y,zConstr);
                     SbVec3f p2(pnt2.x,pnt2.y,zConstr);
 
-                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(1));
+                    SoDatumLabel *asciiText = dynamic_cast<SoDatumLabel *>(sep->getChild(0));
                     asciiText->string       = SbString().sprintf("%.2f",Constr->Value);
                     asciiText->datumtype    = SoDatumLabel::RADIUS;
                     asciiText->param1       = Constr->LabelDistance;
@@ -2398,10 +2405,10 @@ void ViewProviderSketch::rebuildConstraintsVisual(void)
         SoSeparator *sep = new SoSeparator();
         // no caching for fluctuand data structures
         sep->renderCaching = SoSeparator::OFF;
+        
         // every constrained visual node gets its own material for preselection and selection
         SoMaterial *Material = new SoMaterial;
         Material->diffuseColor = ConstrDimColor;
-        sep->addChild(Material);
 
         // distinguish different constraint types to build up
         switch ((*it)->Type) {
@@ -2422,6 +2429,7 @@ void ViewProviderSketch::rebuildConstraintsVisual(void)
             case Horizontal:
             case Vertical:
                 {
+                    sep->addChild(Material);
                     sep->addChild(new SoZoomTranslation()); // 1.
                     sep->addChild(new SoImage());       // 2. constraint icon
 
@@ -2437,6 +2445,7 @@ void ViewProviderSketch::rebuildConstraintsVisual(void)
             case Equal:
                 {
                     // Add new nodes to Constraint Seperator
+                    sep->addChild(Material);
                     sep->addChild(new SoZoomTranslation()); // 1.
                     sep->addChild(new SoImage());           // 2. first constraint icon
                     sep->addChild(new SoZoomTranslation()); // 3.
@@ -2450,6 +2459,7 @@ void ViewProviderSketch::rebuildConstraintsVisual(void)
             case Tangent:
                 {
                     // Add new nodes to Constraint Seperator
+                    sep->addChild(Material);
                     sep->addChild(new SoZoomTranslation()); // 1.
                     sep->addChild(new SoImage());           // 2. constraint icon
 
@@ -2472,6 +2482,7 @@ void ViewProviderSketch::rebuildConstraintsVisual(void)
                     sepArrows->addChild(new SoCoordinate3());
                     SoLineSet *lineSet = new SoLineSet;
                     sepArrows->addChild(lineSet);
+                    sep->addChild(Material);
                     sep->addChild(sepArrows);           // 1.
 
                     // Add new nodes to Constraint Seperator

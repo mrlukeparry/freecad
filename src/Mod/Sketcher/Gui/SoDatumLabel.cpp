@@ -137,79 +137,15 @@ void SoDatumLabel::drawImage()
 
 void SoDatumLabel::computeBBox(SoAction *action, SbBox3f &box, SbVec3f &center)
 {
-    SbVec2s size;
-    int nc;
-
-    const unsigned char * dataptr = this->image.getValue(size, nc);
-    if (dataptr == NULL) {
-        box.setBounds(SbVec3f(0,0,0), SbVec3f(0,0,0));
-        center.setValue(0.0f,0.0f,0.0f);
-        return;
-    }
-
-    float srcw = size[0];
-    float srch = size[1];
-
-    float height, width;
-    float length =  this->param1.getValue();
-
-    // Get the points stored
-    const SbVec3f *pnts = this->pnts.getValues(0);
-    SbVec3f p1 = pnts[0];
-    SbVec3f p2 = pnts[1];
-
-    if(action->getTypeId() == SoGLRenderAction::getClassTypeId()) {
-         // Update using the GL state
-        SoState *state =  action->getState();
-        float srcw = size[0];
-        float srch = size[1];
-
-        const SbViewVolume & vv = SoViewVolumeElement::get(state);
-        float scale = vv.getWorldToScreenScale(SbVec3f(0.f,0.f,0.f), 0.5f);
-
-        float aspectRatio =  (float) srcw / (float) srch;
-        this->imgHeight = scale / (float) srch;
-        this->imgWidth  = aspectRatio * (float) this->imgHeight;
-    }
-
-
-    if(this->datumtype.getValue() == DISTANCE || this->datumtype.getValue() == DISTANCEX || this->datumtype.getValue() == DISTANCEY ){
-        box.setBounds(this->bbox.getMin(),this->bbox.getMax() );
-        SbVec3f center = this->bbox.getCenter();
-        center.setValue(center[0], center[1], center[2]);
-    } else if (this->datumtype.getValue() == RADIUS) {
-        box.setBounds(this->bbox.getMin(),this->bbox.getMax() );
-        SbVec3f center = this->bbox.getCenter();
-        center.setValue(center[0], center[1], center[2]);
-    }
+    // Set the bounding box using stored parameters
+    box.setBounds(this->bbox.getMin(),this->bbox.getMax() );
+    SbVec3f bbcenter = this->bbox.getCenter();
+    center.setValue(bbcenter[0], bbcenter[1], bbcenter[2]);
 }
 
 void SoDatumLabel::generatePrimitives(SoAction * action)
 {
-    // Get the size
-    SbVec2s size;
-    int nc;
 
-    const unsigned char * dataptr = this->image.getValue(size, nc);
-    if (dataptr == NULL)
-        return;
-    
-    float width, height;
-
-    if (action->getTypeId() == SoGLRenderAction::getClassTypeId()) {
-         // Update using the GL state
-        SoState *state =  action->getState();
-        float srcw = size[0];
-        float srch = size[1];
-
-        const SbViewVolume & vv = SoViewVolumeElement::get(state);
-        float scale = vv.getWorldToScreenScale(SbVec3f(0.f,0.f,0.f), 0.5f);
-
-        float aspectRatio =  (float) srcw / (float) srch;
-        this->imgHeight = scale / (float) srch;
-        this->imgWidth  = aspectRatio * (float) height;
-
-    } 
     // Get the points stored
     const SbVec3f *pnts = this->pnts.getValues(0);
     SbVec3f p1 = pnts[0];
@@ -360,10 +296,8 @@ void SoDatumLabel::generatePrimitives(SoAction * action)
         // p0 - vector for angle intersect
         SbVec3f v0(cos(startangle+range/2),sin(startangle+range/2),0);
 
-
-
         SbVec3f textOffset = p0 + v0 * r;
-        
+
         SbVec3f img1 = SbVec3f(-this->imgWidth / 2, -this->imgHeight / 2, 0.f);
         SbVec3f img2 = SbVec3f(-this->imgWidth / 2,  this->imgHeight / 2, 0.f);
         SbVec3f img3 = SbVec3f( this->imgWidth / 2, -this->imgHeight / 2, 0.f);
@@ -430,6 +364,14 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
 
     state->push();
 
+    //Enable Anti-alias
+    if(action->isSmoothing())
+    {
+      glEnable(GL_LINE_SMOOTH);
+      glEnable(GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+      glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
+    }
     // Position for Datum Text Label
     float offsetX, offsetY, angle;
 
@@ -726,11 +668,25 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
         // Finds the mins and maxes
         // We may need to include the text position too
 
+        SbVec3f img1 = SbVec3f(-this->imgWidth / 2, -this->imgHeight / 2, 0.f);
+        SbVec3f img2 = SbVec3f(-this->imgWidth / 2,  this->imgHeight / 2, 0.f);
+        SbVec3f img3 = SbVec3f( this->imgWidth / 2, -this->imgHeight / 2, 0.f);
+        SbVec3f img4 = SbVec3f( this->imgWidth / 2,  this->imgHeight / 2, 0.f);
+
+        img1 += textOffset;
+        img2 += textOffset;
+        img3 += textOffset;
+        img4 += textOffset;
+        
         std::vector<SbVec3f> corners;
         corners.push_back(pnt1);
         corners.push_back(pnt2);
         corners.push_back(pnt3);
         corners.push_back(pnt4);
+        corners.push_back(img1);
+        corners.push_back(img2);
+        corners.push_back(img3);
+        corners.push_back(img4);
 
         float minX = pnt1[0], minY = pnt1[1], maxX = pnt1[0] , maxY = pnt1[1];
         for (std::vector<SbVec3f>::iterator it=corners.begin(); it != corners.end(); ++it) {
