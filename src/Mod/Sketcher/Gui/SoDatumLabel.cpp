@@ -146,6 +146,10 @@ void SoDatumLabel::computeBBox(SoAction *action, SbBox3f &box, SbVec3f &center)
 void SoDatumLabel::generatePrimitives(SoAction * action)
 {
 
+    // Initialisation check (needs something more sensible) prevents an infinite loop bug
+    if(this->imgHeight <= FLT_EPSILON || this->imgWidth <= FLT_EPSILON)
+      return;
+    
     // Get the points stored
     const SbVec3f *pnts = this->pnts.getValues(0);
     SbVec3f p1 = pnts[0];
@@ -153,6 +157,7 @@ void SoDatumLabel::generatePrimitives(SoAction * action)
 
     float offsetX, offsetY;
 
+    
     // Change the offset and bounding box parameters depending on Datum Type
     if(this->datumtype.getValue() == DISTANCE || this->datumtype.getValue() == DISTANCEX || this->datumtype.getValue() == DISTANCEY ){
 
