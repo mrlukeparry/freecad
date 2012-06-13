@@ -33,26 +33,39 @@
 #include <Inventor/fields/SoSFName.h>
 #include <Inventor/fields/SoMFString.h>
 #include <Inventor/fields/SoSFInt32.h>
+#include <Inventor/fields/SoMFVec3f.h>
 #include <Inventor/SbBox3f.h>
 #include <Inventor/fields/SoSFImage.h>
+#include <3rdParty/salomesmesh/inc/Rn.h>
 
 namespace SketcherGui {
- 
+
 class SketcherGuiExport SoDatumLabel : public SoShape {
     typedef SoShape inherited;
 
     SO_NODE_HEADER(SoDatumLabel);
 
 public:
+  enum Type
+  {
+  DISTANCE,
+  DISTANCEX,
+  DISTANCEY,
+  ANGLE,
+  RADIUS};
 
     static void initClass();
     SoDatumLabel();
 
     SoMFString string;
     SoSFColor  textColor;
-    SoSFEnum   justification;
+    SoSFEnum   datumtype;
     SoSFName   name;
     SoSFInt32  size;
+    SoSFFloat  param1;
+    SoSFFloat  param2;
+    SoSFFloat  param3;
+    SoMFVec3f  pnts;
     SoSFImage  image;
 
 protected:
@@ -63,8 +76,9 @@ protected:
 
 private:
     void drawImage();
-    float bbx;
-    float bby;
+    SbBox3f bbox;
+    float imgWidth;
+    float imgHeight;
 };
 
 }
