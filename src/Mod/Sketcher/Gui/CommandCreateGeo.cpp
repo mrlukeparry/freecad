@@ -523,6 +523,7 @@ public:
         else if (Mode==STATUS_SEEK_Second){
             EditCurve[1] = onSketchPos;
             sketchgui->drawEdit(EditCurve);
+            sugConstr2 = sugConstr1; // Copy the previously found constraints
             if (seekAutoConstraint(sugConstr2, onSketchPos, onSketchPos - EditCurve[0])) {
                 renderSuggestConstraintsCursor(sugConstr2);
                 renderHintLines(sugConstr2, EditCurve[0]);
