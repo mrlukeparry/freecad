@@ -52,6 +52,7 @@
 # include <Inventor/nodes/SoFont.h>
 # include <Inventor/sensors/SoIdleSensor.h>
 # include <Inventor/nodes/SoCamera.h>
+# include <Inventor/fields/SoSFUShort.h>
 
 /// Qt Include Files
 # include <QAction>
@@ -91,6 +92,7 @@
 
 #include "SoZoomTranslation.h"
 #include "SoDatumLabel.h"
+#include "SoLineVisual.h"
 #include "EditDatumDialog.h"
 #include "ViewProviderSketch.h"
 #include "DrawSketchHandler.h"
@@ -181,6 +183,7 @@ struct EditData {
     SoCoordinate3 *EditCurvesCoordinate;
     SoLineSet     *CurveSet;
     SoLineSet     *EditCurveSet;
+    SoLineVisual  *EditHintLines;
     SoLineSet     *RootCrossSet;
     SoMarkerSet   *PointSet;
 
@@ -538,7 +541,7 @@ bool ViewProviderSketch::mouseButtonPressed(int Button, bool pressed, const SbVe
                                                );
                         Gui::Command::commitCommand();
                         Gui::Command::updateActive();
-
+                        
                         setPreselectPoint(edit->DragPoint);
                         edit->DragPoint = -1;
                         //updateColor();
@@ -2409,7 +2412,7 @@ void ViewProviderSketch::rebuildConstraintsVisual(void)
         SoSeparator *sep = new SoSeparator();
         // no caching for fluctuand data structures
         sep->renderCaching = SoSeparator::OFF;
-        
+
         // every constrained visual node gets its own material for preselection and selection
         SoMaterial *Material = new SoMaterial;
         Material->diffuseColor = ConstrDimColor;
@@ -2502,6 +2505,40 @@ void ViewProviderSketch::rebuildConstraintsVisual(void)
 
         edit->constrGroup->addChild(sep);
     }
+}
+
+void ViewProviderSketch::drawHintLines(const std::vector<Base::Vector2D> &Pnts)
+{
+    assert(edit);
+
+    int num = Pnts.size(); // Num should be even
+
+    edit->EditHintLines->pnts.setNum(num);
+    edit->EditHintLines->colors.setNum(num / 2);
+    edit->EditHintLines->widths.setNum(num / 2);
+    edit->EditHintLines->patterns.setNum(num / 2);
+
+    SbVec3f *verts    = edit->EditHintLines->pnts.startEditing();
+    SbColor *colors   = edit->EditHintLines->colors.startEditing();
+    float   *widths   = edit->EditHintLines->widths.startEditing();
+    ushort  *patterns = edit->EditHintLines->patterns.startEditing();
+
+    int i = 0;
+    ;
+    for (std::vector<Base::Vector2D>::const_iterator it = Pnts.begin(); it != Pnts.end(); ++it, i++) 
+        verts[i].setValue(it->fX,it->fY, 0.f);
+    
+    for (int j = 0; j < num / 2; j++) {
+            //Defaults needs user feedback
+        colors[j].setValue(0.7f, 0.7f, 0.7f);
+        widths[j]   = 0.5f;
+        patterns[j] = 0xAAAA;
+    }
+    
+    edit->EditHintLines->pnts.finishEditing();
+    edit->EditHintLines->colors.finishEditing();
+    edit->EditHintLines->widths.finishEditing();
+    edit->EditHintLines->patterns.finishEditing();
 }
 
 void ViewProviderSketch::drawEdit(const std::vector<Base::Vector2D> &EditCurve)
@@ -2694,10 +2731,20 @@ void ViewProviderSketch::createEditInventorNodes(void)
 
     edit->EditRoot = new SoSeparator;
     pcRoot->addChild(edit->EditRoot);
+
     edit->EditRoot->renderCaching = SoSeparator::OFF ;
 
     SoDrawStyle *DrawStyle = new SoDrawStyle;
     SoMaterialBinding *MtlBind = new SoMaterialBinding;
+
+    // group node for EditCurves Line Hint +++++++++++++++++++++++++++++++++++
+    // Seperator needed to remove caching
+    SoSeparator *lineHintSep = new SoSeparator();
+        // no caching for fluctuand data structures
+    lineHintSep->renderCaching = SoSeparator::OFF;
+    edit->EditHintLines = new SoLineVisual;
+    lineHintSep->addChild(edit->EditHintLines);
+    edit->EditRoot->addChild(lineHintSep);
 
     // stuff for the edit coordinates ++++++++++++++++++++++++++++++++++++++
     SoMaterial *EditMaterials = new SoMaterial;

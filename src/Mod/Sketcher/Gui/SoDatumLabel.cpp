@@ -75,9 +75,10 @@ SoDatumLabel::SoDatumLabel()
     SO_NODE_ADD_FIELD(string, (""));
     SO_NODE_ADD_FIELD(textColor, (SbVec3f(1.0f,1.0f,1.0f)));
     SO_NODE_ADD_FIELD(pnts, (SbVec3f(.0f,.0f,.0f)));
-    
+
     SO_NODE_ADD_FIELD(name, ("Helvetica"));
     SO_NODE_ADD_FIELD(size, (12.f));
+    SO_NODE_ADD_FIELD(lineWidth, (2.f));
 
     SO_NODE_ADD_FIELD(datumtype, (SoDatumLabel::DISTANCE));
 
@@ -88,8 +89,6 @@ SoDatumLabel::SoDatumLabel()
     SO_NODE_DEFINE_ENUM_VALUE(Type, RADIUS);
     SO_NODE_SET_SF_ENUM_TYPE(datumtype, Type);
 
-//     this->bbx = 0;
-//     this->bby = 0;
     this->imgWidth = 0;
     this->imgHeight = 0;
 }
@@ -149,7 +148,7 @@ void SoDatumLabel::generatePrimitives(SoAction * action)
     // Initialisation check (needs something more sensible) prevents an infinite loop bug
     if(this->imgHeight <= FLT_EPSILON || this->imgWidth <= FLT_EPSILON)
       return;
-    
+
     // Get the points stored
     const SbVec3f *pnts = this->pnts.getValues(0);
     SbVec3f p1 = pnts[0];
@@ -157,7 +156,6 @@ void SoDatumLabel::generatePrimitives(SoAction * action)
 
     float offsetX, offsetY;
 
-    
     // Change the offset and bounding box parameters depending on Datum Type
     if(this->datumtype.getValue() == DISTANCE || this->datumtype.getValue() == DISTANCEX || this->datumtype.getValue() == DISTANCEY ){
 
@@ -186,16 +184,13 @@ void SoDatumLabel::generatePrimitives(SoAction * action)
         SbVec3f img3 = SbVec3f( this->imgWidth / 2, -this->imgHeight / 2, 0.f);
         SbVec3f img4 = SbVec3f( this->imgWidth / 2,  this->imgHeight / 2, 0.f);
 
-        // Rotate thru Angle
+        // Rotate through an angle
         float s = sin(angle);
         float c = cos(angle);
 
         img1 = SbVec3f((img1[0] * c) - (img1[1] * s), (img1[0] * s) + (img1[1] * c), 0.f);
-
-        img2 = SbVec3f((img2[0] * c) - (img2[1] * s), (img2[0] * s) + (img2[1] * c), 0.f);
- 
+        img2 = SbVec3f((img2[0] * c) - (img2[1] * s), (img2[0] * s) + (img2[1] * c), 0.f); 
         img3 = SbVec3f((img3[0] * c) - (img3[1] * s), (img3[0] * s) + (img3[1] * c), 0.f);
-
         img4 = SbVec3f((img4[0] * c) - (img4[1] * s), (img4[0] * s) + (img4[1] * c), 0.f);
 
         SbVec3f textOffset = midpos + norm * length;
@@ -243,16 +238,13 @@ void SoDatumLabel::generatePrimitives(SoAction * action)
         SbVec3f img3 = SbVec3f( this->imgWidth / 2, -this->imgHeight / 2, 0.f);
         SbVec3f img4 = SbVec3f( this->imgWidth / 2,  this->imgHeight / 2, 0.f);
 
-        // Rotate thru Angle
+        // Rotate through an angle
         float s = sin(angle);
         float c = cos(angle);
 
         img1 = SbVec3f((img1[0] * c) - (img1[1] * s), (img1[0] * s) + (img1[1] * c), 0.f);
-
         img2 = SbVec3f((img2[0] * c) - (img2[1] * s), (img2[0] * s) + (img2[1] * c), 0.f);
-
         img3 = SbVec3f((img3[0] * c) - (img3[1] * s), (img3[0] * s) + (img3[1] * c), 0.f);
-
         img4 = SbVec3f((img4[0] * c) - (img4[1] * s), (img4[0] * s) + (img4[1] * c), 0.f);
 
         SbVec3f textOffset = pos;
@@ -369,6 +361,10 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
 
     state->push();
 
+    //Set General OpenGL Properties
+    glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
+    glDisable(GL_LIGHTING);
+    
     //Enable Anti-alias
     if(action->isSmoothing())
     {
@@ -429,7 +425,7 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
         const SbColor& t = textColor.getValue();
 
         // Set GL Properties
-        glLineWidth(2.f);
+        glLineWidth(this->lineWidth.getValue());
         glColor3f(t[0], t[1], t[2]);
         float margin = 0.01f;
         margin *= scale;
@@ -447,19 +443,13 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
         glBegin(GL_LINES);
         glVertex2f(p1[0], p1[1]);
         glVertex2f(perp1[0], perp1[1]);
-        glEnd();
 
-        glBegin(GL_LINES);
         glVertex2f(p2[0], p2[1]);
         glVertex2f(perp2[0], perp2[1]);
-        glEnd();
 
-        glBegin(GL_LINES);
         glVertex2f(par1[0], par1[1]);
         glVertex2f(par2[0], par2[1]);
-        glEnd();
 
-        glBegin(GL_LINES);
         glVertex2f(par3[0], par3[1]);
         glVertex2f(par4[0], par4[1]);
         glEnd();
@@ -477,9 +467,7 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
           glVertex2f(par1[0], par1[1]);
           glVertex2f(ar1[0], ar1[1]);
           glVertex2f(ar2[0], ar2[1]);
-        glEnd();
 
-        glBegin(GL_TRIANGLES);
           glVertex2f(par4[0], par4[1]);
           glVertex2f(ar3[0], ar3[1]);
           glVertex2f(ar4[0], ar4[1]);
@@ -532,7 +520,7 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
         const SbColor& t = textColor.getValue();
 
         // Set GL Properties
-        glLineWidth(2.f);
+        glLineWidth(this->lineWidth.getValue());
         glColor3f(t[0], t[1], t[2]);
 
         float margin = 0.01f;
@@ -556,9 +544,7 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
         glBegin(GL_LINES);
         glVertex2f(p1[0], p1[1]);
         glVertex2f(pnt1[0], pnt1[1]);
-        glEnd();
 
-        glBegin(GL_LINES);
         glVertex2f(pnt2[0], pnt2[1]);
         glVertex2f(p2[0], p2[1]);
         glEnd();
@@ -625,14 +611,14 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
         const SbColor& t = textColor.getValue();
 
         // Set GL Properties
-        glLineWidth(2.f);
+        glLineWidth(this->lineWidth.getValue());
         glColor3f(t[0], t[1], t[2]);
 
         // Draw
         glBegin(GL_LINE_STRIP);
 
         int i=0;
-        
+
         for (; i < countSegments; i++) {
             double theta = startangle + segment*i;
             SbVec3f v1 = p0+SbVec3f(r*cos(theta),r*sin(theta),0);
@@ -642,8 +628,7 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
 
         glBegin(GL_LINE_STRIP);
         i=0;
-        int j=2*countSegments-1;
-        for (; i < countSegments; i++, j--) {
+        for (; i < countSegments; i++) {
             double theta = endangle - segment*i;
             SbVec3f v1 = p0+SbVec3f(r*cos(theta),r*sin(theta),0);
             glVertex2f(v1[0],v1[1]);
@@ -662,9 +647,7 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
         glBegin(GL_LINES);
         glVertex2f(pnt1[0],pnt1[1]);
         glVertex2f(pnt2[0],pnt2[1]);
-        glEnd();
 
-        glBegin(GL_LINES);
         glVertex2f(pnt3[0],pnt3[1]);
         glVertex2f(pnt4[0],pnt4[1]);
         glEnd();
@@ -702,14 +685,13 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
         }
         //Store the bounding box
         this->bbox.setBounds(SbVec3f(minX, minY, 0.f), SbVec3f (maxX, maxY, 0.f));
-        
+
     }
 
-    glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
-    glDisable(GL_LIGHTING);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_TEXTURE_2D); // Enable Textures
-    glEnable(GL_BLEND); 
+    glEnable(GL_BLEND);
+    
     // Copy the text bitmap into memory and bind
     GLuint myTexture;
     // generate a texture
@@ -728,17 +710,17 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
     glTranslatef(textOffset[0],textOffset[1], textOffset[2]);
     glRotatef((GLfloat) angle * 180 / M_PI, 0,0,1);
     glBegin(GL_QUADS);
+    
     glColor3f(1.f, 1.f, 1.f);
     glTexCoord2f(0.f, 1.f); glVertex2f(-this->imgWidth / 2,  this->imgHeight / 2);
     glTexCoord2f(0.f, 0.f); glVertex2f(-this->imgWidth / 2, -this->imgHeight / 2);
     glTexCoord2f(1.f, 0.f); glVertex2f( this->imgWidth / 2, -this->imgHeight / 2);
     glTexCoord2f(1.f, 1.f); glVertex2f( this->imgWidth / 2,  this->imgHeight / 2);
-
+    
     glEnd();
 
     // Reset the Mode
 
     glPopAttrib();
     state->pop();
-
 }

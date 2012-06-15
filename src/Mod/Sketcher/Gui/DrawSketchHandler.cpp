@@ -73,6 +73,8 @@ void DrawSketchHandler::quit(void)
 {
     assert(sketchgui);
     sketchgui->drawEdit(std::vector<Base::Vector2D>());
+    clearHintLines();
+    
     resetPositionText();
 
     unsetCursor();
@@ -325,12 +327,48 @@ void DrawSketchHandler::createAutoConstraints(const std::vector<AutoConstraint> 
                                         ,geoId1, it->Index
                                        );
                 } break;
+            default:
+              continue;
             }
 
             Gui::Command::commitCommand();
             Gui::Command::updateActive();
         }
     }
+}
+
+void DrawSketchHandler::renderHintLines(std::vector<AutoConstraint> &suggestedConstraints, Base::Vector2D &pnt)
+{
+
+      std::vector<Base::Vector2D> pnts;    // Iterate through AutoConstraints type
+      if(suggestedConstraints.size() > 0) {
+          std::vector<AutoConstraint>::iterator it=suggestedConstraints.begin();
+          for (; it != suggestedConstraints.end(); ++it) {
+            switch (it->Type)
+            {
+            case Horizontal: {
+                Base::Vector2D pnt2(pnt.fX + 1.f, pnt.fY);
+                pnts.push_back(pnt);
+                pnts.push_back(pnt2);
+            } break;
+            case Vertical: {
+                Base::Vector2D pnt2(pnt.fX, pnt.fY + 1.f);
+                pnts.push_back(pnt);
+                pnts.push_back(pnt2);
+            } break;
+            default:
+                pnts.clear();
+                break;
+            }
+        }
+      }
+    sketchgui->drawHintLines(pnts);
+}
+
+void DrawSketchHandler::clearHintLines()
+{
+    std::vector<Base::Vector2D> pnts;
+    sketchgui->drawHintLines(pnts);
 }
 
 void DrawSketchHandler::renderSuggestConstraintsCursor(std::vector<AutoConstraint> &suggestedConstraints)
@@ -370,6 +408,8 @@ void DrawSketchHandler::renderSuggestConstraintsCursor(std::vector<AutoConstrain
             break;
         case Tangent:
             iconType = QString::fromAscii("Constraint_Tangent");
+            break;
+        default:
             break;
         }
 

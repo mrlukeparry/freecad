@@ -35,6 +35,8 @@
 #include <Gui/Selection.h>
 #include <Gui/SelectionFilter.h>
 #include <Mod/Sketcher/App/SketchObject.h>
+#include <Inventor/nodes/SoCamera.h>
+#include <Inventor/SbViewportRegion.h>
 
 #include "ViewProviderSketch.h"
 #include "DrawSketchHandler.h"
@@ -155,8 +157,10 @@ public:
             sketchgui->drawEdit(EditCurve);
             if (seekAutoConstraint(sugConstr2, onSketchPos, onSketchPos - EditCurve[0])) {
                 renderSuggestConstraintsCursor(sugConstr2);
+                renderHintLines(sugConstr2, EditCurve[0]);
                 return;
-            }
+            } else
+              clearHintLines();
         }
         applyCursor();
     }
@@ -200,6 +204,7 @@ public:
                 sugConstr2.clear();
             }
 
+            clearHintLines();
             EditCurve.clear();
             sketchgui->drawEdit(EditCurve);
             sketchgui->purgeHandler(); // no code after this line, Handler get deleted in ViewProvider
@@ -314,6 +319,7 @@ public:
             EditCurve[1] = Base::Vector2D(onSketchPos.fX ,EditCurve[0].fY);
             EditCurve[3] = Base::Vector2D(EditCurve[0].fX,onSketchPos.fY);
             sketchgui->drawEdit(EditCurve);
+
             if (seekAutoConstraint(sugConstr2, onSketchPos, Base::Vector2D(0.f,0.f))) {
                 renderSuggestConstraintsCursor(sugConstr2);
                 return;
@@ -517,8 +523,10 @@ public:
             sketchgui->drawEdit(EditCurve);
             if (seekAutoConstraint(sugConstr2, onSketchPos, onSketchPos - EditCurve[0])) {
                 renderSuggestConstraintsCursor(sugConstr2);
+                renderHintLines(sugConstr2, EditCurve[0]);
                 return;
-            }
+            } else
+                renderHintLines(sugConstr2, EditCurve[0]);
         }
         applyCursor();
     }

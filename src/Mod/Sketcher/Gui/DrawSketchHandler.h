@@ -90,6 +90,8 @@ public:
     void setPositionText(const Base::Vector2D &Pos, const std::string &text);
     void setPositionText(const Base::Vector2D &Pos);
     void resetPositionText(void);
+    void renderHintLines(std::vector<AutoConstraint> &suggestedConstraints, Base::Vector2D &pnt);
+    void clearHintLines();
     void renderSuggestConstraintsCursor(std::vector<AutoConstraint> &suggestedConstraints);
 
 protected:

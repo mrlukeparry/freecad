@@ -62,6 +62,8 @@ SET(SketcherGui_SRCS
     PreCompiled.h
     SoZoomTranslation.cpp
     SoZoomTranslation.h
+    SoLineVisual.cpp
+    SoLineVisual.h
     SoDatumLabel.cpp
     SoDatumLabel.h
     TaskSketcherConstrains.ui

@@ -20,69 +20,53 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef SKETCHERGUI_SODATUMLABEL_H
-#define SKETCHERGUI_SODATUMLABEL_H
+#ifndef SKETCHERGUI_SOLINEVISUAL_H
+#define SKETCHERGUI_SOLINEVISUAL_H
 
+#include <vector>
 #include <Inventor/fields/SoSubField.h>
 #include <Inventor/nodes/SoSubNode.h>
 #include <Inventor/nodes/SoShape.h>
-#include <Inventor/fields/SoSFColor.h>
-#include <Inventor/fields/SoSFEnum.h>
+#include <Inventor/fields/SoMFColor.h>
+
 #include <Inventor/fields/SoSFFloat.h>
 #include <Inventor/fields/SoSFBool.h>
 #include <Inventor/fields/SoSFName.h>
 #include <Inventor/fields/SoMFString.h>
-#include <Inventor/fields/SoSFInt32.h>
+#include <Inventor/fields/SoMFFloat.h>
+#include <Inventor/fields/SoMFUShort.h>
+#include <Inventor/fields/SoMFVec2f.h>
 #include <Inventor/fields/SoMFVec3f.h>
-#include <Inventor/SbBox3f.h>
-#include <Inventor/fields/SoSFImage.h>
+
 #include <3rdParty/salomesmesh/inc/Rn.h>
 
 namespace SketcherGui {
 
-class SketcherGuiExport SoDatumLabel : public SoShape {
+class SketcherGuiExport SoLineVisual : public SoShape {
     typedef SoShape inherited;
 
-    SO_NODE_HEADER(SoDatumLabel);
+    SO_NODE_HEADER(SoLineVisual);
 
 public:
-  enum Type
-  {
-  DISTANCE,
-  DISTANCEX,
-  DISTANCEY,
-  ANGLE,
-  RADIUS};
 
     static void initClass();
-    SoDatumLabel();
+    SoLineVisual();
+    SoMFColor   colors;
+    SoMFVec3f   pnts;
+    SoMFFloat   widths;
+    SoMFUShort  patterns;
 
-    SoMFString string;
-    SoSFColor  textColor;
-    SoSFEnum   datumtype;
-    SoSFName   name;
-    SoSFInt32  size;
-    SoSFFloat  param1;
-    SoSFFloat  param2;
-    SoSFFloat  param3;
-    SoMFVec3f  pnts;
-    SoSFImage  image;
-    SoSFFloat  lineWidth;
 
 protected:
-    virtual ~SoDatumLabel() {};
+    virtual ~SoLineVisual() {};
     virtual void GLRender(SoGLRenderAction *action);
     virtual void computeBBox(SoAction *, SbBox3f &box, SbVec3f &center);
     virtual void generatePrimitives(SoAction * action);
 
 private:
-    void drawImage();
-    SbBox3f bbox;
-    float imgWidth;
-    float imgHeight;
+  std::vector<SbVec2f> fndPnts;
 };
 
+
 }
-
-
-#endif // SKETCHERGUI_SODATUMLABEL_H
+#endif // SKETCHERGUI_SOLINEVISUAL_H

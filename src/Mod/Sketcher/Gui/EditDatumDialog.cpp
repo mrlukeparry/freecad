@@ -89,7 +89,7 @@ void EditDatumDialog::exec(bool atCursor)
         double init_val;
         if (Constr->Type == Sketcher::Angle ||
             ((Constr->Type == Sketcher::DistanceX || Constr->Type == Sketcher::DistanceY) &&
-             Constr->FirstPos == Sketcher::none || Constr->Second != Sketcher::Constraint::GeoUndef))
+             (Constr->FirstPos == Sketcher::none || Constr->Second != Sketcher::Constraint::GeoUndef)))
             // hide negative sign
             init_val = std::abs(datum);
         else // show negative sign

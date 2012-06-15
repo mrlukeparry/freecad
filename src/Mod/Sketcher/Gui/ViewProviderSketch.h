@@ -85,7 +85,9 @@ public:
     void draw(bool temp=false);
     /// draw the edit curve
     void drawEdit(const std::vector<Base::Vector2D> &EditCurve);
-
+    /// draw the hint line during construction
+    void drawHintLines(const std::vector<Base::Vector2D> &pnts);
+    
     /// Is the view provider selectable
     bool isSelectable(void) const;
     /// Observer message from the Selection
