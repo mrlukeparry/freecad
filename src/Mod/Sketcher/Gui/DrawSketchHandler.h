@@ -49,6 +49,7 @@ struct AutoConstraint
 {
     Sketcher::ConstraintType Type;
     int Index;
+    Base::Vector2D HintPnt;
 };
 
 enum Type

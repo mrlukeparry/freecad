@@ -86,7 +86,6 @@
 #include <Gui/DlgEditFileIncludeProptertyExternal.h>
 #include <Gui/SoFCUnifiedSelection.h>
 
-#include <Mod/Part/App/Geometry.h>
 #include <Mod/Sketcher/App/SketchObject.h>
 #include <Mod/Sketcher/App/Sketch.h>
 
@@ -2524,14 +2523,22 @@ void ViewProviderSketch::drawHintLines(const std::vector<Base::Vector2D> &Pnts)
     ushort  *patterns = edit->EditHintLines->patterns.startEditing();
 
     int i = 0;
-    ;
-    for (std::vector<Base::Vector2D>::const_iterator it = Pnts.begin(); it != Pnts.end(); ++it, i++) 
-        verts[i].setValue(it->fX,it->fY, 0.f);
+    
+    //Inverse transform to World Coords
+    Base::Placement Plz = getSketchObject()->Placement.getValue();
+
+    Base::Vector3d R0 = Plz.getPosition() ;
+    Base::Rotation tmp(Plz.getRotation());
+
+    for (std::vector<Base::Vector2D>::const_iterator it = Pnts.begin(); it != Pnts.end(); ++it, i++) {
+        Base::Vector3d vec(it->fX,it->fY, 0.f);
+        verts[i].setValue(vec.x, vec.y, vec.z);
+    }
     
     for (int j = 0; j < num / 2; j++) {
             //Defaults needs user feedback
         colors[j].setValue(0.7f, 0.7f, 0.7f);
-        widths[j]   = 0.5f;
+        widths[j]   = 1.4f;
         patterns[j] = 0xAAAA;
     }
     

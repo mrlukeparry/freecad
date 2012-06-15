@@ -91,28 +91,32 @@ void SoLineVisual::computeBBox(SoAction *action, SbBox3f &box, SbVec3f &center)
 
     SbMatrix inv = mat.inverse(); //Transform back to object space
 
-    if(this->fndPnts.size() > 1) {
-          //Initialise boundaries
-          SbVec3f pnt(this->fndPnts[0][0], this->fndPnts[0][1], 0.f);
-          inv.multVecMatrix(pnt, pnt);
-          minX = pnt[0];
-          minY = pnt[1];
-          maxX = pnt[0];
-          maxY = pnt[1];
-        for (std::vector<SbVec2f>::const_iterator it=this->fndPnts.begin();
-                                        it!=this->fndPnts.end();++it) {
-            SbVec3f pnt((*it)[0], (*it)[1], 0.f);
-            inv.multVecMatrix(pnt, pnt);
-            minX = (pnt[0] < minX) ? pnt[0] : minX;
-            minY = (pnt[1] < minY) ? pnt[1] : minY;
-            maxX = (pnt[0] > maxX) ? pnt[0] : maxX;
-            maxY = (pnt[1] < minY) ? pnt[1] : maxY;
-
-        }
-    } else {
-      maxX = FLT_EPSILON;
-      maxY = FLT_EPSILON;
-    }
+    //FIX ME: Unsure if a bounding box is needed since project onto screen.
+    maxX = FLT_EPSILON;
+    maxY = FLT_EPSILON;
+      
+//     if(this->fndPnts.size() > 1) {
+//           //Initialise boundaries
+//           SbVec3f pnt(this->fndPnts[0][0], this->fndPnts[0][1], 0.f);
+//           inv.multVecMatrix(pnt, pnt);
+//           minX = pnt[0];
+//           minY = pnt[1];
+//           maxX = pnt[0];
+//           maxY = pnt[1];
+//         for (std::vector<SbVec2f>::const_iterator it=this->fndPnts.begin();
+//                                         it!=this->fndPnts.end();++it) {
+//             SbVec3f pnt((*it)[0], (*it)[1], 0.f);
+//             inv.multVecMatrix(pnt, pnt);
+//             minX = (pnt[0] < minX) ? pnt[0] : minX;
+//             minY = (pnt[1] < minY) ? pnt[1] : minY;
+//             maxX = (pnt[0] > maxX) ? pnt[0] : maxX;
+//             maxY = (pnt[1] < minY) ? pnt[1] : maxY;
+// 
+//         }
+//     } else {
+//       maxX = FLT_EPSILON;
+//       maxY = FLT_EPSILON;
+//     }
 
     box.setBounds(SbVec3f(minX, minY, 0.f), SbVec3f(maxX, maxY, 0.f) );
     center.setValue(maxX / 2, maxY / 2, 0.f);

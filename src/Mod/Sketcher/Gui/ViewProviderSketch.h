@@ -25,6 +25,7 @@
 #define SKETCHERGUI_VIEWPROVIDERSKETCH_H
 
 #include <Mod/Part/Gui/ViewProvider2DObject.h>
+#include <Mod/Part/App/Geometry.h>
 #include <Inventor/SbColor.h>
 #include <Base/Tools2D.h>
 #include <Gui/Selection.h>

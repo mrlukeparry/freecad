@@ -25,9 +25,6 @@
 
 #ifndef _PreComp_
 # include <Standard_math.hxx>
-# include <Inventor/nodes/SoTranslation.h>
-# include <Inventor/nodes/SoText2.h>
-# include <Inventor/nodes/SoFont.h>
 # include <QPainter>
 #endif
 
@@ -35,6 +32,7 @@
 #include <Base/Console.h>
 #include <Base/Exception.h>
 #include <Base/Interpreter.h>
+#include <Base/Vector3D.h>
 #include <Gui/Application.h>
 #include <Gui/BitmapFactory.h>
 #include <Gui/Command.h>
@@ -53,7 +51,6 @@
 
 using namespace SketcherGui;
 using namespace Sketcher;
-
 
 //**************************************************************************
 // Construction/Destruction
@@ -134,6 +131,10 @@ void DrawSketchHandler::unsetCursor(void)
 int DrawSketchHandler::seekAutoConstraint(std::vector<AutoConstraint> &suggestedConstraints,
                                           const Base::Vector2D& Pos, const Base::Vector2D& Dir, Type type)
 {
+    std::vector<AutoConstraint> prevConstr;
+    // Save past previous constraints to use as reference
+    if(suggestedConstraints.size() > 0)
+      prevConstr = suggestedConstraints;
     suggestedConstraints.clear();
 
     if (!sketchgui->Autoconstraints.getValue())
@@ -202,8 +203,66 @@ int DrawSketchHandler::seekAutoConstraint(std::vector<AutoConstraint> &suggested
     // Get geometry list
     const std::vector<Part::Geometry *> geomlist = sketchgui->getSketchObject()->getCompleteGeometry();
 
+    //Check if perpendicular to a lines, not calculated if previous constraint is vertical or horizontal
+    if(prevConstr.size() > 0) {
+        const AutoConstraint & lastConstr = prevConstr.back();
+        if( suggestedConstraints.size() > 0 &&
+           (suggestedConstraints.back().Type == Sketcher::Horizontal || suggestedConstraints.back().Type == Sketcher::Vertical)) {
+          //Do Nothing
+        } else if(lastConstr.Type == Sketcher::PointOnObject && type == VERTEX) {
+            // FIX ME - need to use GeoById somehow
+            const Part::Geometry *geo = geomlist[(lastConstr.Index >= 0) ? lastConstr.Index : lastConstr.Index + geomlist.size() ];
+            if (geo->getTypeId() == Part::GeomLineSegment::getClassTypeId()) {
+                const Part::GeomLineSegment *lineSeg = dynamic_cast<const Part::GeomLineSegment *>(geo);
+                Base::Vector3d p1, p2;
+                p1 = lineSeg->getStartPoint();
+                p2 = lineSeg->getEndPoint();
+                Base::Vector3d dir = (p2-p1).Normalize();
+                Base::Vector2D norm((float) -dir.y, (float) dir.x);
+
+                // Find angle difference
+                float angle = norm.GetAngle(Dir);
+                if(angle > M_PI_2)
+                  angle = std::abs(angle - M_PI);
+                if (angle < angleDevRad) {
+                    //Perpendicular Constraint
+                      // Suggest vertical constraint
+                    AutoConstraint perpConstr;
+                    perpConstr.Index   = lastConstr.Index;
+                    perpConstr.Type    = Perpendicular;
+                    perpConstr.HintPnt = norm;
+                    suggestedConstraints.push_back(perpConstr);
+                }
+            } else  if (geo->getTypeId() == Part::GeomCircle::getClassTypeId()) {
+                const Part::GeomCircle *circle = dynamic_cast<const Part::GeomCircle *>(geo);
+                Base::Vector3d center = circle->getCenter();
+                Base::Vector2D pnt1 = Pos - Dir;
+                Base::Vector2D pnt2((float) center.x, (float) center.y);
+
+                Base::Vector2D norm = pnt2 - pnt1;
+                norm.Normalize();
+
+                // Find angle difference
+                float angle = norm.GetAngle(Dir);
+                if(angle > M_PI_2)
+                  angle = std::abs(angle - M_PI);
+
+                if (angle < angleDevRad) {
+                    //Perpendicular Constraint
+                      // Suggest vertical constraint
+                    AutoConstraint perpConstr;
+                    perpConstr.Index   = lastConstr.Index;
+                    perpConstr.Type    = Perpendicular;
+                    perpConstr.HintPnt = norm;
+                    suggestedConstraints.push_back(perpConstr);
+                }
+            }
+        }
+    }
+
     // Iterate through geometry
     int i = 0;
+    Base::Vector2D fndPnt(0.f,0.f);
     for (std::vector<Part::Geometry *>::const_iterator it=geomlist.begin(); it != geomlist.end(); ++it, i++) {
 
         if ((*it)->getTypeId() == Part::GeomCircle::getClassTypeId()) {
@@ -221,8 +280,12 @@ int DrawSketchHandler::seekAutoConstraint(std::vector<AutoConstraint> &suggested
             if ( (projDist < radius + tangDeviation ) && (projDist > radius - tangDeviation)) {
                 // Find if nearest
                 if (projDist < smlTangDist) {
-                    tangId = i;
+                    tangId = i; 
                     smlTangDist = projDist;
+
+                    projPnt.Normalize();
+                    projPnt = center + projPnt * radius;
+                    fndPnt = Base::Vector2D((float) projPnt.x, (float) projPnt.y);
                 }
             }
 
@@ -250,6 +313,10 @@ int DrawSketchHandler::seekAutoConstraint(std::vector<AutoConstraint> &suggested
                     (projDist < smlTangDist) ) {
                     tangId = i;
                     smlTangDist = projDist;
+                    projPnt -= center;
+                    projPnt.Normalize();
+                    projPnt = center + projPnt * radius;
+                    fndPnt = Base::Vector2D((float) projPnt.x, (float) projPnt.y);
                 }
             }
         }
@@ -260,8 +327,9 @@ int DrawSketchHandler::seekAutoConstraint(std::vector<AutoConstraint> &suggested
             tangId = getHighestCurveIndex() - tangId;
         // Suggest vertical constraint
         AutoConstraint tangConstr;
-        tangConstr.Index = tangId;
-        tangConstr.Type = Tangent;
+        tangConstr.Index   = tangId;
+        tangConstr.Type    = Tangent;
+        tangConstr.HintPnt = fndPnt;
         suggestedConstraints.push_back(tangConstr);
     }
 
@@ -327,6 +395,12 @@ void DrawSketchHandler::createAutoConstraints(const std::vector<AutoConstraint> 
                                         ,geoId1, it->Index
                                        );
                 } break;
+            case Sketcher::Perpendicular: {
+                Gui::Command::doCommand(Gui::Command::Doc,"App.ActiveDocument.%s.addConstraint(Sketcher.Constraint('Perpendicular',%i, %i)) "
+                                        ,sketchgui->getObject()->getNameInDocument()
+                                        ,geoId1, it->Index
+                                       );
+                } break;
             default:
               continue;
             }
@@ -356,6 +430,23 @@ void DrawSketchHandler::renderHintLines(std::vector<AutoConstraint> &suggestedCo
                 pnts.push_back(pnt);
                 pnts.push_back(pnt2);
             } break;
+            case Perpendicular: {
+                // HintPnt is actually a norm direction.
+                Base::Vector2D pnt2, revNorm;
+                pnt2 = pnt + it->HintPnt;
+                pnts.push_back(pnt);
+                pnts.push_back(pnt2);
+
+                revNorm = Base::Vector2D(-it->HintPnt.fY, it->HintPnt.fX);
+                revNorm.Normalize();
+                pnts.push_back(pnt);
+                pnts.push_back(pnt+revNorm);
+            } break;
+            case Tangent: {
+                pnts.push_back(pnt);
+                pnts.push_back(it->HintPnt);
+            } break;
+            
             default:
                 pnts.clear();
                 break;
@@ -396,6 +487,9 @@ void DrawSketchHandler::renderSuggestConstraintsCursor(std::vector<AutoConstrain
         {
         case Horizontal:
             iconType = QString::fromAscii("Constraint_Horizontal");
+            break;
+        case Perpendicular:
+            iconType = QString::fromAscii("Constraint_Perpendicular");
             break;
         case Vertical:
             iconType = QString::fromAscii("Constraint_Vertical");

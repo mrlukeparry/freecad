@@ -155,6 +155,7 @@ public:
         else if (Mode==STATUS_SEEK_Second){
             EditCurve[1] = onSketchPos;
             sketchgui->drawEdit(EditCurve);
+            sugConstr2 = sugConstr1; // Copy the previously found constraints
             if (seekAutoConstraint(sugConstr2, onSketchPos, onSketchPos - EditCurve[0])) {
                 renderSuggestConstraintsCursor(sugConstr2);
                 renderHintLines(sugConstr2, EditCurve[0]);
@@ -185,6 +186,10 @@ public:
             unsetCursor();
             resetPositionText();
 
+            clearHintLines();
+            EditCurve.clear();
+            sketchgui->drawEdit(EditCurve);
+
             Gui::Command::openCommand("Add sketch line");
             Gui::Command::doCommand(Gui::Command::Doc,"App.ActiveDocument.%s.addGeometry(Part.Line(App.Vector(%f,%f,0),App.Vector(%f,%f,0)))",
                       sketchgui->getObject()->getNameInDocument(),
@@ -204,9 +209,6 @@ public:
                 sugConstr2.clear();
             }
 
-            clearHintLines();
-            EditCurve.clear();
-            sketchgui->drawEdit(EditCurve);
             sketchgui->purgeHandler(); // no code after this line, Handler get deleted in ViewProvider
         }
         return true;
