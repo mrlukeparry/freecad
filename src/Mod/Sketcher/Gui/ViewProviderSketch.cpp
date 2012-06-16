@@ -1014,8 +1014,8 @@ bool ViewProviderSketch::isConstraintAtPosition(const Base::Vector3d &constrPos,
     if (pp) {
         SoPath *path = pp->getPath();
         int length = path->getLength();
-        SoNode *tailFather = path->getNode(length-2);
-        SoNode *tailFather1 = path->getNode(length-3);
+        SoNode *tailFather = path->getNode(length-1);
+        SoNode *tailFather1 = path->getNode(length-2);
 
         // checking if a constraint is the same as the one selected
         if (tailFather == constraint || tailFather1 == constraint) {
