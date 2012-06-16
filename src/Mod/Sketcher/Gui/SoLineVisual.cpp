@@ -125,19 +125,20 @@ void SoLineVisual::computeBBox(SoAction *action, SbBox3f &box, SbVec3f &center)
 
 void SoLineVisual::generatePrimitives(SoAction * action)
 {
+// Supposibly Empty
 
-    this->beginShape(action, SoShape::LINES);
-    for (std::vector<SbVec2f>::const_iterator it=this->fndPnts.begin();
-                                    it!=this->fndPnts.end();++it) {
-
-        // Primitive Shape is only for text as this should only be selectable
-        SoPrimitiveVertex pv;
-        pv.setNormal( SbVec3f(0.f, 0.f, 1.f) ); //Dummy Normal
-        // Set coordinates
-        pv.setPoint( SbVec3f((*it)[0],(*it)[1], 0.f)  );
-        shapeVertex(&pv);
-    }
-    this->endShape();
+//     this->beginShape(action, SoShape::LINES);
+//     for (std::vector<SbVec2f>::const_iterator it=this->fndPnts.begin();
+//                                     it!=this->fndPnts.end();++it) {
+// 
+//         // Primitive Shape is only for text as this should only be selectable
+//         SoPrimitiveVertex pv;
+//         pv.setNormal( SbVec3f(0.f, 0.f, 1.f) ); //Dummy Normal
+//         // Set coordinates
+//         pv.setPoint( SbVec3f((*it)[0],(*it)[1], 0.f)  );
+//         shapeVertex(&pv);
+//     }
+//     this->endShape();
 
 }
 
