@@ -172,8 +172,7 @@ void SoLineVisual::GLRender(SoGLRenderAction * action)
     state->push();
 
     SbVec2s vpsize = vp.getViewportSizePixels();
-    
-    SbVec3f pntCont[num];
+    std::vector<SbVec3f> pntCont;
 
     // Iterate Points and calculate project points
     for(int i = 0; i < num; i++){
@@ -186,7 +185,7 @@ void SoLineVisual::GLRender(SoGLRenderAction * action)
       pnt[1] = pnt[1] * float(vpsize[1]);
       pnt[2] = pnt[2] * 2.0f - 1.0f; // change z range from [0,1] to [-1,1]
 
-      pntCont[i] = pnt;
+      pntCont.push_back(pnt);
     }
 
     // Projection Settings
@@ -229,7 +228,7 @@ void SoLineVisual::GLRender(SoGLRenderAction * action)
       SbVec3f dir = (pnt2 -pnt1);
       dir.normalize();
       //Arbitrary start length: maxlength length is the diagonal
-      float length = sqrt( (vpsize[0])*(vpsize[0]) + (vpsize[1]) * vpsize[1]);
+      float length = sqrt((float) (vpsize[0]*vpsize[0] + vpsize[1] * vpsize[1]));
 
       SbVec3f a = pnt2 + dir * length;
       SbVec3f b = pnt2 - dir * length;
