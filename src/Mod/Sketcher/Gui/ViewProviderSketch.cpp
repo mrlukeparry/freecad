@@ -46,6 +46,7 @@
 # include <Inventor/nodes/SoAsciiText.h>
 # include <Inventor/nodes/SoTransform.h>
 # include <Inventor/nodes/SoSeparator.h>
+# include <Inventor/nodes/SoAnnotation.h>
 # include <Inventor/nodes/SoVertexProperty.h>
 # include <Inventor/nodes/SoTranslation.h>
 # include <Inventor/nodes/SoText2.h>
@@ -2429,9 +2430,13 @@ void ViewProviderSketch::rebuildConstraintsVisual(void)
                     SoDatumLabel *text = new SoDatumLabel();
                     text->string = "";
                     text->textColor = ConstrDimColor;
+                    SoAnnotation *anno = new SoAnnotation();
+                    anno->renderCaching = SoSeparator::OFF;
+                    anno->addChild(text);
                     sep->addChild(text);
-
+                            edit->constrGroup->addChild(anno);
                     edit->vConstrType.push_back((*it)->Type);
+                    continue;
                 }
                 break;
             case Horizontal:

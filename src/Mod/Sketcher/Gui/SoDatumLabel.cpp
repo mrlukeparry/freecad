@@ -43,9 +43,11 @@
 # include <Inventor/SoPrimitiveVertex.h>
 # include <Inventor/actions/SoGLRenderAction.h>
 # include <Inventor/misc/SoState.h>
+# include <Inventor/nodes/SoCamera.h>
 # include <math.h>
 #endif
 
+#include <Inventor/actions/SoGetMatrixAction.h>
 #include <Inventor/elements/SoFontNameElement.h>
 #include <Inventor/elements/SoFontSizeElement.h>
 #include <Inventor/elements/SoModelMatrixElement.h>
@@ -688,7 +690,20 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
 
     }
 
-    glEnable(GL_DEPTH_TEST);
+    SbVec3f surfNorm(0.f, 0.f, 1.f) ;
+    //Get the camera z-direction
+    SbVec3f z = vv.zVector();
+    const SbViewportRegion & vpr = SoViewportRegionElement::get(state);
+
+    SoGetMatrixAction * getmatrixaction = new SoGetMatrixAction(vpr);
+    getmatrixaction->apply(this);
+
+    SbMatrix transform = getmatrixaction->getMatrix();
+    transform.multVecMatrix(surfNorm, surfNorm);
+
+    bool flip = surfNorm.dot(z) > 0;
+
+    glDisable(GL_DEPTH_TEST);
     glEnable(GL_TEXTURE_2D); // Enable Textures
     glEnable(GL_BLEND);
     
@@ -712,10 +727,11 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
     glBegin(GL_QUADS);
     
     glColor3f(1.f, 1.f, 1.f);
-    glTexCoord2f(0.f, 1.f); glVertex2f(-this->imgWidth / 2,  this->imgHeight / 2);
-    glTexCoord2f(0.f, 0.f); glVertex2f(-this->imgWidth / 2, -this->imgHeight / 2);
-    glTexCoord2f(1.f, 0.f); glVertex2f( this->imgWidth / 2, -this->imgHeight / 2);
-    glTexCoord2f(1.f, 1.f); glVertex2f( this->imgWidth / 2,  this->imgHeight / 2);
+
+    glTexCoord2f((flip) ? 0.f : 1.f, 1.f); glVertex2f( -this->imgWidth / 2,  this->imgHeight / 2);
+    glTexCoord2f((flip) ? 0.f : 1.f, 0.f); glVertex2f( -this->imgWidth / 2, -this->imgHeight / 2);
+    glTexCoord2f((flip) ? 1.f : 0.f, 0.f); glVertex2f( this->imgWidth / 2, -this->imgHeight / 2);
+    glTexCoord2f((flip) ? 1.f : 0.f, 1.f); glVertex2f( this->imgWidth / 2,  this->imgHeight / 2);
     
     glEnd();
 

@@ -82,6 +82,7 @@ SoLineVisual::SoLineVisual()
 void SoLineVisual::computeBBox(SoAction *action, SbBox3f &box, SbVec3f &center)
 {
     SoState *state = action->getState();
+    
     const SbViewportRegion & vp = SoViewportRegionElement::get(state);
     SbVec2s vpsize = vp.getViewportSizePixels();
 
