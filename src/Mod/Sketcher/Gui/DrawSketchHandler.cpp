@@ -193,25 +193,23 @@ int DrawSketchHandler::seekAutoConstraint(std::vector<AutoConstraint> &suggested
         suggestedConstraints.push_back(vertConstr);
     }
 
-    // Find if there are tangent constraints (currently arcs and circles)
-    // FIXME needs to consider when zooming out?
-    const float tangDeviation = 2.;
-
-    int tangId = Constraint::GeoUndef;
-    float smlTangDist = 1e15f;
-
     // Get geometry list
     const std::vector<Part::Geometry *> geomlist = sketchgui->getSketchObject()->getCompleteGeometry();
 
+    //Store Index for later if geometry is connected to arc or curve
+    int prevLastIndex = Constraint::GeoUndef;
+    
     //Check if perpendicular to a lines, not calculated if previous constraint is vertical or horizontal
     if(prevConstr.size() > 0) {
         const AutoConstraint & lastConstr = prevConstr.back();
+        prevLastIndex = (lastConstr.Index >= 0) ? lastConstr.Index : lastConstr.Index + geomlist.size();
         if( suggestedConstraints.size() > 0 &&
            (suggestedConstraints.back().Type == Sketcher::Horizontal || suggestedConstraints.back().Type == Sketcher::Vertical)) {
           //Do Nothing
         } else if(lastConstr.Type == Sketcher::PointOnObject && type == VERTEX) {
             // FIX ME - need to use GeoById somehow
             const Part::Geometry *geo = geomlist[(lastConstr.Index >= 0) ? lastConstr.Index : lastConstr.Index + geomlist.size() ];
+
             if (geo->getTypeId() == Part::GeomLineSegment::getClassTypeId()) {
                 const Part::GeomLineSegment *lineSeg = dynamic_cast<const Part::GeomLineSegment *>(geo);
                 Base::Vector3d p1, p2;
@@ -230,41 +228,68 @@ int DrawSketchHandler::seekAutoConstraint(std::vector<AutoConstraint> &suggested
                     AutoConstraint perpConstr;
                     perpConstr.Index   = lastConstr.Index;
                     perpConstr.Type    = Perpendicular;
-                    perpConstr.HintPnt = norm;
+                    perpConstr.HintDir = norm;
                     suggestedConstraints.push_back(perpConstr);
                 }
-            } else  if (geo->getTypeId() == Part::GeomCircle::getClassTypeId()) {
+            } else if (geo->getTypeId() == Part::GeomCircle::getClassTypeId()) {
+
                 const Part::GeomCircle *circle = dynamic_cast<const Part::GeomCircle *>(geo);
                 Base::Vector3d center = circle->getCenter();
                 Base::Vector2D pnt1 = Pos - Dir;
                 Base::Vector2D pnt2((float) center.x, (float) center.y);
 
+                float radius = (float) circle->getRadius();
                 Base::Vector2D norm = pnt2 - pnt1;
                 norm.Normalize();
+                Base::Vector2D tang(-norm.fY, norm.fX);
 
                 // Find angle difference
-                float angle = norm.GetAngle(Dir);
-                if(angle > M_PI_2)
-                  angle = std::abs(angle - M_PI);
+                float normAngle = norm.GetAngle(Dir);
+                if(normAngle > M_PI_2)
+                  normAngle = std::abs(normAngle - M_PI);
 
-                if (angle < angleDevRad) {
+                // Find angle difference
+                float tangAngle = tang.GetAngle(Dir);
+                if(tangAngle > M_PI_2)
+                  tangAngle = std::abs(tangAngle - M_PI);
+
+                if (normAngle < angleDevRad) {
                     //Perpendicular Constraint
-                      // Suggest vertical constraint
                     AutoConstraint perpConstr;
                     perpConstr.Index   = lastConstr.Index;
                     perpConstr.Type    = Perpendicular;
-                    perpConstr.HintPnt = norm;
+                    perpConstr.HintDir = norm;
                     suggestedConstraints.push_back(perpConstr);
+                } else if (tangAngle < angleDevRad) {
+                    //Tangent Constraint
+                    // Direction vector
+                    norm.Scale(radius);
+                    AutoConstraint tangConstr;
+                    tangConstr.Index   = lastConstr.Index;
+                    tangConstr.Type    = Tangent;
+                    tangConstr.HintDir = tang;
+                    suggestedConstraints.push_back(tangConstr);
                 }
             }
         }
     }
 
+    // Find if there are tangent constraints (currently arcs and circles)
+    // FIXME needs to consider when zooming out?
+    const float tangDeviation = 2.;
+
+    int tangId = Constraint::GeoUndef;
+    float smlTangDist = 1e15f;
+    
     // Iterate through geometry
     int i = 0;
     Base::Vector2D fndPnt(0.f,0.f);
     for (std::vector<Part::Geometry *>::const_iterator it=geomlist.begin(); it != geomlist.end(); ++it, i++) {
 
+        if(prevLastIndex == i)
+          continue; // This is the geometry that should be skipped
+
+        // If the line is attached to a curve disable tangent finding
         if ((*it)->getTypeId() == Part::GeomCircle::getClassTypeId()) {
             const Part::GeomCircle *circle = dynamic_cast<const Part::GeomCircle *>((*it));
 
@@ -300,17 +325,24 @@ int DrawSketchHandler::seekAutoConstraint(std::vector<AutoConstraint> &suggested
 
             projPnt = projPnt.ProjToLine(center - tmpPos, Base::Vector3d(Dir.fX, Dir.fY));
             float projDist = projPnt.Length();
+            
 
             if ( projDist < radius + tangDeviation && projDist > radius - tangDeviation) {
                 double startAngle, endAngle;
                 arc->getRange(startAngle, endAngle);
-
-                projPnt += center;
+                if(startAngle > 2 * M_PI)
+                    startAngle -= 2 * M_PI;
+                if(endAngle > 2 * M_PI)
+                    endAngle -= 2 * M_PI;
                 double angle = atan2(projPnt.y, projPnt.x);
 
+                if(angle < 0)
+                  angle = M_PI + std::abs(angle);
+
+                bool flip = (startAngle > endAngle);
+                projPnt += center;
                 // if the pnt is on correct side of arc and find if nearest
-                if ((angle > startAngle && angle < endAngle) &&
-                    (projDist < smlTangDist) ) {
+                if ((projDist < smlTangDist) && ( (flip && angle < startAngle && angle < endAngle) || (!flip && angle > startAngle && angle < endAngle))) {
                     tangId = i;
                     smlTangDist = projDist;
                     projPnt -= center;
@@ -432,19 +464,22 @@ void DrawSketchHandler::renderHintLines(std::vector<AutoConstraint> &suggestedCo
             } break;
             case Perpendicular: {
                 // HintPnt is actually a norm direction.
-                Base::Vector2D pnt2, revNorm;
-                pnt2 = pnt + it->HintPnt;
+                Base::Vector2D pnt2, revNorm, norm;
+                bool useDir = (it->HintDir.fX != 0.f && it->HintDir.fY != 0.f);
+                pnt2 = (useDir) ? pnt + it->HintDir : it->HintPnt;
                 pnts.push_back(pnt);
                 pnts.push_back(pnt2);
 
-                revNorm = Base::Vector2D(-it->HintPnt.fY, it->HintPnt.fX);
+                norm = pnt2 - pnt;
+                revNorm = Base::Vector2D(-norm.fY, norm.fX);
                 revNorm.Normalize();
                 pnts.push_back(pnt);
                 pnts.push_back(pnt+revNorm);
             } break;
             case Tangent: {
+                bool useDir = (it->HintDir.fX != 0.f && it->HintDir.fY != 0.f);
                 pnts.push_back(pnt);
-                pnts.push_back(it->HintPnt);
+                pnts.push_back((useDir) ? pnt + it->HintDir : it->HintPnt);
             } break;
             
             default:

@@ -47,9 +47,12 @@ class ViewProviderSketch;
 // A Simple data type to hold basic information for suggested constraints
 struct AutoConstraint
 {
+    AutoConstraint() : HintPnt(Base::Vector2D(0.f, 0.f)), HintDir(Base::Vector2D(0.f, 0.f)), HintToggle(true) {}
     Sketcher::ConstraintType Type;
     int Index;
     Base::Vector2D HintPnt;
+    Base::Vector2D HintDir;
+    bool HintToggle;
 };
 
 enum Type
