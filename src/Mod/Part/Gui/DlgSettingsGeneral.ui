@@ -71,7 +71,7 @@
    <item row="1" column="0">
     <widget class="QGroupBox" name="groupBox_2">
      <property name="title">
-      <string>Boolean operation</string>
+      <string>Model refinement</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="0" column="0">
@@ -81,6 +81,19 @@
         </property>
         <property name="prefEntry" stdset="0">
          <cstring>RefineModel</cstring>
+        </property>
+        <property name="prefPath" stdset="0">
+         <cstring>Mod/Part/Boolean</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="Gui::PrefCheckBox" name="checkBooleanCheck">
+        <property name="text">
+         <string>Automatically check model after boolean operation</string>
+        </property>
+        <property name="prefEntry" stdset="0">
+         <cstring>CheckModel</cstring>
         </property>
         <property name="prefPath" stdset="0">
          <cstring>Mod/Part/Boolean</cstring>
