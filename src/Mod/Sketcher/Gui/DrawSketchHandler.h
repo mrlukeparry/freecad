@@ -73,6 +73,7 @@ public:
     virtual bool pressButton(Base::Vector2D onSketchPos)=0;
     virtual bool releaseButton(Base::Vector2D onSketchPos)=0;
     virtual bool onSelectionChanged(const Gui::SelectionChanges& msg) { return false; };
+    virtual void registerPressedKey(bool pressed, int key){};
 
     virtual void quit(void);
 
