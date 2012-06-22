@@ -35,6 +35,7 @@
 # include <Inventor/SoPickedPoint.h>
 # include <Inventor/details/SoLineDetail.h>
 # include <Inventor/details/SoPointDetail.h>
+# include <Inventor/events/SoMouseButtonEvent.h>
 # include <Inventor/nodes/SoBaseColor.h>
 # include <Inventor/nodes/SoCoordinate3.h>
 # include <Inventor/nodes/SoDrawStyle.h>
@@ -58,6 +59,7 @@
 /// Qt Include Files
 # include <QAction>
 # include <QApplication>
+# include <QCursor>
 # include <QColor>
 # include <QDialog>
 # include <QFont>
@@ -82,6 +84,7 @@
 #include <Gui/Selection.h>
 #include <Gui/MainWindow.h>
 #include <Gui/MenuManager.h>
+#include "Gui/Utilities.h"
 #include <Gui/View3DInventor.h>
 #include <Gui/View3DInventorViewer.h>
 #include <Gui/DlgEditFileIncludeProptertyExternal.h>
@@ -201,6 +204,132 @@ const Part::Geometry* GeoById(const std::vector<Part::Geometry*> GeoList, int Id
         return GeoList[Id];
     else
         return GeoList[GeoList.size()+Id];
+}
+
+static void boxSelectionCallback(void * ud, SoEventCallback * cb)
+{
+    Gui::View3DInventorViewer* view  = reinterpret_cast<Gui::View3DInventorViewer*>(cb->getUserData());
+    view->removeEventCallback(SoMouseButtonEvent::getClassTypeId(), boxSelectionCallback, ud);
+    std::vector<SbVec2f> picked = view->getGLPolygon();
+    SoCamera* cam = view->getCamera();
+    SbViewVolume vv = cam->getViewVolume();
+    Gui::ViewVolumeProjection proj(vv);
+    Base::Polygon2D polygon;
+    if (picked.size() == 2) {
+        SbVec2f pt1 = picked[0];
+        SbVec2f pt2 = picked[1];
+        polygon.Add(Base::Vector2D(pt1[0], pt1[1]));
+        polygon.Add(Base::Vector2D(pt1[0], pt2[1]));
+        polygon.Add(Base::Vector2D(pt2[0], pt2[1]));
+        polygon.Add(Base::Vector2D(pt2[0], pt1[1]));
+    }
+    else {
+        for (std::vector<SbVec2f>::const_iterator it = picked.begin(); it != picked.end(); ++it)
+            polygon.Add(Base::Vector2D((*it)[0],(*it)[1]));
+        return;
+    }
+
+    std::vector<Base::Vector2D> points;
+    
+//     for (std::vector<Part::Geometry *>::const_iterator it = geomlist->begin(); it != geomlist->end()-2; ++it) {
+//         if ((*it)->getTypeId() == Part::GeomLineSegment::getClassTypeId()) { // add a line
+//             const Part::GeomLineSegment *lineSeg = dynamic_cast<const Part::GeomLineSegment *>(*it);
+//             // create the definition struct for that geom
+//             Coords.push_back(lineSeg->getStartPoint());
+//             Coords.push_back(lineSeg->getEndPoint());
+//             Points.push_back(lineSeg->getStartPoint());
+//             Points.push_back(lineSeg->getEndPoint());
+//             Index.push_back(2);
+//         }
+//         else if ((*it)->getTypeId() == Part::GeomCircle::getClassTypeId()) { // add a circle
+//             const Part::GeomCircle *circle = dynamic_cast<const Part::GeomCircle *>(*it);
+//             Handle_Geom_Circle curve = Handle_Geom_Circle::DownCast(circle->handle());
+// 
+//             int countSegments = 50;
+//             Base::Vector3d center = circle->getCenter();
+//             double segment = (2 * M_PI) / countSegments;
+//             for (int i=0; i < countSegments; i++) {
+//                 gp_Pnt pnt = curve->Value(i*segment);
+//                 Coords.push_back(Base::Vector3d(pnt.X(), pnt.Y(), pnt.Z()));
+//             }
+// 
+//             gp_Pnt pnt = curve->Value(0);
+//             Coords.push_back(Base::Vector3d(pnt.X(), pnt.Y(), pnt.Z()));
+// 
+//             Index.push_back(countSegments+1);
+//             Points.push_back(center);
+//         }
+
+    App::Document* doc = App::GetApplication().getActiveDocument();
+    if (doc) {
+        cb->setHandled();
+        Sketcher::SketchObject *sketchObject = dynamic_cast<Sketcher::SketchObject *>(doc->getActiveObject());
+
+        int i = 0;
+
+        int intGeoCount = sketchObject->getHighestCurveIndex() + 1;
+        int extGeoCount = sketchObject->getExternalGeometryCount();
+
+        const std::vector<Part::Geometry *> geomlist = sketchObject->getCompleteGeometry(); // without memory allocation
+
+        assert(int(geomlist.size()) == extGeoCount + intGeoCount);
+        assert(int(geomlist.size()) >= 2);
+
+        for (std::vector<Part::Geometry *>::const_iterator it = geomlist.begin(); it != geomlist.end()-2; ++it, i++) {
+
+            // Calculate bounding box for each item
+            if ((*it)->getTypeId() == Part::GeomLineSegment::getClassTypeId()) {
+                const Part::GeomLineSegment *lineSeg = dynamic_cast<const Part::GeomLineSegment *>(*it);
+                Base::Vector3d pnt1, pnt2;
+                pnt1 = proj(lineSeg->getStartPoint());
+                pnt2 = proj(lineSeg->getEndPoint());
+                Base::Vector2D p1(pnt1.x, pnt1.y);
+                Base::Vector2D p2(pnt2.x, pnt2.y);
+
+                std::stringstream ss;
+
+                points.push_back(p1);
+                bool pnt1Inside = false;
+                if(polygon.Contains(p1)) {
+                    pnt1Inside = true;
+                    ss << "Vertex" << points.size() - 1;
+                    if (Gui::Selection().isSelected(doc->getName(),sketchObject->getNameInDocument(), ss.str().c_str())){
+                        //Do nothing
+                    } else {
+                        Gui::Selection().addSelection(doc->getName() ,sketchObject->getNameInDocument(),ss.str().c_str());
+                    }
+                }
+
+                points.push_back(p2);
+                if(polygon.Contains(p2)) {
+                    ss.clear();
+                    ss.str("");
+                    ss << "Vertex" << points.size() - 1;
+                    if (Gui::Selection().isSelected(doc->getName(),sketchObject->getNameInDocument(), ss.str().c_str())){
+                        //Do nothing
+                    } else {
+                        Gui::Selection().addSelection(doc->getName() ,sketchObject->getNameInDocument(),ss.str().c_str());
+                    }
+
+                    if(pnt1Inside) {
+                        ss.clear();
+                        ss.str("");
+                        ss << "Edge" << i;
+                        if (Gui::Selection().isSelected(doc->getName(),sketchObject->getNameInDocument(), ss.str().c_str())){
+                            //Do nothing
+                        } else {
+                            Gui::Selection().addSelection(doc->getName() ,sketchObject->getNameInDocument(),ss.str().c_str());
+                        }
+                    }
+                }
+            }
+        }
+
+        // ensure that we are in sketch only selection mode
+        SoNode* root = view->getSceneGraph();
+        static_cast<Gui::SoFCUnifiedSelection*>(root)->selectionRole.setValue(FALSE);
+        view->stopSelection();
+    }
 }
 
 //**************************************************************************
@@ -397,7 +526,6 @@ bool ViewProviderSketch::mouseButtonPressed(int Button, bool pressed, const SbVe
                         //Base::Console().Log("start dragging, point:%d\n",this->DragPoint);
                         Mode = STATUS_SELECT_Constraint;
                         done = true;
-
                     }
 
                     if (done && length <  dblClickRadius && tmp.getValue() < dci) {
@@ -407,7 +535,9 @@ bool ViewProviderSketch::mouseButtonPressed(int Button, bool pressed, const SbVe
                         prvClickTime = SbTime();
                         prvClickPoint = SbVec3f(0.0f, 0.0f, 0.0f);
                         Mode = STATUS_NONE;
-
+                    } else if(!done) {
+                        Mode = STATUS_SKETCH_StartRubberBand;
+                        done = true;
                     } else {
                         prvClickTime = SbTime::getTimeOfDay();
                         prvClickPoint = point;
@@ -420,8 +550,7 @@ bool ViewProviderSketch::mouseButtonPressed(int Button, bool pressed, const SbVe
                 default:
                     return false;
             }
-        }
-        else {
+        } else {
             // Do things depending on the mode of the user interaction
             switch (Mode) {
                 case STATUS_SELECT_Point:
@@ -585,9 +714,16 @@ bool ViewProviderSketch::mouseButtonPressed(int Button, bool pressed, const SbVe
                     }
                     Mode = STATUS_NONE;
                     return true;
+                case STATUS_SKETCH_StartRubberBand:
+                    Mode = STATUS_NONE;
+                    return true;
+                case STATUS_SKETCH_UseRubberBand:
+                    Mode = STATUS_NONE;
+                    return true;
                 case STATUS_SKETCH_UseHandler:
                     return edit->sketchHandler->releaseButton(Base::Vector2D(x,y));
                 case STATUS_NONE:
+                    return true;
                 default:
                     return false;
             }
@@ -861,6 +997,19 @@ bool ViewProviderSketch::mouseMove(const SbVec3f &point, const SbVec3f &normal, 
                 this->updateColor();
             }
             return true;
+        case STATUS_SKETCH_StartRubberBand: {
+            Mode = STATUS_SKETCH_UseRubberBand;
+
+            Gui::MDIView *mdi = Gui::Application::Instance->activeDocument()->getActiveView();
+            if(mdi)
+            {
+                Gui::View3DInventorViewer *viewer = static_cast<Gui::View3DInventor *>(mdi)->getViewer();
+                    QPoint mousePos = viewer->getGLWidget()->mapFromGlobal(QCursor::pos());
+       
+                    boxSelectionInit(mousePos.x(), viewer->getGLWidget()->height() - mousePos.y());
+                    return true;
+            }
+        }
         default:
             return false;
     }
@@ -868,6 +1017,29 @@ bool ViewProviderSketch::mouseMove(const SbVec3f &point, const SbVec3f &normal, 
     return false;
 }
 
+void ViewProviderSketch::boxSelectionInit(int x, int y)
+{
+    Gui::MDIView *mdi = Gui::Application::Instance->activeDocument()->getActiveView();
+    if(mdi)
+    {
+        Gui::View3DInventorViewer *viewer = static_cast<Gui::View3DInventor *>(mdi)->getViewer();
+        if (!viewer->isSelecting()) {
+            viewer->addEventCallback(SoMouseButtonEvent::getClassTypeId(), boxSelectionCallback);
+            viewer->startSelection(Gui::View3DInventorViewer::Rectangle);
+
+            // we have to simulate a mouse down event
+            SoMouseButtonEvent *pSceneEvent = new SoMouseButtonEvent;
+
+            pSceneEvent->setState(SoButtonEvent::DOWN);
+            pSceneEvent->setButton(SoMouseButtonEvent::BUTTON1);
+            pSceneEvent->setPosition(SbVec2s(x, y));
+            pSceneEvent->setTime(SbTime::getTimeOfDay());
+            
+            viewer->sendSoEvent(dynamic_cast<SoEvent *>(pSceneEvent));
+
+        }
+    }
+}
 void ViewProviderSketch::moveConstraint(int constNum, const Base::Vector2D &toPos)
 {
     // are we in edit?
