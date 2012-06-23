@@ -721,6 +721,9 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+
     // Apply a rotation and translation matrix
     glTranslatef(textOffset[0],textOffset[1], textOffset[2]);
     glRotatef((GLfloat) angle * 180 / M_PI, 0,0,1);
@@ -736,7 +739,7 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
     glEnd();
 
     // Reset the Mode
-
+    glPopMatrix();
     glPopAttrib();
     state->pop();
 }
