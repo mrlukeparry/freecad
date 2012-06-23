@@ -262,7 +262,7 @@ static void boxSelectionCallback(void * ud, SoEventCallback * cb)
 
     App::Document* doc = App::GetApplication().getActiveDocument();
     if (doc) {
-        cb->setHandled();
+
         Sketcher::SketchObject *sketchObject = dynamic_cast<Sketcher::SketchObject *>(doc->getActiveObject());
 
         int i = 0;
@@ -322,13 +322,169 @@ static void boxSelectionCallback(void * ud, SoEventCallback * cb)
                         }
                     }
                 }
+            } else if ((*it)->getTypeId() == Part::GeomCircle::getClassTypeId()) {
+
+                const Part::GeomCircle *circle = dynamic_cast<const Part::GeomCircle *>(*it);
+                Base::Vector3d pnt = circle->getCenter();
+
+                float radius = (float) circle->getRadius();
+                // Create a bounding boxSelectionCallback
+                Base::Vector3d p1(pnt.x - radius, pnt.y + radius, 0.f); // Top Left
+                Base::Vector3d p2(pnt.x - radius, pnt.y - radius, 0.f); // Bottom Left
+                Base::Vector3d p3(pnt.x + radius, pnt.y + radius, 0.f); // Top Right
+                Base::Vector3d p4(pnt.x + radius, pnt.y - radius, 0.f); // Bottom Left
+
+                p1 = proj(p1);
+                p2 = proj(p2);
+                p3 = proj(p3);
+                p4 = proj(p4);
+                pnt = proj(pnt);
+
+                std::stringstream ss;
+
+                points.push_back(Base::Vector2D(pnt.x, pnt.y));
+                if(polygon.Contains(Base::Vector2D(pnt.x, pnt.y))) {
+                    ss << "Vertex" << points.size() - 1;
+                    if (Gui::Selection().isSelected(doc->getName(),sketchObject->getNameInDocument(), ss.str().c_str())){
+                        //Do nothing
+                    } else {
+                        Gui::Selection().addSelection(doc->getName() ,sketchObject->getNameInDocument(),ss.str().c_str());
+                    }
+
+
+                    if(polygon.Contains(Base::Vector2D(p1.x, p1.y)) && polygon.Contains(Base::Vector2D(p2.x, p2.y)) &&
+                       polygon.Contains(Base::Vector2D(p3.x, p3.y)) && polygon.Contains(Base::Vector2D(p4.x, p4.y))) {
+                        ss.clear();
+                        ss.str("");
+                        ss << "Edge" << i;
+
+                        if (Gui::Selection().isSelected(doc->getName(),sketchObject->getNameInDocument(), ss.str().c_str())){
+                        //Do nothing
+                        } else {
+                            Gui::Selection().addSelection(doc->getName() ,sketchObject->getNameInDocument(),ss.str().c_str());
+                        }
+                    }
+
+                }
+            } else if ((*it)->getTypeId() == Part::GeomArcOfCircle::getClassTypeId()) {
+                const Part::GeomArcOfCircle *aoc = dynamic_cast<const Part::GeomArcOfCircle *>(*it);
+
+                // Get Parameters
+                Base::Vector3d pnt = aoc->getCenter();
+                Base::Vector3d pnt1 = aoc->getStartPoint();
+                Base::Vector3d pnt2 = aoc->getEndPoint();
+                double radius = aoc->getRadius();
+
+                std::stringstream ss;
+
+                Base::Vector3d prjPnt = proj(pnt);
+                Base::Vector3d prjPnt1 = proj(pnt1);
+                Base::Vector3d prjPnt2 = proj(pnt2);
+                // Center
+                points.push_back(Base::Vector2D(pnt.x, pnt.y));
+                if(polygon.Contains(Base::Vector2D(prjPnt.x, prjPnt.y))) {
+                    ss << "Vertex" << points.size() - 1;
+                    if (Gui::Selection().isSelected(doc->getName(),sketchObject->getNameInDocument(), ss.str().c_str())){
+                        //Do nothing
+                    } else {
+                        Gui::Selection().addSelection(doc->getName() ,sketchObject->getNameInDocument(),ss.str().c_str());
+                    }
+                }
+
+                points.push_back(Base::Vector2D(pnt1.x, pnt1.y));
+                if(polygon.Contains(Base::Vector2D(prjPnt1.x, prjPnt1.y))) {
+                    ss.clear();
+                    ss.str("");
+                    ss << "Vertex" << points.size() - 1;
+                    if (Gui::Selection().isSelected(doc->getName(),sketchObject->getNameInDocument(), ss.str().c_str())){
+                        //Do nothing
+                    } else {
+                        Gui::Selection().addSelection(doc->getName() ,sketchObject->getNameInDocument(),ss.str().c_str());
+                    }
+                }
+
+                points.push_back(Base::Vector2D(pnt2.x, pnt2.y));
+                if(polygon.Contains(Base::Vector2D(prjPnt2.x, prjPnt2.y))) {
+                    ss.clear();
+                    ss.str("");
+                    ss << "Vertex" << points.size() - 1;
+                    if (Gui::Selection().isSelected(doc->getName(),sketchObject->getNameInDocument(), ss.str().c_str())){
+                        //Do nothing
+                    } else {
+                        Gui::Selection().addSelection(doc->getName() ,sketchObject->getNameInDocument(),ss.str().c_str());
+                    }
+                }
+
+                // Create a list of boundbox point to traverse and test
+                std::vector<Base::Vector2D> bbPnts;
+                bbPnts.push_back(Base::Vector2D(pnt.x, pnt.y));
+                bbPnts.push_back(Base::Vector2D(pnt1.x, pnt1.y));
+                bbPnts.push_back(Base::Vector2D(pnt2.x, pnt2.y));
+
+                double startangle, endangle;
+                aoc->getRange(startangle, endangle);
+                if(startangle > 2 * M_PI)
+                  startangle -= 2 * M_PI;
+                if(endangle > 2 * M_PI)
+                  endangle -= 2 * M_PI;
+
+                if(startangle < 0.f && endangle > 0.f)
+                  bbPnts.push_back(Base::Vector2D(pnt.x + radius, pnt.y));
+
+                if( startangle < M_PI_2 && endangle > M_PI_2)
+                    bbPnts.push_back(Base::Vector2D(pnt.x, pnt.y + radius));
+
+                if( startangle < M_PI && endangle > M_PI)
+                    bbPnts.push_back(Base::Vector2D(pnt.x - radius, pnt.y));
+
+                if( startangle < 3.f * M_PI_2 && endangle > 3 * M_PI_2)
+                    bbPnts.push_back(Base::Vector2D(pnt.x, pnt.y - radius));
+
+                float minX = bbPnts[0].fX, minY = bbPnts[0].fY;
+                float maxX = bbPnts[0].fX, maxY = bbPnts[0].fY;
+
+                for (std::vector<Base::Vector2D>::const_iterator it= bbPnts.begin(); it != bbPnts.end(); ++it) {
+                    minX = ((*it).fX < minX) ? (*it).fX : minX;
+                    minY = ((*it).fY < minY) ? (*it).fY : minY;
+                    maxX = ((*it).fX > maxX) ? (*it).fX : maxX;
+                    maxY = ((*it).fY > maxY) ? (*it).fY : maxY;
+                }
+
+                // Convert bounding box distances to corner coords
+                Base::Vector3d bb1(minX, minY, 0.f); // Bottom Left
+                Base::Vector3d bb2(minX, maxY, 0.f); // Top Left
+                Base::Vector3d bb3(maxX, minY, 0.f); // Bottom Right
+                Base::Vector3d bb4(maxX, maxY, 0.f); // Top Right
+
+                bb1 = proj(bb1);
+                bb2 = proj(bb2);
+                bb3 = proj(bb3);
+                bb4 = proj(bb4);
+
+                if(polygon.Contains(Base::Vector2D(bb1.x, bb2.y)) && polygon.Contains(Base::Vector2D(bb1.x, bb2.y)) &&
+                   polygon.Contains(Base::Vector2D(bb3.x, bb3.y)) && polygon.Contains(Base::Vector2D(bb4.x, bb4.y)) ){
+                    ss.clear();
+                    ss.str("");
+                    ss << "Edge" << i;
+                    if (Gui::Selection().isSelected(doc->getName(),sketchObject->getNameInDocument(), ss.str().c_str())){
+                        //Do nothing
+                    } else {
+                        Gui::Selection().addSelection(doc->getName() ,sketchObject->getNameInDocument(),ss.str().c_str());
+                    }
+                }
             }
         }
 
-        // ensure that we are in sketch only selection mode
-        SoNode* root = view->getSceneGraph();
-        static_cast<Gui::SoFCUnifiedSelection*>(root)->selectionRole.setValue(FALSE);
-        view->stopSelection();
+        Gui::MDIView *mdi = Gui::Application::Instance->activeDocument()->getActiveView();
+        if(mdi)
+        {
+            Gui::View3DInventorViewer *viewer = static_cast<Gui::View3DInventor *>(mdi)->getViewer();
+            // ensure that we are in sketch only selection mode
+            SoNode* root = viewer->getSceneGraph();
+            viewer->stopSelection();
+            static_cast<Gui::SoFCUnifiedSelection*>(root)->selectionRole.setValue(FALSE);
+            
+        }
     }
 }
 
@@ -1036,7 +1192,7 @@ void ViewProviderSketch::boxSelectionInit(int x, int y)
             pSceneEvent->setTime(SbTime::getTimeOfDay());
             
             viewer->sendSoEvent(dynamic_cast<SoEvent *>(pSceneEvent));
-
+            
         }
     }
 }
