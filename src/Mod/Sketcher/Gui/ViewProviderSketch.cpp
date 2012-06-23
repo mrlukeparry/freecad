@@ -887,7 +887,7 @@ bool ViewProviderSketch::mouseButtonPressed(int Button, bool pressed, const SbVe
     }
     // Right mouse button ****************************************************
     else if (Button == 2) {
-        if (!pressed) {
+        if(!pressed) {
             switch (Mode) {
                 case STATUS_SKETCH_UseHandler:
                     // make the handler quit
@@ -899,7 +899,61 @@ bool ViewProviderSketch::mouseButtonPressed(int Button, bool pressed, const SbVe
                         if (edit->PreselectPoint != -1) {
                             return true;
                         } else if (edit->PreselectCurve != -1) {
-                            return true;
+                            //Get Viewer
+                            Gui::MDIView *mdi = Gui::Application::Instance->activeDocument()->getActiveView();
+                            Gui::View3DInventorViewer *viewer ;
+                            viewer = static_cast<Gui::View3DInventor *>(mdi)->getViewer();
+
+                            Gui::MenuItem *geom = new Gui::MenuItem();
+                            geom->setCommand("Sketcher constraints");
+                            *geom << "Sketcher_ConstrainVertical"
+                            << "Sketcher_ConstrainHorizontal";
+
+                            // Gets a selection vector
+                            std::vector<Gui::SelectionObject> selection = Gui::Selection().getSelectionEx();
+
+                            bool rightClickOnSelectedLine = false;
+
+                            /*
+                            * Add Multiple Line Constraints to the menu
+                            */
+                            // only one sketch with its subelements are allowed to be selected
+                            if (selection.size() == 1) {
+                                // get the needed lists and objects
+                                const std::vector<std::string> &SubNames = selection[0].getSubNames();
+
+                                // Two Objects are selected
+                                if (SubNames.size() == 2) {
+                                    // go through the selected subelements
+                                    for (std::vector<std::string>::const_iterator it=SubNames.begin();
+                                        it!=SubNames.end();++it) {
+
+                                        // If the object selected is of type edge
+                                        if (it->size() > 4 && it->substr(0,4) == "Edge") {
+                                            // Get the index of the object selected
+                                            int index=std::atoi(it->substr(4,4000).c_str());
+                                            if (edit->PreselectCurve == index)
+                                                rightClickOnSelectedLine = true;
+                                        } else {
+                                            // The selection is not exclusively edges
+                                            rightClickOnSelectedLine = false;
+                                        }
+                                    } // End of Iteration
+                                }
+                            }
+
+                            if (rightClickOnSelectedLine) {
+                                *geom << "Sketcher_ConstrainParallel"
+                                      << "Sketcher_ConstrainPerpendicular";
+                            }
+
+                            Gui::Application::Instance->setupContextMenu("View", geom);
+                            //Create the Context Menu using the Main View Qt Widget
+                            QMenu contextMenu(viewer->getGLWidget());
+                            Gui::MenuManager::getInstance()->setupContextMenu(geom, contextMenu);
+                            QAction *used = contextMenu.exec(QCursor::pos());
+
+                        return true;
                         } else if (edit->PreselectConstraint != -1) {
                             return true;
                         } else {
@@ -936,61 +990,7 @@ bool ViewProviderSketch::mouseButtonPressed(int Button, bool pressed, const SbVe
                     break;
                 case STATUS_SELECT_Edge:
                     {
-                        //Get Viewer
-                        Gui::MDIView *mdi = Gui::Application::Instance->activeDocument()->getActiveView();
-                        Gui::View3DInventorViewer *viewer ;
-                        viewer = static_cast<Gui::View3DInventor *>(mdi)->getViewer();
 
-                        Gui::MenuItem *geom = new Gui::MenuItem();
-                        geom->setCommand("Sketcher constraints");
-                        *geom << "Sketcher_ConstrainVertical"
-                        << "Sketcher_ConstrainHorizontal";
-
-                        // Gets a selection vector
-                        std::vector<Gui::SelectionObject> selection = Gui::Selection().getSelectionEx();
-
-                        bool rightClickOnSelectedLine = false;
-
-                        /*
-                         * Add Multiple Line Constraints to the menu
-                         */
-                        // only one sketch with its subelements are allowed to be selected
-                        if (selection.size() == 1) {
-                            // get the needed lists and objects
-                            const std::vector<std::string> &SubNames = selection[0].getSubNames();
-
-                            // Two Objects are selected
-                            if (SubNames.size() == 2) {
-                                // go through the selected subelements
-                                for (std::vector<std::string>::const_iterator it=SubNames.begin();
-                                     it!=SubNames.end();++it) {
-
-                                    // If the object selected is of type edge
-                                    if (it->size() > 4 && it->substr(0,4) == "Edge") {
-                                        // Get the index of the object selected
-                                        int index=std::atoi(it->substr(4,4000).c_str());
-                                        if (edit->PreselectCurve == index)
-                                            rightClickOnSelectedLine = true;
-                                    } else {
-                                        // The selection is not exclusively edges
-                                        rightClickOnSelectedLine = false;
-                                    }
-                                } // End of Iteration
-                            }
-                        }
-
-                        if (rightClickOnSelectedLine) {
-                            *geom << "Sketcher_ConstrainParallel"
-                                  << "Sketcher_ConstrainPerpendicular";
-                        }
-
-                        Gui::Application::Instance->setupContextMenu("View", geom);
-                        //Create the Context Menu using the Main View Qt Widget
-                        QMenu contextMenu(viewer->getGLWidget());
-                        Gui::MenuManager::getInstance()->setupContextMenu(geom, contextMenu);
-                        QAction *used = contextMenu.exec(QCursor::pos());
-
-                        return true;
                     }
                 case STATUS_SELECT_Cross:
                 case STATUS_SELECT_Constraint:
