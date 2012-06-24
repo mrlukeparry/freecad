@@ -693,7 +693,7 @@ bool ViewProviderSketch::mouseButtonPressed(int Button, bool pressed, const SbVe
                         Mode = STATUS_NONE;
                     } else if(!done) {
                         Mode = STATUS_SKETCH_StartRubberBand;
-                        done = true;
+                        done = false;
                     } else {
                         prvClickTime = SbTime::getTimeOfDay();
                         prvClickPoint = point;
@@ -872,6 +872,7 @@ bool ViewProviderSketch::mouseButtonPressed(int Button, bool pressed, const SbVe
                     return true;
                 case STATUS_SKETCH_StartRubberBand:
                     Mode = STATUS_NONE;
+                    Gui::Selection().clearSelection();
                     return true;
                 case STATUS_SKETCH_UseRubberBand:
                     Mode = STATUS_NONE;
@@ -879,6 +880,7 @@ bool ViewProviderSketch::mouseButtonPressed(int Button, bool pressed, const SbVe
                 case STATUS_SKETCH_UseHandler:
                     return edit->sketchHandler->releaseButton(Base::Vector2D(x,y));
                 case STATUS_NONE:
+                    Gui::Selection().clearSelection();
                     return true;
                 default:
                     return false;
