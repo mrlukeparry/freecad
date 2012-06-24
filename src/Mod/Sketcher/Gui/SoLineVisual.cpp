@@ -200,7 +200,6 @@ void SoLineVisual::GLRender(SoGLRenderAction * action)
 
     this->fndPnts.clear();
 
-    glBegin(GL_LINES);
     //glEnable(GL_LINE_STIPPLE);
 
     //For algorithm later
@@ -217,11 +216,13 @@ void SoLineVisual::GLRender(SoGLRenderAction * action)
       //glLineStipple(1, patterns[i]);
 
       //Set Line Properties
-      glLineWidth(widths[i]);
+      float myWidth = widths[i];
+      glLineWidth((GLfloat) myWidth);
 
       SbColor color = colors[i];
-      glColor3f(color[0], color[1], color[2]);
+      glColor3f((GLfloat) color[0], (GLfloat) color[1], (GLfloat) color[2]);
 
+      glBegin(GL_LINE);
       // Select pairs of points to construct line;
       SbVec3f pnt1 = pntCont[2*i];
       SbVec3f pnt2 = pntCont[2*i+1];
@@ -260,9 +261,8 @@ void SoLineVisual::GLRender(SoGLRenderAction * action)
       //Draw Line Pair
       glVertex2f(A[0], A[1]);
       glVertex2f(B[0], B[1]);
+      glEnd();
     }
-
-    glEnd();
 
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();

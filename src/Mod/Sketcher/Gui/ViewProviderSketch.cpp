@@ -2877,14 +2877,14 @@ void ViewProviderSketch::drawHintLines(const std::vector<Base::Vector2D> &Pnts)
         Base::Vector3d vec(it->fX,it->fY, 0.f);
         verts[i].setValue(vec.x, vec.y, vec.z);
     }
-    
+
     for (int j = 0; j < num / 2; j++) {
             //Defaults needs user feedback
         colors[j].setValue(0.7f, 0.7f, 0.7f);
         widths[j]   = 1.4f;
         patterns[j] = 0xAAAA;
     }
-    
+
     edit->EditHintLines->pnts.finishEditing();
     edit->EditHintLines->colors.finishEditing();
     edit->EditHintLines->widths.finishEditing();
