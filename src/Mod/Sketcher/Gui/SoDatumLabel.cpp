@@ -556,7 +556,6 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
           glVertex2f(ar1[0], ar1[1]);
           glVertex2f(ar2[0], ar2[1]);
         glEnd();
-        
         // BOUNDING BOX CALCULATION - IMPORTANT
         // Finds the mins and maxes
         std::vector<SbVec3f> corners;

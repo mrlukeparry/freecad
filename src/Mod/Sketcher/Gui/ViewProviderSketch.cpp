@@ -1252,8 +1252,9 @@ void ViewProviderSketch::moveConstraint(int constNum, const Base::Vector2D &toPo
             else if (geo->getTypeId() == Part::GeomCircle::getClassTypeId()) {
                 const Part::GeomCircle *circle = dynamic_cast<const Part::GeomCircle *>(geo);
                 double radius = circle->getRadius();
-                double angle = M_PI/4;
                 p1 = circle->getCenter();
+                Base::Vector3d tmpDir =  Base::Vector3d(toPos.fX, toPos.fY, 0) - p1;
+                double angle = atan2f(tmpDir.y, tmpDir.x);
                 p2 = p1 + radius * Base::Vector3d(cos(angle),sin(angle),0.);
             } else
                 return;
@@ -1270,9 +1271,10 @@ void ViewProviderSketch::moveConstraint(int constNum, const Base::Vector2D &toPo
         else if (Constr->Type == DistanceY)
             dir = Base::Vector3d(0, (p2.y - p1.y >= FLT_EPSILON) ? 1 : -1, 0);
 
-        if (Constr->Type == Radius)
+        if (Constr->Type == Radius) {
+            Constr->SecondParam = atan2f(dir.y, dir.x);
             Constr->LabelDistance = vec.x * dir.x + vec.y * dir.y;
-        else {
+        } else {
             Base::Vector3d norm(-dir.y,dir.x,0);
             Constr->LabelDistance = vec.x * norm.x + vec.y * norm.y;
         }
@@ -2691,7 +2693,7 @@ Restart:
                         else if (geo->getTypeId() == Part::GeomCircle::getClassTypeId()) {
                             const Part::GeomCircle *circle = dynamic_cast<const Part::GeomCircle *>(geo);
                             double radius = circle->getRadius();
-                            double angle = M_PI/4;
+                            double angle = (double) Constr->SecondParam;
                             pnt1 = circle->getCenter();
                             pnt2 = pnt1 + radius * Base::Vector3d(cos(angle),sin(angle),0.);
                         } else
@@ -2706,6 +2708,7 @@ Restart:
                     asciiText->string       = SbString().sprintf("%.2f",Constr->Value);
                     asciiText->datumtype    = SoDatumLabel::RADIUS;
                     asciiText->param1       = Constr->LabelDistance;
+                    asciiText->param2       = Constr->SecondParam;
 
                     asciiText->pnts.setNum(2);
                     SbVec3f *verts = asciiText->pnts.startEditing();
@@ -2767,7 +2770,7 @@ void ViewProviderSketch::rebuildConstraintsVisual(void)
                     anno->renderCaching = SoSeparator::OFF;
                     anno->addChild(text);
                     sep->addChild(text);
-                            edit->constrGroup->addChild(anno);
+                    edit->constrGroup->addChild(anno);
                     edit->vConstrType.push_back((*it)->Type);
                     continue;
                 }
