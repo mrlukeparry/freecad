@@ -162,6 +162,7 @@ void SoDatumLabel::generatePrimitives(SoAction * action)
     if(this->datumtype.getValue() == DISTANCE || this->datumtype.getValue() == DISTANCEX || this->datumtype.getValue() == DISTANCEY ){
 
         float length = this->param1.getValue();
+        float length2 = this->param2.getValue();
         SbVec3f dir, norm;
         if (this->datumtype.getValue() == DISTANCE) {
             dir = (p2-p1);
@@ -195,7 +196,7 @@ void SoDatumLabel::generatePrimitives(SoAction * action)
         img3 = SbVec3f((img3[0] * c) - (img3[1] * s), (img3[0] * s) + (img3[1] * c), 0.f);
         img4 = SbVec3f((img4[0] * c) - (img4[1] * s), (img4[0] * s) + (img4[1] * c), 0.f);
 
-        SbVec3f textOffset = midpos + norm * length;
+        SbVec3f textOffset = midpos + norm * length + dir * length2;
 
         img1 += textOffset;
         img2 += textOffset;
@@ -382,6 +383,7 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
     if(this->datumtype.getValue() == DISTANCE || this->datumtype.getValue() == DISTANCEX || this->datumtype.getValue() == DISTANCEY )
         {
         float length = this->param1.getValue();
+        float length2 = this->param2.getValue();
         const SbVec3f *pnts = this->pnts.getValues(0);
 
         SbVec3f p1 = pnts[0];
@@ -421,7 +423,7 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
             flip = true;
         }
 
-        textOffset = midpos + norm * length;
+        textOffset = midpos + norm * length + dir * length2;
 
         // Get the colour
         const SbColor& t = textColor.getValue();
@@ -437,10 +439,30 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
 
         // Calculate the coordinates for the parallel datum lines
         SbVec3f par1 = p1_ + norm * length;
-        SbVec3f par2 = midpos + norm * length - dir * (this->imgWidth / 2 + margin);
-        SbVec3f par3 = midpos + norm * length + dir * (this->imgWidth / 2 + margin);
+        SbVec3f par2 = midpos + norm * length + dir * (length2 - this->imgWidth / 2 - margin);
+        SbVec3f par3 = midpos + norm * length + dir * (length2 + this->imgWidth / 2 + margin);
         SbVec3f par4 = p2  + norm * length;
 
+        bool flipTriang = false;
+
+        if ((par3-par1).dot(dir) > (par4 - par1).length()) {
+            // Increase Margin to improve visability
+            float tmpMargin = 0.08f * scale;
+            par3 = par4;
+            if((par2-par1).dot(dir) > (par4 - par1).length()) {
+                par3 = par2;
+                par2 = par1 - dir * tmpMargin;
+                flipTriang = true;
+            }
+        } else if ((par2-par1).dot(dir) < 0.f) {
+            float tmpMargin = 0.08f * scale;
+            par2 = par1;
+            if((par3-par1).dot(dir) < 0.f) {
+                par2 = par3;
+                par3 = par4 + dir * tmpMargin;
+                flipTriang = true;
+            }
+        }
         // Perp Lines
         glBegin(GL_LINES);
         glVertex2f(p1[0], p1[1]);
@@ -456,11 +478,11 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
         glVertex2f(par4[0], par4[1]);
         glEnd();
 
-        SbVec3f ar1 = par1 + dir * 0.866 * 2 * margin;
+        SbVec3f ar1 = par1 + ((flipTriang) ? -1 : 1) * dir * 0.866 * 2 * margin;
         SbVec3f ar2 = ar1 + norm * margin;
                 ar1 -= norm * margin;
 
-        SbVec3f ar3 = par4 - dir * 0.866 * 2 * margin;
+        SbVec3f ar3 = par4 - ((flipTriang) ? -1 : 1) * dir * 0.866 * 2 * margin;
         SbVec3f ar4 = ar3 + norm * margin ;
                 ar3 -= norm * margin;
 
@@ -532,7 +554,7 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
         SbVec3f ar0  = p2;
         SbVec3f ar1  = p2 - dir * 0.866 * 2 * margin;
         SbVec3f ar2  = ar1 + norm * margin;
-                ar1 -= norm * margin;
+        ar1 -= norm * margin;
 
         SbVec3f p3 = pos +  dir * (this->imgWidth / 2 + margin);
         if ((p3-p1).length() > (p2-p1).length())
@@ -607,7 +629,7 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
 
         float margin = 0.01f;
         margin *= scale;
-        
+
           // Get the colour
         const SbColor& t = textColor.getValue();
 
@@ -644,7 +666,7 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
         SbVec3f pnt2 = p0+(r+margin)*v1;
         SbVec3f pnt3 = p0+(r-margin)*v2;
         SbVec3f pnt4 = p0+(r+margin)*v2;
-        
+
         glBegin(GL_LINES);
         glVertex2f(pnt1[0],pnt1[1]);
         glVertex2f(pnt2[0],pnt2[1]);
@@ -666,7 +688,7 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
         img2 += textOffset;
         img3 += textOffset;
         img4 += textOffset;
-        
+
         std::vector<SbVec3f> corners;
         corners.push_back(pnt1);
         corners.push_back(pnt2);

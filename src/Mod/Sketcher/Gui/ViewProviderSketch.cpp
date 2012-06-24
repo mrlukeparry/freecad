@@ -1190,9 +1190,7 @@ void ViewProviderSketch::boxSelectionInit(int x, int y)
             pSceneEvent->setButton(SoMouseButtonEvent::BUTTON1);
             pSceneEvent->setPosition(SbVec2s(x, y));
             pSceneEvent->setTime(SbTime::getTimeOfDay());
-            
             viewer->sendSoEvent(dynamic_cast<SoEvent *>(pSceneEvent));
-            
         }
     }
 }
@@ -1274,6 +1272,13 @@ void ViewProviderSketch::moveConstraint(int constNum, const Base::Vector2D &toPo
         if (Constr->Type == Radius) {
             Constr->SecondParam = atan2f(dir.y, dir.x);
             Constr->LabelDistance = vec.x * dir.x + vec.y * dir.y;
+        } else if (Constr->Type == Distance || Constr->Type == DistanceX || Constr->Type == DistanceY) {
+
+            Base::Vector3d norm(-dir.y,dir.x,0);
+            Constr->LabelDistance = vec.x * norm.x + vec.y * norm.y;
+
+            vec = Base::Vector3d(toPos.fX, toPos.fY, 0) - (p2 + p1) / 2;
+            Constr->SecondParam = vec.x * dir.x + vec.y * dir.y;
         } else {
             Base::Vector3d norm(-dir.y,dir.x,0);
             Constr->LabelDistance = vec.x * norm.x + vec.y * norm.y;
@@ -2434,6 +2439,7 @@ Restart:
 
                     //Assign the Label Distance
                     asciiText->param1 = Constr->LabelDistance;
+                    asciiText->param2 = Constr->SecondParam;
                 }
                 break;
             case PointOnObject:
@@ -3094,7 +3100,7 @@ void ViewProviderSketch::createEditInventorNodes(void)
     lineHintSep->renderCaching = SoSeparator::OFF;
     edit->EditHintLines = new SoLineVisual;
     lineHintSep->addChild(edit->EditHintLines);
-    edit->EditRoot->addChild(lineHintSep);
+    edit->EditRoot->addChild(edit->EditHintLines);
 
     // stuff for the edit coordinates ++++++++++++++++++++++++++++++++++++++
     SoMaterial *EditMaterials = new SoMaterial;
@@ -3192,10 +3198,6 @@ void ViewProviderSketch::createEditInventorNodes(void)
     MtlBind = new SoMaterialBinding;
     MtlBind->value = SoMaterialBinding::OVERALL ;
     edit->EditRoot->addChild(MtlBind);
-
-    // add font for the text shown constraints
-    font->size = 8.0;
-    edit->EditRoot->addChild(font);
 
     // use small line width for the Constraints
     DrawStyle = new SoDrawStyle;
