@@ -1171,9 +1171,9 @@ SbVec3f View3DInventorViewer::getPointOnScreen(const SbVec2s& pnt) const
 
     SbLine line; SbVec3f pt;
     SbPlane focalPlane = vol.getPlane(focalDist);
+
     vol.projectPointToLine(SbVec2f(pX,pY), line);
     focalPlane.intersect(line, pt);
-    
     return pt;
 }
 

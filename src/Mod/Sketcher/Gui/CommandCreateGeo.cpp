@@ -755,7 +755,11 @@ public:
             float angle = atan2f(dy_ , dx_) * 180 / M_PI;
 
             char buf[40];
+<<<<<<< HEAD
             sprintf( buf, "R(%.1f),%.1f ", radius, angle);
+=======
+            sprintf( buf, " (R%.1f,%.1f)", radius, angle);
+>>>>>>> dfca264acfa6fc7c58d4ca695c5ac76507568073
             std::string text = buf;
             setPositionText(onSketchPos, text);
 
@@ -776,11 +780,19 @@ public:
                 float dy = rx * sin(angle) + ry * cos(angle);
                 EditCurve[i] = Base::Vector2D(CenterPoint.fX + dx, CenterPoint.fY + dy);
             }
+<<<<<<< HEAD
+=======
+
+>>>>>>> dfca264acfa6fc7c58d4ca695c5ac76507568073
             // Display radius and end angle
             float radius = (onSketchPos - EditCurve[0]).Length();
 
             char buf[40];
+<<<<<<< HEAD
             sprintf( buf, "R(%.1f),%.1f ", radius, arcAngle * 180 / M_PI);
+=======
+            sprintf( buf, " (R%.1f,%.1f)", radius, arcAngle * 180 / M_PI);
+>>>>>>> dfca264acfa6fc7c58d4ca695c5ac76507568073
             std::string text = buf;
             setPositionText(onSketchPos, text);
             
@@ -967,7 +979,10 @@ public:
 
     virtual void mouseMove(Base::Vector2D onSketchPos)
     {
+<<<<<<< HEAD
 
+=======
+>>>>>>> dfca264acfa6fc7c58d4ca695c5ac76507568073
         if (Mode==STATUS_SEEK_First) {
             setPositionText(onSketchPos);
             if (seekAutoConstraint(sugConstr1, onSketchPos, Base::Vector2D(0.f,0.f))) {
@@ -991,7 +1006,11 @@ public:
             float radius = (onSketchPos - EditCurve[0]).Length();
 
             char buf[40];
+<<<<<<< HEAD
             sprintf( buf, "R(%.1f)", radius);
+=======
+            sprintf( buf, "R%.1f", radius);
+>>>>>>> dfca264acfa6fc7c58d4ca695c5ac76507568073
             std::string text = buf;
             setPositionText(onSketchPos, text);
 
