@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (c) 2008 Jürgen Riegel (juergen.riegel@web.de)              *
+ *   Copyright (c) 2008 Jï¿½rgen Riegel (juergen.riegel@web.de)              *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -383,7 +383,7 @@ CmdRobotTrajectoryDressUp::CmdRobotTrajectoryDressUp()
     sAppModule      = "Robot";
     sGroup          = QT_TR_NOOP("Robot");
     sMenuText       = QT_TR_NOOP("Dress up trajectory...");
-    sToolTipText    = QT_TR_NOOP("Create a dress up object which overide som aspects of a trajectory");
+    sToolTipText    = QT_TR_NOOP("Create a dress up object which override some aspects of a trajectory");
     sWhatsThis      = sToolTipText;
     sStatusTip      = sToolTipText;
     sPixmap         = "Robot_TrajectoryDressUp";
