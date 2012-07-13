@@ -27,12 +27,14 @@ set(PartDesignGui_LIBS
 set(PartDesignGui_MOC_HDRS
     TaskPadParameters.h
     TaskPatternRectangularParameters.h
+    TaskPlaneParameters.h
     TaskPocketParameters.h
     TaskChamferParameters.h
     TaskFilletParameters.h
     TaskHoleParameters.h
     TaskRevolutionParameters.h
     TaskGrooveParameters.h
+    SelectionLineEdit.h
 )
 fc_wrap_cpp(PartDesignGui_MOC_SRCS ${PartDesignGui_MOC_HDRS})
 SOURCE_GROUP("Moc" FILES ${PartDesignGui_MOC_SRCS})
@@ -42,6 +44,7 @@ qt4_add_resources(PartDesignGui_SRCS Resources/PartDesign.qrc)
 set(PartDesignGui_UIC_SRCS
     TaskPadParameters.ui
     TaskPatternRectangularParameters.ui
+    TaskPlaneParameters.ui
     TaskPocketParameters.ui
     TaskChamferParameters.ui
     TaskFilletParameters.ui
@@ -68,18 +71,25 @@ SET(PartDesignGuiViewProvider_SRCS
     ViewProviderRevolution.h
     ViewProviderGroove.cpp
     ViewProviderGroove.h
+    ViewProviderPlane.cpp
+    ViewProviderPlane.h
     ViewProviderPatternRectangular.cpp
     ViewProviderPatternRectangular.h
 )
 SOURCE_GROUP("ViewProvider" FILES ${PartDesignGuiViewProvider_SRCS})
 
 SET(PartDesignGuiTaskDlgs_SRCS
+    SelectionLineEdit.cpp
+    SelectionLineEdit.h
     TaskPadParameters.ui
     TaskPadParameters.cpp
     TaskPadParameters.h
     TaskPatternRectangularParameters.ui
     TaskPatternRectangularParameters.cpp
     TaskPatternRectangularParameters.h
+    TaskPlaneParameters.ui
+    TaskPlaneParameters.cpp
+    TaskPlaneParameters.h
     TaskPocketParameters.ui
     TaskPocketParameters.cpp
     TaskPocketParameters.h

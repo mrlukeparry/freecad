@@ -23,6 +23,7 @@
 
 #include "PreCompiled.h"
 #ifndef _PreComp_
+# include <BRepAdaptor_Surface.hxx>
 # include <BRep_Tool.hxx>
 # include <TopExp_Explorer.hxx>
 # include <TopoDS.hxx>
@@ -45,8 +46,11 @@
 #include <Gui/Selection.h>
 #include <Gui/MainWindow.h>
 #include <Gui/FileDialog.h>
+#include <Gui/SelectionFilter.h>
+
 
 #include <Mod/Part/App/Part2DObject.h>
+
 
 
 using namespace std;
@@ -55,46 +59,73 @@ using namespace std;
 // Part_Pad
 //===========================================================================
 
-/* Sketch commands =======================================================*/
-//DEF_STD_CMD_A(CmdPartDesignNewSketch);
-//
-//CmdPartDesignNewSketch::CmdPartDesignNewSketch()
-//  :Command("PartDesign_NewSketch")
-//{
-//    sAppModule      = "PartDesign";
-//    sGroup          = QT_TR_NOOP("PartDesign");
-//    sMenuText       = QT_TR_NOOP("Create sketch");
-//    sToolTipText    = QT_TR_NOOP("Create a new sketch");
-//    sWhatsThis      = sToolTipText;
-//    sStatusTip      = sToolTipText;
-//    sPixmap         = "Sketcher_NewSketch";
-//}
-//
-//
-//void CmdPartDesignNewSketch::activated(int iMsg)
-//{
-//    const char camstring[] = "#Inventor V2.1 ascii \\n OrthographicCamera { \\n viewportMapping ADJUST_CAMERA \\n position 0 0 87 \\n orientation 0 0 1  0 \\n nearDistance 37 \\n farDistance 137 \\n aspectRatio 1 \\n focalDistance 87 \\n height 119 }";
-//
-//    std::string FeatName = getUniqueObjectName("Sketch");
-//
-//    std::string cam(camstring);
-//
-//    openCommand("Create a new Sketch");
-//    doCommand(Doc,"App.activeDocument().addObject('Sketcher::SketchObject','%s')",FeatName.c_str());
-//    doCommand(Gui,"Gui.activeDocument().activeView().setCamera('%s')",cam.c_str());
-//    doCommand(Gui,"Gui.activeDocument().setEdit('%s')",FeatName.c_str());
-//
-//    //getDocument()->recompute();
-//}
-//
-//bool CmdPartDesignNewSketch::isActive(void)
-//{
-//    if (getActiveGuiDocument())
-//        return true;
-//    else
-//        return false;
-//}
-//
+/* Create Plane commands =======================================================*/
+DEF_STD_CMD_A(CmdPartDesignPlane);
+
+CmdPartDesignPlane::CmdPartDesignPlane()
+ :Command("PartDesign_Plane")
+{
+   sAppModule      = "PartDesign";
+   sGroup          = QT_TR_NOOP("PartDesign");
+   sMenuText       = QT_TR_NOOP("Create plane");
+   sToolTipText    = QT_TR_NOOP("Create a new sketcher plane");
+   sWhatsThis      = sToolTipText;
+   sStatusTip      = sToolTipText;
+   sPixmap         = "PartDesign_SketchPlane";
+}
+
+
+void CmdPartDesignPlane::activated(int iMsg)
+{
+
+    unsigned int mode = 0; // 0 - Points Mode
+                           // 1 - Faces Mode
+    std::string supportString;
+
+    //Add Face Recognition for convenience when initialising plane
+    Gui::SelectionFilter FaceFilter  ("SELECT Part::Feature SUBELEMENT Face COUNT 1");
+    if (FaceFilter.match()) {
+        // get the selected object
+        Part::Feature *part = static_cast<Part::Feature*>(FaceFilter.Result[0][0].getObject());
+        Base::Placement ObjectPos = part->Placement.getValue();
+        const std::vector<std::string> &sub = FaceFilter.Result[0][0].getSubNames();
+        if (sub.size() == 1){
+            // get the selected sub shape (a Face)
+            const Part::TopoShape &shape = part->Shape.getValue();
+            TopoDS_Shape sh = shape.getSubShape(sub[0].c_str());
+            const TopoDS_Face& face = TopoDS::Face(sh);
+
+            BRepAdaptor_Surface adapt(face);
+
+            // Currently only Planar faces are supported
+            if (adapt.GetType() == GeomAbs_Plane) {
+                mode = 1; // Set Mode to faces
+
+                supportString = FaceFilter.Result[0][0].getAsPropertyLinkSubString();
+            }
+        }
+    }
+
+    std::string FeatName = getUniqueObjectName("Plane");
+
+    openCommand("Create a new Sketch");
+    doCommand(Doc,"App.activeDocument().addObject('PartDesign::Plane','%s')",FeatName.c_str());
+
+    doCommand(Doc,"App.activeDocument().%s.Type = %u",FeatName.c_str(),mode);
+    if(supportString.size() > 0)
+        doCommand(Gui,"App.activeDocument().%s.Entity1 = %s",FeatName.c_str(),supportString.c_str());
+
+    doCommand(Gui,"Gui.activeDocument().setEdit('%s')",FeatName.c_str());
+}
+
+bool CmdPartDesignPlane::isActive(void)
+{
+   if (getActiveGuiDocument())
+       return true;
+   else
+       return false;
+}
+
 
 //===========================================================================
 // PartDesign_Pad
@@ -702,6 +733,7 @@ void CreatePartDesignCommands(void)
     Gui::CommandManager &rcCmdMgr = Gui::Application::Instance->commandManager();
 
     rcCmdMgr.addCommand(new CmdPartDesignPad());
+    rcCmdMgr.addCommand(new CmdPartDesignPlane());
     rcCmdMgr.addCommand(new CmdPartDesignPocket());
     rcCmdMgr.addCommand(new CmdPartDesignRevolution());
     rcCmdMgr.addCommand(new CmdPartDesignGroove());

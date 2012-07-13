@@ -69,13 +69,13 @@ void CmdSketcherNewSketch::activated(int iMsg)
 {
     Gui::SelectionFilter SketchFilter("SELECT Sketcher::SketchObject COUNT 1");
     Gui::SelectionFilter FaceFilter  ("SELECT Part::Feature SUBELEMENT Face COUNT 1");
+    Gui::SelectionFilter PlaneFilter  ("SELECT PartDesign::Plane COUNT 1");
 
     if (SketchFilter.match()) {
         Sketcher::SketchObject *Sketch = static_cast<Sketcher::SketchObject*>(SketchFilter.Result[0][0].getObject());
         openCommand("Edit Sketch");
         doCommand(Gui,"Gui.activeDocument().setEdit('%s')",Sketch->getNameInDocument());
-    }
-    else if (FaceFilter.match()) {
+    } else if (FaceFilter.match()) {
         // get the selected object
         Part::Feature *part = static_cast<Part::Feature*>(FaceFilter.Result[0][0].getObject());
         Base::Placement ObjectPos = part->Placement.getValue();
@@ -115,8 +115,23 @@ void CmdSketcherNewSketch::activated(int iMsg)
         doCommand(Gui,"App.activeDocument().recompute()");  // recompute the sketch placement based on its support
         //doCommand(Gui,"Gui.activeDocument().activeView().setCamera('%s')",cam.c_str());
         doCommand(Gui,"Gui.activeDocument().setEdit('%s')",FeatName.c_str());
-    }
-    else {
+    } else if (PlaneFilter.match()) {
+        // get the selected object
+        Part::Feature *part = static_cast<Part::Feature*>(PlaneFilter.Result[0][0].getObject());
+        Base::Placement ObjectPos = part->Placement.getValue();
+       
+        std::string supportString = PlaneFilter.Result[0][0].getAsPropertyLinkSubString();
+
+        // create Sketch on Face
+        std::string FeatName = getUniqueObjectName("Sketch");
+
+        openCommand("Create a Sketch on Face");
+        doCommand(Doc,"App.activeDocument().addObject('Sketcher::SketchObject','%s')",FeatName.c_str());
+        doCommand(Gui,"App.activeDocument().%s.Support = %s",FeatName.c_str(),supportString.c_str());
+        doCommand(Gui,"App.activeDocument().recompute()");  // recompute the sketch placement based on its support
+        //doCommand(Gui,"Gui.activeDocument().activeView().setCamera('%s')",cam.c_str());
+        doCommand(Gui,"Gui.activeDocument().setEdit('%s')",FeatName.c_str());
+    } else {
         // ask user for orientation
         SketchOrientationDialog Dlg;
 
@@ -333,10 +348,6 @@ bool CmdSketcherViewSketch::isActive(void)
     }
     return false;
 }
-
-
-
-
 
 void CreateSketcherCommands(void)
 {

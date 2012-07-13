@@ -30,6 +30,7 @@
 #include <Base/Interpreter.h>
  
 #include "FeaturePad.h"
+#include "FeaturePlane.h"
 #include "FeaturePocket.h"
 #include "FeatureFillet.h"
 #include "FeatureSketchBased.h"
@@ -80,6 +81,7 @@ void PartDesignExport initPartDesign()
     PartDesign::Hole               ::init();
     PartDesign::Body               ::init();
     PartDesign::Pad                ::init();
+    PartDesign::Plane              ::init();
     PartDesign::Pocket             ::init();
     PartDesign::Fillet             ::init();
     PartDesign::Revolution         ::init();

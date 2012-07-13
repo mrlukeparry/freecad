@@ -43,8 +43,7 @@
 #define M_PI       3.14159265358979323846
 #endif
 
-
-
+#include <Mod/PartDesign/App/FeaturePlane.h>
 #include "Part2DObject.h"
 #include "Geometry.h"
 
@@ -72,118 +71,120 @@ void Part2DObject::positionBySupport(void)
 {
     // recalculate support:
     Part::Feature *part = static_cast<Part::Feature*>(Support.getValue());
-    if (!part || !part->getTypeId().isDerivedFrom(Part::Feature::getClassTypeId()))
-        return;
+    if (!part || !part->getTypeId().isDerivedFrom(Part::Feature::getClassTypeId())) {
+    } else if(part->getTypeId() == PartDesign::Plane::getClassTypeId() ){
+        Placement.setValue(part->Placement.getValue());
+    } else {
+        Base::Placement Place = part->Placement.getValue();
+        const std::vector<std::string> &sub = Support.getSubValues();
+        assert(sub.size()==1);
+        // get the selected sub shape (a Face)
+        const Part::TopoShape &shape = part->Shape.getShape();
+        if (shape._Shape.IsNull())
+            throw Base::Exception("Support shape is empty!");
+        TopoDS_Shape sh = shape.getSubShape(sub[0].c_str());
+        const TopoDS_Face &face = TopoDS::Face(sh);
+        if (face.IsNull())
+            throw Base::Exception("Null face in Part2DObject::positionBySupport()!");
 
-    Base::Placement Place = part->Placement.getValue();
-    const std::vector<std::string> &sub = Support.getSubValues();
-    assert(sub.size()==1);
-    // get the selected sub shape (a Face)
-    const Part::TopoShape &shape = part->Shape.getShape();
-    if (shape._Shape.IsNull())
-        throw Base::Exception("Support shape is empty!");
-    TopoDS_Shape sh = shape.getSubShape(sub[0].c_str());
-    const TopoDS_Face &face = TopoDS::Face(sh);
-    if (face.IsNull())
-        throw Base::Exception("Null face in Part2DObject::positionBySupport()!");
+        BRepAdaptor_Surface adapt(face);
+        if (adapt.GetType() != GeomAbs_Plane)
+            throw Base::Exception("No planar face in Part2DObject::positionBySupport()!");
 
-    BRepAdaptor_Surface adapt(face);
-    if (adapt.GetType() != GeomAbs_Plane)
-        throw Base::Exception("No planar face in Part2DObject::positionBySupport()!");
+        bool Reverse = false;
+        if (face.Orientation() == TopAbs_REVERSED)
+            Reverse = true;
 
-    bool Reverse = false;
-    if (face.Orientation() == TopAbs_REVERSED)
-        Reverse = true;
+        gp_Pln plane = adapt.Plane();
+        Standard_Boolean ok = plane.Direct();
+        if (!ok) {
+            // toggle if plane has a left-handed coordinate system
+            plane.UReverse();
+            Reverse = !Reverse;
+        }
 
-    gp_Pln plane = adapt.Plane();
-    Standard_Boolean ok = plane.Direct();
-    if (!ok) {
-        // toggle if plane has a left-handed coordinate system
-        plane.UReverse();
-        Reverse = !Reverse;
-    }
+        gp_Ax1 Normal = plane.Axis();
+        if (Reverse)
+            Normal.Reverse();
 
-    gp_Ax1 Normal = plane.Axis();
-    if (Reverse)
-        Normal.Reverse();
+        gp_Pnt ObjOrg(Place.getPosition().x,Place.getPosition().y,Place.getPosition().z);
 
-    gp_Pnt ObjOrg(Place.getPosition().x,Place.getPosition().y,Place.getPosition().z);
+        Handle (Geom_Plane) gPlane = new Geom_Plane(plane);
+        GeomAPI_ProjectPointOnSurf projector(ObjOrg,gPlane);
+        gp_Pnt SketchBasePoint = projector.NearestPoint();
 
-    Handle (Geom_Plane) gPlane = new Geom_Plane(plane);
-    GeomAPI_ProjectPointOnSurf projector(ObjOrg,gPlane);
-    gp_Pnt SketchBasePoint = projector.NearestPoint();
+        gp_Dir dir = Normal.Direction();
+        gp_Ax3 SketchPos;
 
-    gp_Dir dir = Normal.Direction();
-    gp_Ax3 SketchPos;
+        Base::Vector3d dX,dY,dZ;
+        Place.getRotation().multVec(Base::Vector3d(1,0,0),dX);
+        Place.getRotation().multVec(Base::Vector3d(0,1,0),dY);
+        Place.getRotation().multVec(Base::Vector3d(0,0,1),dZ);
+        gp_Dir dirX(dX.x, dX.y, dX.z);
+        gp_Dir dirY(dY.x, dY.y, dY.z);
+        gp_Dir dirZ(dZ.x, dZ.y, dZ.z);
+        double cosNX = dir.Dot(dirX);
+        double cosNY = dir.Dot(dirY);
+        double cosNZ = dir.Dot(dirZ);
+        std::vector<double> cosXYZ;
+        cosXYZ.push_back(fabs(cosNX));
+        cosXYZ.push_back(fabs(cosNY));
+        cosXYZ.push_back(fabs(cosNZ));
 
-    Base::Vector3d dX,dY,dZ;
-    Place.getRotation().multVec(Base::Vector3d(1,0,0),dX);
-    Place.getRotation().multVec(Base::Vector3d(0,1,0),dY);
-    Place.getRotation().multVec(Base::Vector3d(0,0,1),dZ);
-    gp_Dir dirX(dX.x, dX.y, dX.z);
-    gp_Dir dirY(dY.x, dY.y, dY.z);
-    gp_Dir dirZ(dZ.x, dZ.y, dZ.z);
-    double cosNX = dir.Dot(dirX);
-    double cosNY = dir.Dot(dirY);
-    double cosNZ = dir.Dot(dirZ);
-    std::vector<double> cosXYZ;
-    cosXYZ.push_back(fabs(cosNX));
-    cosXYZ.push_back(fabs(cosNY));
-    cosXYZ.push_back(fabs(cosNZ));
+        int pos = std::max_element(cosXYZ.begin(), cosXYZ.end()) - cosXYZ.begin();
 
-    int pos = std::max_element(cosXYZ.begin(), cosXYZ.end()) - cosXYZ.begin();
-
-    // +X/-X
-    if (pos == 0) {
-        if (cosNX > 0)
-            SketchPos = gp_Ax3(SketchBasePoint, dir, dirY);
-        else
-            SketchPos = gp_Ax3(SketchBasePoint, dir, -dirY);
-    }
-    // +Y/-Y
-    else if (pos == 1) {
-        if (cosNY > 0)
-            SketchPos = gp_Ax3(SketchBasePoint, dir, -dirX);
-        else
+        // +X/-X
+        if (pos == 0) {
+            if (cosNX > 0)
+                SketchPos = gp_Ax3(SketchBasePoint, dir, dirY);
+            else
+                SketchPos = gp_Ax3(SketchBasePoint, dir, -dirY);
+        }
+        // +Y/-Y
+        else if (pos == 1) {
+            if (cosNY > 0)
+                SketchPos = gp_Ax3(SketchBasePoint, dir, -dirX);
+            else
+                SketchPos = gp_Ax3(SketchBasePoint, dir, dirX);
+        }
+        // +Z/-Z
+        else {
             SketchPos = gp_Ax3(SketchBasePoint, dir, dirX);
-    }
-    // +Z/-Z
-    else {
-        SketchPos = gp_Ax3(SketchBasePoint, dir, dirX);
-    }
+        }
 
-    gp_Trsf Trf;
-    Trf.SetTransformation(SketchPos);
-    Trf.Invert();
+        gp_Trsf Trf;
+        Trf.SetTransformation(SketchPos);
+        Trf.Invert();
 
-    Base::Matrix4D mtrx;
+        Base::Matrix4D mtrx;
 
-    gp_Mat m = Trf._CSFDB_Getgp_Trsfmatrix();
-    gp_XYZ p = Trf._CSFDB_Getgp_Trsfloc();
-    Standard_Real scale = 1.0;
+        gp_Mat m = Trf._CSFDB_Getgp_Trsfmatrix();
+        gp_XYZ p = Trf._CSFDB_Getgp_Trsfloc();
+        Standard_Real scale = 1.0;
 
-    // set Rotation matrix
-    mtrx[0][0] = scale * m._CSFDB_Getgp_Matmatrix(0,0);
-    mtrx[0][1] = scale * m._CSFDB_Getgp_Matmatrix(0,1);
-    mtrx[0][2] = scale * m._CSFDB_Getgp_Matmatrix(0,2);
+        // set Rotation matrix
+        mtrx[0][0] = scale * m._CSFDB_Getgp_Matmatrix(0,0);
+        mtrx[0][1] = scale * m._CSFDB_Getgp_Matmatrix(0,1);
+        mtrx[0][2] = scale * m._CSFDB_Getgp_Matmatrix(0,2);
 
-    mtrx[1][0] = scale * m._CSFDB_Getgp_Matmatrix(1,0);
-    mtrx[1][1] = scale * m._CSFDB_Getgp_Matmatrix(1,1);
-    mtrx[1][2] = scale * m._CSFDB_Getgp_Matmatrix(1,2);
+        mtrx[1][0] = scale * m._CSFDB_Getgp_Matmatrix(1,0);
+        mtrx[1][1] = scale * m._CSFDB_Getgp_Matmatrix(1,1);
+        mtrx[1][2] = scale * m._CSFDB_Getgp_Matmatrix(1,2);
 
-    mtrx[2][0] = scale * m._CSFDB_Getgp_Matmatrix(2,0);
-    mtrx[2][1] = scale * m._CSFDB_Getgp_Matmatrix(2,1);
-    mtrx[2][2] = scale * m._CSFDB_Getgp_Matmatrix(2,2);
+        mtrx[2][0] = scale * m._CSFDB_Getgp_Matmatrix(2,0);
+        mtrx[2][1] = scale * m._CSFDB_Getgp_Matmatrix(2,1);
+        mtrx[2][2] = scale * m._CSFDB_Getgp_Matmatrix(2,2);
 
-    // set pos vector
-    mtrx[0][3] = p._CSFDB_Getgp_XYZx();
-    mtrx[1][3] = p._CSFDB_Getgp_XYZy();
-    mtrx[2][3] = p._CSFDB_Getgp_XYZz();
+        // set pos vector
+        mtrx[0][3] = p._CSFDB_Getgp_XYZx();
+        mtrx[1][3] = p._CSFDB_Getgp_XYZy();
+        mtrx[2][3] = p._CSFDB_Getgp_XYZz();
 
-    // check the angle against the Z Axis
-    //Standard_Real a = Normal.Angle(gp_Ax1(gp_Pnt(0,0,0),gp_Dir(0,0,1)));
+        // check the angle against the Z Axis
+        //Standard_Real a = Normal.Angle(gp_Ax1(gp_Pnt(0,0,0),gp_Dir(0,0,1)));
 
-    Placement.setValue(Base::Placement(mtrx));
+        Placement.setValue(Base::Placement(mtrx));
+    } 
 }
 
 int Part2DObject::getAxisCount(void) const

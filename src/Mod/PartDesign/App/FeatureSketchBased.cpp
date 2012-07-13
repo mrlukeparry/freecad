@@ -82,6 +82,7 @@ void SketchBased::positionBySketch(void)
     Part::Part2DObject *sketch = static_cast<Part::Part2DObject*>(Sketch.getValue());
     if (sketch && sketch->getTypeId().isDerivedFrom(Part::Part2DObject::getClassTypeId())) {
         Part::Feature *part = static_cast<Part::Feature*>(sketch->Support.getValue());
+
         if (part && part->getTypeId().isDerivedFrom(Part::Feature::getClassTypeId()))
             this->Placement.setValue(part->Placement.getValue());
         else

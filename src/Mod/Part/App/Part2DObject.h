@@ -31,7 +31,9 @@
 #include "PartFeature.h"
 
 class TopoDS_Face;
-
+namespace PartDesign {
+class Plane;
+}
 namespace Part
 {
 class Geometry;

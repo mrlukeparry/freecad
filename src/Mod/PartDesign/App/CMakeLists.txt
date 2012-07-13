@@ -23,6 +23,8 @@ set(PartDesign_LIBS
 SET(Features_SRCS
     Feature.cpp
     Feature.h
+    FeaturePlane.cpp
+    FeaturePlane.h
     FeaturePatternRectangular.h
     FeaturePatternRectangular.cpp
     Body.cpp
