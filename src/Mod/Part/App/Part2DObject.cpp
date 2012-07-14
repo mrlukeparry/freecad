@@ -43,7 +43,6 @@
 #define M_PI       3.14159265358979323846
 #endif
 
-#include <Mod/PartDesign/App/FeaturePlane.h>
 #include "Part2DObject.h"
 #include "Geometry.h"
 
@@ -72,8 +71,6 @@ void Part2DObject::positionBySupport(void)
     // recalculate support:
     Part::Feature *part = static_cast<Part::Feature*>(Support.getValue());
     if (!part || !part->getTypeId().isDerivedFrom(Part::Feature::getClassTypeId())) {
-    } else if(part->getTypeId() == PartDesign::Plane::getClassTypeId() ){
-        Placement.setValue(part->Placement.getValue());
     } else {
         Base::Placement Place = part->Placement.getValue();
         const std::vector<std::string> &sub = Support.getSubValues();

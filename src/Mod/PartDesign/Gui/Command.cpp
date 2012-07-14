@@ -60,14 +60,14 @@ using namespace std;
 //===========================================================================
 
 /* Create Plane commands =======================================================*/
-DEF_STD_CMD_A(CmdPartDesignPlane);
+DEF_STD_CMD_A(CmdPartDesignSketchPlane);
 
-CmdPartDesignPlane::CmdPartDesignPlane()
- :Command("PartDesign_Plane")
+CmdPartDesignSketchPlane::CmdPartDesignSketchPlane()
+ :Command("PartDesign_SketchPlane")
 {
    sAppModule      = "PartDesign";
    sGroup          = QT_TR_NOOP("PartDesign");
-   sMenuText       = QT_TR_NOOP("Create plane");
+   sMenuText       = QT_TR_NOOP("Create sketch plane");
    sToolTipText    = QT_TR_NOOP("Create a new sketcher plane");
    sWhatsThis      = sToolTipText;
    sStatusTip      = sToolTipText;
@@ -75,7 +75,7 @@ CmdPartDesignPlane::CmdPartDesignPlane()
 }
 
 
-void CmdPartDesignPlane::activated(int iMsg)
+void CmdPartDesignSketchPlane::activated(int iMsg)
 {
 
     unsigned int mode = 0; // 0 - Points Mode
@@ -106,10 +106,10 @@ void CmdPartDesignPlane::activated(int iMsg)
         }
     }
 
-    std::string FeatName = getUniqueObjectName("Plane");
+    std::string FeatName = getUniqueObjectName("SketchPlane");
 
     openCommand("Create a new Sketch");
-    doCommand(Doc,"App.activeDocument().addObject('PartDesign::Plane','%s')",FeatName.c_str());
+    doCommand(Doc,"App.activeDocument().addObject('PartDesign::SketchPlane','%s')",FeatName.c_str());
 
     doCommand(Doc,"App.activeDocument().%s.Type = %u",FeatName.c_str(),mode);
     if(supportString.size() > 0)
@@ -118,7 +118,7 @@ void CmdPartDesignPlane::activated(int iMsg)
     doCommand(Gui,"Gui.activeDocument().setEdit('%s')",FeatName.c_str());
 }
 
-bool CmdPartDesignPlane::isActive(void)
+bool CmdPartDesignSketchPlane::isActive(void)
 {
    if (getActiveGuiDocument())
        return true;
@@ -733,7 +733,7 @@ void CreatePartDesignCommands(void)
     Gui::CommandManager &rcCmdMgr = Gui::Application::Instance->commandManager();
 
     rcCmdMgr.addCommand(new CmdPartDesignPad());
-    rcCmdMgr.addCommand(new CmdPartDesignPlane());
+    rcCmdMgr.addCommand(new CmdPartDesignSketchPlane());
     rcCmdMgr.addCommand(new CmdPartDesignPocket());
     rcCmdMgr.addCommand(new CmdPartDesignRevolution());
     rcCmdMgr.addCommand(new CmdPartDesignGroove());

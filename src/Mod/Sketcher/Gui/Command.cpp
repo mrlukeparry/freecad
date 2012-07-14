@@ -69,7 +69,7 @@ void CmdSketcherNewSketch::activated(int iMsg)
 {
     Gui::SelectionFilter SketchFilter("SELECT Sketcher::SketchObject COUNT 1");
     Gui::SelectionFilter FaceFilter  ("SELECT Part::Feature SUBELEMENT Face COUNT 1");
-    Gui::SelectionFilter PlaneFilter  ("SELECT PartDesign::Plane COUNT 1");
+    Gui::SelectionFilter PlaneFilter  ("SELECT PartDesign::SketchPlane COUNT 1");
 
     if (SketchFilter.match()) {
         Sketcher::SketchObject *Sketch = static_cast<Sketcher::SketchObject*>(SketchFilter.Result[0][0].getObject());

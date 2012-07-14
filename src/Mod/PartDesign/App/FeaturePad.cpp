@@ -39,12 +39,15 @@
 # include <Precision.hxx>
 # include <BRepPrimAPI_MakeHalfSpace.hxx>
 # include <BRepAlgoAPI_Common.hxx>
+# include <GeomAPI.hxx>
+# include <BRepAdaptor_Surface.hxx>
 #endif
 
 #include <Base/Placement.h>
 #include <Mod/Part/App/Part2DObject.h>
 #include <App/Document.h>
 
+#include "FeatureSketchPlane.h"
 #include "FeaturePad.h"
 
 
@@ -124,6 +127,30 @@ App::DocumentObjectExecReturn *Pad::execute(void)
     Part::Feature *SupportObject = 0;
     if (SupportLink && SupportLink->getTypeId().isDerivedFrom(Part::Feature::getClassTypeId()))
         SupportObject = static_cast<Part::Feature*>(SupportLink);
+
+    if(SupportObject->getTypeId() == SketchPlane::getClassTypeId())
+    {
+        SketchPlane *plane = static_cast<SketchPlane *>(SupportObject);
+        SupportObject = 0; //Rest Support Object
+        Part::Feature *part = static_cast<Part::Feature*>(plane->Support.getValue());
+        if (!part || !part->getTypeId().isDerivedFrom(Part::Feature::getClassTypeId())) {
+        } else {
+            SupportObject = part;
+//             const std::vector<std::string> &sub = plane->Support.getSubValues();
+//             assert(sub.size()==1);
+//             // get the selected sub shape (a Face)
+//             const Part::TopoShape &shape = part->Shape.getShape();
+//             if (!shape._Shape.IsNull()) {
+//                 TopoDS_Shape sh = shape.getSubShape(sub[0].c_str());
+//                 const TopoDS_Face &face = TopoDS::Face(sh);
+//                 if (!face.IsNull()) {
+//                     BRepAdaptor_Surface adapt(face);
+//                     if (adapt.GetType() == GeomAbs_Plane)
+//                       SupportObject = part;
+//                 }
+//             }
+        }
+    }
 
     TopoDS_Shape aFace = makeFace(wires);
     if (aFace.IsNull())

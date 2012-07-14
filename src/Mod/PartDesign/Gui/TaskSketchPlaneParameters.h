@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (c) 2011 Juergen Riegel <FreeCAD@juergen-riegel.net>        *
+ *   Copyright (c) 2012 Luke Parry           <l.parry@warwick.ac.uk>       *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -21,16 +21,16 @@
  ***************************************************************************/
 
 
-#ifndef GUI_TASKVIEW_TaskPlaneParameters_H
-#define GUI_TASKVIEW_TaskPlaneParameters_H
+#ifndef GUI_TASKVIEW_TaskSketchPlaneParameters_H
+#define GUI_TASKVIEW_TaskSketchPlaneParameters_H
 
 #include <Gui/TaskView/TaskView.h>
 #include <Gui/Selection.h>
 #include <Gui/TaskView/TaskDialog.h>
 
-#include "ViewProviderPlane.h"
+#include "ViewProviderSketchPlane.h"
 
-class Ui_TaskPlaneParameters;
+class Ui_TaskSketchPlaneParameters;
 
 namespace App {
 class Property;
@@ -40,17 +40,15 @@ namespace Gui {
 class ViewProvider;
 }
 
-namespace PartDesignGui { 
+namespace PartDesignGui {
 
-
-
-class TaskPlaneParameters : public Gui::TaskView::TaskBox, public Gui::SelectionObserver
+class TaskSketchPlaneParameters : public Gui::TaskView::TaskBox, public Gui::SelectionObserver
 {
     Q_OBJECT
 
 public:
-    TaskPlaneParameters(ViewProviderPlane *PlaneView,QWidget *parent = 0);
-    ~TaskPlaneParameters();
+    TaskSketchPlaneParameters(ViewProviderSketchPlane *PlaneView,QWidget *parent = 0);
+    ~TaskSketchPlaneParameters();
 
     int    getMode(void) const;
     double getOffset(void) const;
@@ -82,20 +80,20 @@ private:
 private:
     QWidget* proxy;
     QWidget* entSelected;
-    Ui_TaskPlaneParameters* ui;
-    ViewProviderPlane *PlaneView;
+    Ui_TaskSketchPlaneParameters* ui;
+    ViewProviderSketchPlane *PlaneView;
 };
 
 /// simulation dialog for the TaskView
-class TaskDlgPlaneParameters : public Gui::TaskView::TaskDialog
+class TaskDlgSketchPlaneParameters : public Gui::TaskView::TaskDialog
 {
     Q_OBJECT
 
 public:
-    TaskDlgPlaneParameters(ViewProviderPlane *PlaneView);
-    ~TaskDlgPlaneParameters();
+    TaskDlgSketchPlaneParameters(ViewProviderSketchPlane *PlaneView);
+    ~TaskDlgSketchPlaneParameters();
 
-    ViewProviderPlane* getPlaneView() const
+    ViewProviderSketchPlane* getPlaneView() const
     { return PlaneView; }
 
 
@@ -117,9 +115,8 @@ public:
     { return QDialogButtonBox::Ok|QDialogButtonBox::Cancel; }
 
 protected:
-    ViewProviderPlane   *PlaneView;
-
-    TaskPlaneParameters  *parameter;
+    ViewProviderSketchPlane   *PlaneView;
+    TaskSketchPlaneParameters *parameter;
 };
 
 } //namespace PartDesignGui

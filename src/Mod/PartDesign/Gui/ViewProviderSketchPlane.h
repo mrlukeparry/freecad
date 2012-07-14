@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (c) 2010 Juergen Riegel <FreeCAD@juergen-riegel.net>        *
+ *   Copyright (c) 2012 Luke Parry           <l.parry@warwick.ac.uk>       *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -20,53 +20,37 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "PreCompiled.h"
-#ifndef PARTDESIGN_Plane_H
-#define PARTDESIGN_Plane_H
 
-#include <App/PropertyStandard.h>
-#include <App/PropertyUnits.h>
-#include "Feature.h"
+#ifndef PARTGUI_ViewProviderSketchPlane_H
+#define PARTGUI_ViewProviderSketchPlane_H
 
-namespace PartDesign
+#include <Mod/Part/Gui/ViewProvider2DObject.h>
+
+namespace PartDesignGui {
+
+class PartDesignGuiExport ViewProviderSketchPlane : public PartGui::ViewProvider2DObject
 {
-
-class PartDesignExport Plane : public PartDesign::Feature
-{
-    PROPERTY_HEADER(PartDesign::Plane);
+    PROPERTY_HEADER(PartGui::ViewProviderSketchPlane);
 
 public:
-    Plane();
-    App::PropertyEnumeration    Type;
-    App::PropertyDistance       OffsetX;
-    App::PropertyDistance       OffsetY;
-    App::PropertyDistance       OffsetZ;
-    App::PropertyAngle          Rotation;
-    App::PropertyBool           Reversed;
-    App::PropertyLinkSub        Entity1;
-    App::PropertyLinkSub        Entity2;
-    App::PropertyLinkSub        Entity3;
+    /// constructor
+    ViewProviderSketchPlane();
+    /// destructor
+    virtual ~ViewProviderSketchPlane();
 
-    /** @name methods override feature */
-    //@{
-    /// recalculate the feature
-    void checkRefTypes(void);
-    App::DocumentObjectExecReturn *execute(void);
-    short mustExecute() const;
-    const char* getViewProviderName(void) const {
-        return "PartDesignGui::ViewProviderPlane";
-    }
+    /// grouping handling 
+    void setupContextMenu(QMenu*, QObject*, const char*);
+
+    virtual bool onDelete(const std::vector<std::string> &);
 
 protected:
-    void onChanged(const App::Property* prop);
-private:
-    static const char* TypeEnums[];
-    int numFaces;
-    int numVertices;
-    int numEdges;
+    virtual bool setEdit(int ModNum);
+    virtual void unsetEdit(int ModNum);
+
 };
 
-} //namespace PartDesign
+
+} // namespace PartDesignGui
 
 
-#endif // PARTDESIGN_Plane_H
+#endif // PARTGUI_ViewProviderSketchPlane_H

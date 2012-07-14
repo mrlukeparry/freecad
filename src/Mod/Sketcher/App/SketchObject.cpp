@@ -44,7 +44,7 @@
 #include <Base/Console.h>
 
 #include <Mod/Part/App/Geometry.h>
-
+#include <Mod/PartDesign/App/FeatureSketchPlane.h>
 #include <vector>
 
 #include "SketchObject.h"
@@ -54,9 +54,7 @@
 using namespace Sketcher;
 using namespace Base;
 
-
 PROPERTY_SOURCE(Sketcher::SketchObject, Part::Part2DObject)
-
 
 SketchObject::SketchObject()
 {
@@ -87,7 +85,13 @@ SketchObject::~SketchObject()
 App::DocumentObjectExecReturn *SketchObject::execute(void)
 {
     try {
-        this->positionBySupport();
+        Part::Feature *part = static_cast<Part::Feature*>(Support.getValue());
+        if(part && part->getTypeId() == PartDesign::SketchPlane::getClassTypeId())
+        {
+          this->Placement.setValue(part->Placement.getValue());
+        } else {
+            this->positionBySupport();
+        }
     }
     catch (const Base::Exception& e) {
         return new App::DocumentObjectExecReturn(e.what());

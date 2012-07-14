@@ -28,22 +28,23 @@
 
 #include <Base/Console.h>
 #include <Base/Interpreter.h>
- 
-#include "FeaturePad.h"
-#include "FeaturePlane.h"
-#include "FeaturePocket.h"
-#include "FeatureFillet.h"
-#include "FeatureSketchBased.h"
-#include "FeatureRevolution.h"
-#include "FeatureGroove.h"
+
+
 #include "Body.h"
-#include "FeatureDressUp.h"
-#include "FeatureChamfer.h"
-#include "FeatureFace.h"
-#include "FeatureSubtractive.h"
 #include "FeatureAdditive.h"
+#include "FeatureChamfer.h"
+#include "FeatureDressUp.h"
+#include "FeatureFace.h"
+#include "FeatureFillet.h"
+#include "FeatureGroove.h"
 #include "FeatureHole.h"
+#include "FeaturePad.h"
 #include "FeaturePatternRectangular.h"
+#include "FeaturePocket.h"
+#include "FeatureRevolution.h"
+#include "FeatureSketchBased.h"
+#include "FeatureSketchPlane.h"
+#include "FeatureSubtractive.h"
 
 extern struct PyMethodDef PartDesign_methods[];
 
@@ -58,7 +59,6 @@ void PartDesignExport initPartDesign()
     // load dependent module
     try {
         Base::Interpreter().runString("import Part");
-        Base::Interpreter().runString("import Sketcher");
     }
     catch(const Base::Exception& e) {
         PyErr_SetString(PyExc_ImportError, e.what());
@@ -74,6 +74,7 @@ void PartDesignExport initPartDesign()
  
     PartDesign::Feature            ::init();
     PartDesign::DressUp            ::init();
+    PartDesign::SketchPlane        ::init();
     PartDesign::SketchBased        ::init();
     PartDesign::Subtractive        ::init();
     PartDesign::Additive           ::init();
@@ -81,13 +82,13 @@ void PartDesignExport initPartDesign()
     PartDesign::Hole               ::init();
     PartDesign::Body               ::init();
     PartDesign::Pad                ::init();
-    PartDesign::Plane              ::init();
     PartDesign::Pocket             ::init();
     PartDesign::Fillet             ::init();
     PartDesign::Revolution         ::init();
     PartDesign::Groove		   ::init();
     PartDesign::Chamfer            ::init();
     PartDesign::Face               ::init();
+
 }
 
 } // extern "C"

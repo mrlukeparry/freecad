@@ -27,7 +27,7 @@ set(PartDesignGui_LIBS
 set(PartDesignGui_MOC_HDRS
     TaskPadParameters.h
     TaskPatternRectangularParameters.h
-    TaskPlaneParameters.h
+    TaskSketchPlaneParameters.h
     TaskPocketParameters.h
     TaskChamferParameters.h
     TaskFilletParameters.h
@@ -44,7 +44,7 @@ qt4_add_resources(PartDesignGui_SRCS Resources/PartDesign.qrc)
 set(PartDesignGui_UIC_SRCS
     TaskPadParameters.ui
     TaskPatternRectangularParameters.ui
-    TaskPlaneParameters.ui
+    TaskSketchPlaneParameters.ui
     TaskPocketParameters.ui
     TaskChamferParameters.ui
     TaskFilletParameters.ui
@@ -71,8 +71,8 @@ SET(PartDesignGuiViewProvider_SRCS
     ViewProviderRevolution.h
     ViewProviderGroove.cpp
     ViewProviderGroove.h
-    ViewProviderPlane.cpp
-    ViewProviderPlane.h
+    ViewProviderSketchPlane.cpp
+    ViewProviderSketchPlane.h
     ViewProviderPatternRectangular.cpp
     ViewProviderPatternRectangular.h
 )
@@ -87,9 +87,9 @@ SET(PartDesignGuiTaskDlgs_SRCS
     TaskPatternRectangularParameters.ui
     TaskPatternRectangularParameters.cpp
     TaskPatternRectangularParameters.h
-    TaskPlaneParameters.ui
-    TaskPlaneParameters.cpp
-    TaskPlaneParameters.h
+    TaskSketchPlaneParameters.ui
+    TaskSketchPlaneParameters.cpp
+    TaskSketchPlaneParameters.h
     TaskPocketParameters.ui
     TaskPocketParameters.cpp
     TaskPocketParameters.h

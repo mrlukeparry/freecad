@@ -51,6 +51,7 @@ void SketcherExport initSketcher()
     // load dependent module
     try {
         Base::Interpreter().runString("import Part");
+        Base::Interpreter().runString("import PartDesign");
     }
     catch(const Base::Exception& e) {
         PyErr_SetString(PyExc_ImportError, e.what());

@@ -21,6 +21,7 @@ link_directories(${OCC_LIBRARY_DIR})
 
 set(Sketcher_LIBS
     Part
+    PartDesign
     FreeCADApp
 )
 

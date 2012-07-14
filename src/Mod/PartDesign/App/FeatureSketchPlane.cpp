@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (c) 2010 Juergen Riegel <FreeCAD@juergen-riegel.net>        *
+ *   Copyright (c) 2012 Luke Parry           <l.parry@warwick.ac.uk>       *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -20,7 +20,7 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "PreCompiled.h"
+# include "PreCompiled.h"
 #ifndef _PreComp_
 # include <Standard_math.hxx>
 # include <BRep_Builder.hxx>
@@ -47,19 +47,17 @@
 # include <BRepAdaptor_Surface.hxx>
 #endif
 
-
-#include "FeaturePlane.h"
-#include <Mod/Part/App/Part2DObject.h>
+# include "FeatureSketchPlane.h"
 
 using namespace PartDesign;
 
-const char* Plane::TypeEnums[]= {"Points","Face",NULL};
+const char* SketchPlane::TypeEnums[]= {"Points","Face",NULL};
 
 namespace PartDesign {
 
-PROPERTY_SOURCE(PartDesign::Plane, PartDesign::Feature)
+PROPERTY_SOURCE(PartDesign::SketchPlane, Part::Part2DObject)
 
-Plane::Plane()
+SketchPlane::SketchPlane()
 {
     ADD_PROPERTY(Type,((long)0));
     Type.setEnums(TypeEnums);
@@ -77,7 +75,7 @@ Plane::Plane()
     numVertices = 0;
 }
 
-short Plane::mustExecute() const
+short SketchPlane::mustExecute() const
 {
     if (Placement.isTouched() ||
         OffsetX.isTouched()   ||
@@ -92,8 +90,7 @@ short Plane::mustExecute() const
     return 0;
 }
 
-
-void Plane::checkRefTypes(void)
+void SketchPlane::checkRefTypes(void)
 {
 
   std::vector<App::PropertyLinkSub *> refs;
@@ -153,12 +150,14 @@ void Plane::checkRefTypes(void)
   }
 }
 
-App::DocumentObjectExecReturn *Plane::execute(void)
+App::DocumentObjectExecReturn *SketchPlane::execute(void)
 {
     gp_Pln plane;
     gp_Ax1 Normal;
     gp_Pnt ObjOrg;
     Base::Placement Place;
+
+    bool reverse = Reversed.getValue();
 
     // Calculate the number of references
     checkRefTypes();
@@ -177,8 +176,6 @@ App::DocumentObjectExecReturn *Plane::execute(void)
         refs.push_back(&Entity2);
         refs.push_back(&Entity3);
 
-        bool Reverse = false;
-
         for (std::vector<App::PropertyLinkSub *>::const_iterator it=refs.begin(); it!=refs.end();++it) {
             if((*it)->getValue()) {
                 Part::Feature *feat = static_cast<Part::Feature*>((*it)->getValue());
@@ -194,7 +191,6 @@ App::DocumentObjectExecReturn *Plane::execute(void)
 
                 // Get the SubShape
                 const TopoDS_Shape sh = shape.getSubShape(sub[0].c_str());
-
                 if(sh.ShapeType() == TopAbs_VERTEX)
                 {
                     TopoDS_Vertex vert = TopoDS::Vertex(sh);
@@ -219,9 +215,11 @@ App::DocumentObjectExecReturn *Plane::execute(void)
                 if (adapt.GetType() != GeomAbs_Plane)
                     throw Base::Exception("Only Planar Faces Can be Handled");
 
+                Support.setValue((*it)->getValue(), sub);
+
                 // ------ Successfuly Found a Plane we can use ------- //
                 if ((face).Orientation() == TopAbs_REVERSED)
-                    Reverse = true;
+                  reverse = !reverse;
 
                 // Store the created plane from face and its supporting feature
                 plane = adapt.Plane();
@@ -240,12 +238,10 @@ App::DocumentObjectExecReturn *Plane::execute(void)
         if (!plane.Direct()) {
             // toggle if plane has a left-handed coordinate system
             plane.UReverse();
-            Reverse = !Reverse;
+            reverse = !reverse;
         }
 
         Normal = plane.Axis();
-        if (Reverse)
-            Normal.Reverse();
 
         Place = refFaceFeat->Placement.getValue();
 
@@ -330,20 +326,22 @@ App::DocumentObjectExecReturn *Plane::execute(void)
 
     gp_Dir dir = Normal.Direction();
 
-
     double offsetZ = OffsetZ.getValue();
-    bool reversed = Reversed.getValue();
-    if (offsetZ > Precision::Confusion()) {
+
+    if (fabs(offsetZ) > Precision::Confusion()) {
         gp_Vec vec(dir);
         vec.Normalize();
         gp_Vec vec2(gp_Pnt(0.f, 0.f, 0.f), BasePoint);
 
-        if (Reversed.getValue())
-            offsetZ *= -1.f;
-
         vec2 = vec2 + vec * offsetZ;
         BasePoint = gp_Pnt(vec2.X(), vec2.Y(), vec2.Z());
     }
+
+    if (reverse) {
+        Normal.Reverse();
+        dir = Normal.Direction();
+    }
+
     gp_Ax3 BasePos;
     Base::Vector3d dX,dY,dZ;
     Place.getRotation().multVec(Base::Vector3d(1,0,0),dX);
@@ -437,7 +435,7 @@ App::DocumentObjectExecReturn *Plane::execute(void)
     return App::DocumentObject::StdReturn;
 }
 
-void Plane::onChanged(const App::Property* prop)
+void SketchPlane::onChanged(const App::Property* prop)
 {
 //     if (prop == &Sketch) {
 //         // if attached to a sketch then mark it as read-only

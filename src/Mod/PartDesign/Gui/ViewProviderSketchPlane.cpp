@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (c) 2010 Juergen Riegel <FreeCAD@juergen-riegel.net>        *
+ *   Copyright (c) 2012 Luke Parry           <l.parry@warwick.ac.uk>       *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -27,43 +27,43 @@
 
 #endif
 
-#include "ViewProviderPlane.h"
-#include "TaskPlaneParameters.h"
-#include <Mod/PartDesign/App/FeaturePlane.h>
+#include "ViewProviderSketchPlane.h"
+#include "TaskSketchPlaneParameters.h"
+#include <Mod/PartDesign/App/FeatureSketchPlane.h>
 #include <Gui/Control.h>
 #include <Gui/Command.h>
 #include <Gui/Application.h>
 
 using namespace PartDesignGui;
 
-PROPERTY_SOURCE(PartDesignGui::ViewProviderPlane,PartGui::ViewProvider2DObject)
+PROPERTY_SOURCE(PartDesignGui::ViewProviderSketchPlane,PartGui::ViewProvider2DObject)
 
-ViewProviderPlane::ViewProviderPlane()
+ViewProviderSketchPlane::ViewProviderSketchPlane()
 {
 
 }
 
-ViewProviderPlane::~ViewProviderPlane()
+ViewProviderSketchPlane::~ViewProviderSketchPlane()
 {
 }
 
 
-void ViewProviderPlane::setupContextMenu(QMenu* menu, QObject* receiver, const char* member)
+void ViewProviderSketchPlane::setupContextMenu(QMenu* menu, QObject* receiver, const char* member)
 {
     QAction* act;
-    act = menu->addAction(QObject::tr("Edit plane"), receiver, member);
+    act = menu->addAction(QObject::tr("Edit sketch plane"), receiver, member);
     act->setData(QVariant((int)ViewProvider::Default));
     PartGui::ViewProviderPart::setupContextMenu(menu, receiver, member);
 }
 
-bool ViewProviderPlane::setEdit(int ModNum)
+bool ViewProviderSketchPlane::setEdit(int ModNum)
 {
     if (ModNum == ViewProvider::Default ) {
         // When double-clicking on the item for this pad the
         // object unsets and sets its edit mode without closing
         // the task panel
         Gui::TaskView::TaskDialog *dlg = Gui::Control().activeDialog();
-        TaskDlgPlaneParameters *planeDlg = qobject_cast<TaskDlgPlaneParameters *>(dlg);
+        TaskDlgSketchPlaneParameters *planeDlg = qobject_cast<TaskDlgSketchPlaneParameters *>(dlg);
         if (planeDlg && planeDlg->getPlaneView() != this)
             planeDlg = 0; 
         if (dlg && !planeDlg) {
@@ -88,7 +88,7 @@ bool ViewProviderPlane::setEdit(int ModNum)
         if (planeDlg)
             Gui::Control().showDialog(planeDlg);
         else
-            Gui::Control().showDialog(new TaskDlgPlaneParameters(this));
+            Gui::Control().showDialog(new TaskDlgSketchPlaneParameters(this));
 
         return true;
     }
@@ -97,7 +97,7 @@ bool ViewProviderPlane::setEdit(int ModNum)
     }
 }
 
-void ViewProviderPlane::unsetEdit(int ModNum)
+void ViewProviderSketchPlane::unsetEdit(int ModNum)
 {
     this->ShowGrid.setValue(false);
     if (ModNum == ViewProvider::Default) {
@@ -112,10 +112,10 @@ void ViewProviderPlane::unsetEdit(int ModNum)
     }
 }
 
-bool ViewProviderPlane::onDelete(const std::vector<std::string> &)
+bool ViewProviderSketchPlane::onDelete(const std::vector<std::string> &)
 {
     // get the support and Sketch
-    PartDesign::Plane* pcPlane = static_cast<PartDesign::Plane*>(getObject());
+    PartDesign::SketchPlane* pcPlane = static_cast<PartDesign::SketchPlane*>(getObject());
 
     return true;
 }

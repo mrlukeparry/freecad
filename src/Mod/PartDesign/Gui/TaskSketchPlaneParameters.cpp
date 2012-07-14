@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (c) 2011 Juergen Riegel <FreeCAD@juergen-riegel.net>        *
+ *   Copyright (c) 2012 Luke Parry         <l.parry@warwick.ac.uk>         *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -27,8 +27,8 @@
 # include <QMessageBox>
 #endif
 
-#include "ui_TaskPlaneParameters.h"
-#include "TaskPlaneParameters.h"
+#include "ui_TaskSketchPlaneParameters.h"
+#include "TaskSketchPlaneParameters.h"
 #include <App/Application.h>
 #include <App/Document.h>
 #include <Gui/Application.h>
@@ -39,21 +39,21 @@
 #include <Base/Console.h>
 #include <Gui/Selection.h>
 #include <Gui/Command.h>
-#include <Mod/PartDesign/App/FeaturePlane.h>
+#include <Mod/PartDesign/App/FeatureSketchPlane.h>
 
 #include "SelectionLineEdit.h"
 
 using namespace PartDesignGui;
 using namespace Gui;
 
-/* TRANSLATOR PartDesignGui::TaskPlaneParameters */
+/* TRANSLATOR PartDesignGui::TaskSketchPlaneParameters */
 
-TaskPlaneParameters::TaskPlaneParameters(ViewProviderPlane *PlaneView,QWidget *parent)
-    : TaskBox(Gui::BitmapFactory().pixmap("PartDesign_SketchPlane"),tr("Plane parameters"),true, parent),PlaneView(PlaneView)
+TaskSketchPlaneParameters::TaskSketchPlaneParameters(ViewProviderSketchPlane *PlaneView,QWidget *parent)
+    : TaskBox(Gui::BitmapFactory().pixmap("PartDesign_SketchPlane"),tr("Sketch Plane Parameters"),true, parent),PlaneView(PlaneView)
 {
     // we need a separate container widget to add all controls to
     proxy = new QWidget(this);
-    ui = new Ui_TaskPlaneParameters();
+    ui = new Ui_TaskSketchPlaneParameters();
     ui->setupUi(proxy);
     QMetaObject::connectSlotsByName(this);
 
@@ -84,7 +84,7 @@ TaskPlaneParameters::TaskPlaneParameters(ViewProviderPlane *PlaneView,QWidget *p
     ui->groupBox->setLayout(ui->horizontalLayout_3);
 
     // Get the feature data
-    PartDesign::Plane* pcPlane = static_cast<PartDesign::Plane*>(PlaneView->getObject());
+    PartDesign::SketchPlane* pcPlane = static_cast<PartDesign::SketchPlane*>(PlaneView->getObject());
 
     double offsetX  = pcPlane->OffsetX.getValue();
     double offsetY  = pcPlane->OffsetY.getValue();
@@ -109,7 +109,7 @@ TaskPlaneParameters::TaskPlaneParameters(ViewProviderPlane *PlaneView,QWidget *p
     ui->doubleSpinBoxOffsetX->setMaximum(INT_MAX);
     ui->doubleSpinBoxOffsetX->setValue(offsetY);
 
-    ui->doubleSpinBoxOffsetZ->setMinimum(0);
+    ui->doubleSpinBoxOffsetZ->setMinimum(-INT_MAX);
     ui->doubleSpinBoxOffsetZ->setMaximum(INT_MAX);
     ui->doubleSpinBoxOffsetZ->setValue(offsetZ);
 
@@ -163,12 +163,12 @@ TaskPlaneParameters::TaskPlaneParameters(ViewProviderPlane *PlaneView,QWidget *p
     updateUI(index);
 }
 
-TaskPlaneParameters::~TaskPlaneParameters()
+TaskSketchPlaneParameters::~TaskSketchPlaneParameters()
 {
   delete ui;
 }
 
-bool TaskPlaneParameters::eventFilter(QObject *object, QEvent *event)
+bool TaskSketchPlaneParameters::eventFilter(QObject *object, QEvent *event)
 {
     if (event->type() == QEvent::FocusIn)
     {
@@ -185,7 +185,7 @@ bool TaskPlaneParameters::eventFilter(QObject *object, QEvent *event)
     return false;
 }
 
-void TaskPlaneParameters::updateUI(int index)
+void TaskSketchPlaneParameters::updateUI(int index)
 {
     if (index == 0) {  // three points
         ui->checkBoxReversed->setEnabled(true);
@@ -217,9 +217,9 @@ void TaskPlaneParameters::updateUI(int index)
     } 
 }
 
-void TaskPlaneParameters::onSelectionChanged(const Gui::SelectionChanges& msg)
+void TaskSketchPlaneParameters::onSelectionChanged(const Gui::SelectionChanges& msg)
 {
-    PartDesign::Plane* pcPlane = static_cast<PartDesign::Plane*>(PlaneView->getObject());
+    PartDesign::SketchPlane* pcPlane = static_cast<PartDesign::SketchPlane*>(PlaneView->getObject());
 
     if (!msg.pSubName || msg.pSubName[0] == '\0')
         return;
@@ -271,12 +271,12 @@ void TaskPlaneParameters::onSelectionChanged(const Gui::SelectionChanges& msg)
     }
 }
 
-void TaskPlaneParameters::togglePlane()
+void TaskSketchPlaneParameters::togglePlane()
 {
     PlaneView->ShowGrid.setValue(PlaneView->getObject()->isValid());
 }
 
-void TaskPlaneParameters::updatePlaneStatus()
+void TaskSketchPlaneParameters::updatePlaneStatus()
 {
     togglePlane();
     SelectionLineEdit::EditMode mode;
@@ -292,44 +292,44 @@ void TaskPlaneParameters::updatePlaneStatus()
     ui->entity3->updateStatus(mode);
 }
 
-void TaskPlaneParameters::onRotationChanged(double rotation)
+void TaskSketchPlaneParameters::onRotationChanged(double rotation)
 {
-    PartDesign::Plane* pcPlane = static_cast<PartDesign::Plane*>(PlaneView->getObject());
+    PartDesign::SketchPlane* pcPlane = static_cast<PartDesign::SketchPlane*>(PlaneView->getObject());
     pcPlane->Rotation.setValue((float)rotation);
     pcPlane->getDocument()->recomputeFeature(pcPlane);
     updatePlaneStatus();
 }
 
-void TaskPlaneParameters::onOffsetXChanged(double offset)
+void TaskSketchPlaneParameters::onOffsetXChanged(double offset)
 {
-    PartDesign::Plane* pcPlane = static_cast<PartDesign::Plane*>(PlaneView->getObject());
+    PartDesign::SketchPlane* pcPlane = static_cast<PartDesign::SketchPlane*>(PlaneView->getObject());
     pcPlane->OffsetX.setValue((float)offset);
     pcPlane->getDocument()->recomputeFeature(pcPlane);
     updatePlaneStatus();
 }
 
-void TaskPlaneParameters::onOffsetYChanged(double offset)
+void TaskSketchPlaneParameters::onOffsetYChanged(double offset)
 {
-    PartDesign::Plane* pcPlane = static_cast<PartDesign::Plane*>(PlaneView->getObject());
+    PartDesign::SketchPlane* pcPlane = static_cast<PartDesign::SketchPlane*>(PlaneView->getObject());
     pcPlane->OffsetY.setValue((float)offset);
     pcPlane->getDocument()->recomputeFeature(pcPlane);
     updatePlaneStatus();
 }
 
-void TaskPlaneParameters::onOffsetZChanged(double offset)
+void TaskSketchPlaneParameters::onOffsetZChanged(double offset)
 {
-    PartDesign::Plane* pcPlane = static_cast<PartDesign::Plane*>(PlaneView->getObject());
+    PartDesign::SketchPlane* pcPlane = static_cast<PartDesign::SketchPlane*>(PlaneView->getObject());
     pcPlane->OffsetZ.setValue((float)offset);
     pcPlane->getDocument()->recomputeFeature(pcPlane);
     updatePlaneStatus();
 }
 
-void TaskPlaneParameters::onEntityChanged(QString s)
+void TaskSketchPlaneParameters::onEntityChanged(QString s)
 {
     // Find and cast the sender - we can assume it is from a SelectionLineEdit widget
     QWidget *selected = qobject_cast<QWidget *>(QObject::sender());
     QLineEdit * lineEdit = dynamic_cast<QLineEdit *>(selected);
-    PartDesign::Plane* pcPlane = static_cast<PartDesign::Plane*>(PlaneView->getObject());
+    PartDesign::SketchPlane* pcPlane = static_cast<PartDesign::SketchPlane*>(PlaneView->getObject());
 
     // If the text is now empty, the entity reference should be deleted
     if(s.isEmpty())
@@ -351,18 +351,18 @@ void TaskPlaneParameters::onEntityChanged(QString s)
     }
 }
 
-void TaskPlaneParameters::onReversed(bool on)
+void TaskSketchPlaneParameters::onReversed(bool on)
 {
-    PartDesign::Plane* pcPlane = static_cast<PartDesign::Plane*>(PlaneView->getObject());
+    PartDesign::SketchPlane* pcPlane = static_cast<PartDesign::SketchPlane*>(PlaneView->getObject());
     pcPlane->Reversed.setValue(on);
     pcPlane->getDocument()->recomputeFeature(pcPlane);
     updatePlaneStatus();
 }
 
 
-void TaskPlaneParameters::onModeChanged(int index)
+void TaskSketchPlaneParameters::onModeChanged(int index)
 {
-    PartDesign::Plane* pcPlane = static_cast<PartDesign::Plane*>(PlaneView->getObject());
+    PartDesign::SketchPlane* pcPlane = static_cast<PartDesign::SketchPlane*>(PlaneView->getObject());
 
     switch (index) {
       default:
@@ -376,37 +376,37 @@ void TaskPlaneParameters::onModeChanged(int index)
     updatePlaneStatus();
 }
 
-double TaskPlaneParameters::getOffsetX(void) const
+double TaskSketchPlaneParameters::getOffsetX(void) const
 {
     return ui->doubleSpinBoxOffsetX->value();
 }
 
-double TaskPlaneParameters::getOffsetY(void) const
+double TaskSketchPlaneParameters::getOffsetY(void) const
 {
     return ui->doubleSpinBoxOffsetY->value();
 }
 
-double TaskPlaneParameters::getOffsetZ(void) const
+double TaskSketchPlaneParameters::getOffsetZ(void) const
 {
     return ui->doubleSpinBoxOffsetZ->value();
 }
 
-double TaskPlaneParameters::getRotation(void) const
+double TaskSketchPlaneParameters::getRotation(void) const
 {
     return ui->doubleSpinBoxRotation->value();
 }
 
-bool   TaskPlaneParameters::getReversed(void) const
+bool   TaskSketchPlaneParameters::getReversed(void) const
 {
     return ui->checkBoxReversed->isChecked();
 }
 
-int TaskPlaneParameters::getMode(void) const
+int TaskSketchPlaneParameters::getMode(void) const
 {
     return ui->changeMode->currentIndex();
 }
 
-void TaskPlaneParameters::changeEvent(QEvent *e)
+void TaskSketchPlaneParameters::changeEvent(QEvent *e)
 {
     TaskBox::changeEvent(e);
     if (e->type() == QEvent::LanguageChange) {
@@ -419,16 +419,16 @@ void TaskPlaneParameters::changeEvent(QEvent *e)
 // TaskDialog
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-TaskDlgPlaneParameters::TaskDlgPlaneParameters(ViewProviderPlane *PlaneView)
+TaskDlgSketchPlaneParameters::TaskDlgSketchPlaneParameters(ViewProviderSketchPlane *PlaneView)
     : TaskDialog(),PlaneView(PlaneView)
 {
     assert(PlaneView);
-    parameter  = new TaskPlaneParameters(PlaneView);
+    parameter  = new TaskSketchPlaneParameters(PlaneView);
 
     Content.push_back(parameter);
 }
 
-TaskDlgPlaneParameters::~TaskDlgPlaneParameters()
+TaskDlgSketchPlaneParameters::~TaskDlgSketchPlaneParameters()
 {
 
 }
@@ -436,20 +436,20 @@ TaskDlgPlaneParameters::~TaskDlgPlaneParameters()
 //==== calls from the TaskView ===============================================================
 
 
-void TaskDlgPlaneParameters::open()
+void TaskDlgSketchPlaneParameters::open()
 {
     
 }
 
-void TaskDlgPlaneParameters::clicked(int)
+void TaskDlgSketchPlaneParameters::clicked(int)
 {
     
 }
 
-bool TaskDlgPlaneParameters::accept()
+bool TaskDlgSketchPlaneParameters::accept()
 {
     std::string name = PlaneView->getObject()->getNameInDocument();
-    PartDesign::Plane* pcPlane = static_cast<PartDesign::Plane*>(PlaneView->getObject());
+    PartDesign::SketchPlane* pcPlane = static_cast<PartDesign::SketchPlane*>(PlaneView->getObject());
 
     const std::vector<std::string> &sub1 = pcPlane->Entity1.getSubValues();
     const std::vector<std::string> &sub2 = pcPlane->Entity2.getSubValues();
@@ -491,10 +491,10 @@ bool TaskDlgPlaneParameters::accept()
     return true;
 }
 
-bool TaskDlgPlaneParameters::reject()
+bool TaskDlgSketchPlaneParameters::reject()
 {
     // get the support and Sketch
-    PartDesign::Plane* pcPlane = static_cast<PartDesign::Plane*>(PlaneView->getObject());
+    PartDesign::SketchPlane* pcPlane = static_cast<PartDesign::SketchPlane*>(PlaneView->getObject());
 
     // role back the done things
     Gui::Command::abortCommand();
@@ -506,7 +506,5 @@ bool TaskDlgPlaneParameters::reject()
     return true;
 }
 
-
-
-#include "moc_TaskPlaneParameters.cpp"
+#include "moc_TaskSketchPlaneParameters.cpp"
 #include "moc_SelectionLineEdit.cpp"

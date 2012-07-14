@@ -71,7 +71,7 @@ void Workbench::activated()
 
     const char* Face[] = {
         "Sketcher_NewSketch",
-        "PartDesign_Plane",
+        "PartDesign_SketchPlane",
         "PartDesign_Fillet",
         "PartDesign_Chamfer",
         0};
@@ -98,7 +98,7 @@ void Workbench::activated()
 
     const char* Empty[] = {
         "Sketcher_NewSketch",
-        "PartDesign_Plane",
+        "PartDesign_SketchPlane",
         "Part_Box",
         "Part_Cylinder",
         0};
@@ -187,7 +187,7 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
     *part << "Sketcher_NewSketch"
           << "Sketcher_LeaveSketch"
           << "Separator"
-          << "PartDesign_Plane"
+          << "PartDesign_SketchPlane"
           << "PartDesign_Pad"
           << "PartDesign_Pocket"
           << "PartDesign_Revolution"
