@@ -24,7 +24,14 @@
 #ifndef PARTGUI_ViewProviderSketchPlane_H
 #define PARTGUI_ViewProviderSketchPlane_H
 
-#include <Mod/Part/Gui/ViewProvider2DObject.h>
+# include <Mod/Part/Gui/ViewProvider2DObject.h>
+# include <Inventor/nodes/SoSeparator.h>
+# include <Inventor/nodes/SoSwitch.h>
+
+# include "SoTranslationDragger.h"
+# include "SoZoomTransform.h"
+#include <Gui/Selection.h>
+#include <boost/signals.hpp>
 
 namespace PartDesignGui {
 
@@ -43,10 +50,24 @@ public:
 
     virtual bool onDelete(const std::vector<std::string> &);
 
+    boost::signal<void (float val)> offsetZChanged;
+
 protected:
     virtual bool setEdit(int ModNum);
     virtual void unsetEdit(int ModNum);
+    static void draggerMotionCallback(void *data, SoDragger *dragger);
+    void draggerMotionCallback(SoDragger *dragger);
+    void updateData(const App::Property *prop);
+    void onChanged(const App::Property* prop);
+    void createInventorNodes();
+private:
+    TranslationDragger *transDragger;
+    SoSeparator *vpRoot;
+    SoTransform *transform;
+    SoZoomTransform * zoomTransform;
+    SoSwitch * switchNode;
 
+    bool edit;
 };
 
 

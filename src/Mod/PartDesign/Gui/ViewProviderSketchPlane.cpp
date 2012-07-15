@@ -27,26 +27,47 @@
 
 #endif
 
-#include "ViewProviderSketchPlane.h"
-#include "TaskSketchPlaneParameters.h"
-#include <Mod/PartDesign/App/FeatureSketchPlane.h>
 #include <Gui/Control.h>
 #include <Gui/Command.h>
 #include <Gui/Application.h>
+
+# include <Inventor/SbVec3f.h>
+# include <Inventor/nodes/SoSeparator.h>
+# include <Inventor/nodes/SoTransform.h>
+# include <Inventor/nodes/SoRotation.h>
+
+#include "ViewProviderSketchPlane.h"
+#include "TaskSketchPlaneParameters.h"
+
+#include <Mod/PartDesign/App/FeatureSketchPlane.h>
 
 using namespace PartDesignGui;
 
 PROPERTY_SOURCE(PartDesignGui::ViewProviderSketchPlane,PartGui::ViewProvider2DObject)
 
-ViewProviderSketchPlane::ViewProviderSketchPlane()
+ViewProviderSketchPlane::ViewProviderSketchPlane() :edit(false)
 {
-
 }
 
 ViewProviderSketchPlane::~ViewProviderSketchPlane()
 {
 }
 
+void ViewProviderSketchPlane::draggerMotionCallback(void *data, SoDragger *dragger)
+{
+    static_cast<ViewProviderSketchPlane*>(data)->draggerMotionCallback(dragger);
+}
+
+void ViewProviderSketchPlane::draggerMotionCallback(SoDragger *dragger)
+{
+    TranslationDragger *transDrag = static_cast<TranslationDragger *>(dragger);
+
+    SbVec3f distance = transDrag->translation.getValue();
+    PartDesign::SketchPlane* planeObj = static_cast<PartDesign::SketchPlane*>(pcObject);
+    planeObj->OffsetZ.setValue(distance[0]);
+    offsetZChanged(distance[0]);
+    planeObj->recompute();
+}
 
 void ViewProviderSketchPlane::setupContextMenu(QMenu* menu, QObject* receiver, const char* member)
 {
@@ -84,11 +105,15 @@ bool ViewProviderSketchPlane::setEdit(int ModNum)
         //if (ModNum == 1)
         //    Gui::Command::openCommand("Change pad parameters");
 
+        createInventorNodes();
+        edit = true;
+
         // start the edit dialog
         if (planeDlg)
             Gui::Control().showDialog(planeDlg);
         else
             Gui::Control().showDialog(new TaskDlgSketchPlaneParameters(this));
+
 
         return true;
     }
@@ -97,26 +122,110 @@ bool ViewProviderSketchPlane::setEdit(int ModNum)
     }
 }
 
+void ViewProviderSketchPlane::createInventorNodes()
+{
+    vpRoot = new SoSeparator();
+    vpRoot->renderCaching = SoSeparator::OFF; // Disable Rendercaching since Dragger scales with zoomTransform
+
+    transDragger = new TranslationDragger();
+    transform = new SoTransform();
+    switchNode = new SoSwitch();
+
+    transDragger->addMotionCallback(draggerMotionCallback,this);
+    switchNode->addChild(transform);
+    switchNode->addChild(transDragger);
+
+    // Initialise the Transdragger with the correct distance
+    PartDesign::SketchPlane* pcPlane = static_cast<PartDesign::SketchPlane*>(pcObject);
+    if(pcPlane->isValid()) {
+        SbVec3f dist(pcPlane->OffsetZ.getValue(), 0.f, 0.f);
+        transDragger->translation.setValue(dist);
+    }
+    vpRoot->addChild(switchNode);
+
+    vpRoot->ref();
+    pcRoot->addChild(vpRoot);
+}
+
 void ViewProviderSketchPlane::unsetEdit(int ModNum)
 {
     this->ShowGrid.setValue(false);
-    if (ModNum == ViewProvider::Default) {
-        // and update the pad
-        //getSketchObject()->getDocument()->recompute();
+    vpRoot->removeAllChildren();
+    pcRoot->removeChild(vpRoot);
 
-        // when pressing ESC make sure to close the dialog
-        Gui::Control().closeDialog();
-    }
-    else {
-        PartGui::ViewProviderPart::unsetEdit(ModNum);
-    }
+    edit = false;
+    // and update the sketch
+    //pcObject->getDocument()->recompute();
+
+    // when pressing ESC make sure to close the dialog
+    Gui::Control().closeDialog();
 }
 
 bool ViewProviderSketchPlane::onDelete(const std::vector<std::string> &)
 {
     // get the support and Sketch
-    PartDesign::SketchPlane* pcPlane = static_cast<PartDesign::SketchPlane*>(getObject());
 
     return true;
+}
+
+void ViewProviderSketchPlane::onChanged(const App::Property* prop)
+{
+    // call father
+    PartGui::ViewProvider2DObject::onChanged(prop);
+    PartDesign::SketchPlane* pcPlane = static_cast<PartDesign::SketchPlane*>(pcObject);
+
+    if(!edit)
+      return;
+
+    if(pcPlane->isValid())
+    {
+        switchNode->whichChild.setValue(-3); //All are enabled
+        Base::Vector3d axis(0,1,0);
+        bool reverse = pcPlane->Reversed.getValue();
+        double angle = -M_PI_2;
+        if(reverse)
+            angle *= -1;
+        Base::Rotation rot(axis, angle);
+        SbVec3f pos = transDragger->translation.getValue();
+        double q1,q2,q3,q4;
+        rot.getValue(q1,q2,q3,q4);
+        transform->rotation.setValue((float) q1,(float) q2, (float) q3, (float)q4);
+        float distance = -pos[0];
+        if(reverse)
+          distance *= -1.f;
+        transform->translation.setValue(SbVec3f ( 0.f, 0.f, distance));
+    } else {
+        switchNode->whichChild.setValue(-2); // Hides the dragger
+    }
+}
+
+void ViewProviderSketchPlane::updateData(const App::Property *prop)
+{
+    PartGui::ViewProvider2DObject::updateData(prop);
+    PartDesign::SketchPlane* pcPlane = static_cast<PartDesign::SketchPlane*>(pcObject);
+
+    if(!edit)
+      return;
+    if(pcPlane->isValid())
+    {
+        switchNode->whichChild.setValue(-3); //All are enabled
+        Base::Vector3d axis(0,1,0);
+        bool reverse = pcPlane->Reversed.getValue();
+        double angle = -M_PI_2;
+        if(reverse)
+            angle *= -1;
+        Base::Rotation rot(axis, angle);
+        SbVec3f pos = transDragger->translation.getValue();
+        double q1,q2,q3,q4;
+        rot.getValue(q1,q2,q3,q4);
+        transform->rotation.setValue((float) q1,(float) q2, (float) q3, (float)q4);
+
+        float distance = -pos[0];
+        if(reverse)
+          distance *= -1.f;
+        transform->translation.setValue(SbVec3f ( 0.f, 0.f, distance));
+    } else {
+        switchNode->whichChild.setValue(-2); // Hides the dragger
+    }
 }
 

@@ -25,12 +25,15 @@
 #define GUI_TASKVIEW_TaskSketchPlaneParameters_H
 
 #include <Gui/TaskView/TaskView.h>
-#include <Gui/Selection.h>
 #include <Gui/TaskView/TaskDialog.h>
+
+#include <Gui/Selection.h>
+#include <boost/signals.hpp>
 
 #include "ViewProviderSketchPlane.h"
 
 class Ui_TaskSketchPlaneParameters;
+
 
 namespace App {
 class Property;
@@ -45,6 +48,7 @@ namespace PartDesignGui {
 class TaskSketchPlaneParameters : public Gui::TaskView::TaskBox, public Gui::SelectionObserver
 {
     Q_OBJECT
+    typedef boost::signals::connection Connection;
 
 public:
     TaskSketchPlaneParameters(ViewProviderSketchPlane *PlaneView,QWidget *parent = 0);
@@ -58,6 +62,8 @@ public:
     double getOffsetZ() const;
     double getRotation() const;
 
+    void  slotOffsetZChanged(float val);
+
 private Q_SLOTS:
     void onOffsetXChanged(double);
     void onOffsetYChanged(double);
@@ -69,6 +75,7 @@ private Q_SLOTS:
 
 protected:
     void changeEvent(QEvent *e);
+    Connection connectionOffsetZChanged;
 
 private:
     void onSelectionChanged(const Gui::SelectionChanges& msg);

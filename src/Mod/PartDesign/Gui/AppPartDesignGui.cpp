@@ -32,6 +32,8 @@
 #include <Gui/Language/Translator.h>
 
 #include "Workbench.h"
+#include "SoZoomTransform.h"
+#include "SoTranslationDragger.h"
 #include "ViewProviderPocket.h"
 #include "ViewProviderPad.h"
 #include "ViewProviderSketchPlane.h"
@@ -80,6 +82,8 @@ void PartDesignGuiExport initPartDesignGui()
     // instantiating the commands
     CreatePartDesignCommands();
 
+    PartDesignGui::SoZoomTransform         ::initClass();
+    PartDesignGui::TranslationDragger      ::initClass();
     PartDesignGui::Workbench               ::init();
     PartDesignGui::ViewProvider            ::init();
     PartDesignGui::ViewProviderPocket      ::init();

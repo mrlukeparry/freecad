@@ -118,6 +118,10 @@ SET(PartDesignGuiModule_SRCS
     Resources/PartDesign.qrc
     PreCompiled.cpp
     PreCompiled.h
+    SoZoomTransform.cpp
+    SoZoomTransform.h
+    SoTranslationDragger.cpp
+    SoTranslationDragger.h
     Workbench.cpp
     Workbench.h
 )

@@ -41,6 +41,8 @@
 #include <Gui/Command.h>
 #include <Mod/PartDesign/App/FeatureSketchPlane.h>
 
+#include <boost/bind.hpp>
+
 #include "SelectionLineEdit.h"
 
 using namespace PartDesignGui;
@@ -79,9 +81,10 @@ TaskSketchPlaneParameters::TaskSketchPlaneParameters(ViewProviderSketchPlane *Pl
     QObject::connect(ui->entity3, SIGNAL(textChanged(QString)),
     this, SLOT(onEntityChanged(QString)));
 
+    connectionOffsetZChanged = PlaneView->offsetZChanged.connect(boost::bind(&PartDesignGui::TaskSketchPlaneParameters::slotOffsetZChanged, this,_1));
+
     this->groupLayout()->addWidget(proxy);
 
-    ui->groupBox->setLayout(ui->horizontalLayout_3);
 
     // Get the feature data
     PartDesign::SketchPlane* pcPlane = static_cast<PartDesign::SketchPlane*>(PlaneView->getObject());
@@ -165,7 +168,14 @@ TaskSketchPlaneParameters::TaskSketchPlaneParameters(ViewProviderSketchPlane *Pl
 
 TaskSketchPlaneParameters::~TaskSketchPlaneParameters()
 {
+   // Disconnect Boost Signal
+  connectionOffsetZChanged.disconnect();
   delete ui;
+}
+
+void TaskSketchPlaneParameters::slotOffsetZChanged(float val)
+{
+    ui->doubleSpinBoxOffsetZ->setValue(val);
 }
 
 bool TaskSketchPlaneParameters::eventFilter(QObject *object, QEvent *event)
