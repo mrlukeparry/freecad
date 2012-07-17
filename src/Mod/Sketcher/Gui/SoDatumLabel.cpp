@@ -667,7 +667,6 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
         float range      = this->param3.getValue();
         float endangle   = startangle + range;
 
-        
         float r = 2*length;
 
         // Set the Text label angle to zero
@@ -834,12 +833,12 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
         const SbViewportRegion & vpr = SoViewportRegionElement::get(state);
 
         SoGetMatrixAction * getmatrixaction = new SoGetMatrixAction(vpr);
-        getmatrixaction->apply(this);
+        getmatrixaction->apply(action);
 
         SbMatrix transform = getmatrixaction->getMatrix();
         transform.multVecMatrix(surfNorm, surfNorm);
 
-        bool flip = surfNorm.dot(z) > 0;
+        bool flip =  surfNorm.dot(z) > FLT_EPSILON;
 
         glDisable(GL_DEPTH_TEST);
         glEnable(GL_TEXTURE_2D); // Enable Textures
