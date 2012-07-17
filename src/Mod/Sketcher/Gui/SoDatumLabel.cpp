@@ -87,6 +87,7 @@ SoDatumLabel::SoDatumLabel()
     SO_NODE_DEFINE_ENUM_VALUE(Type, DISTANCEY);
     SO_NODE_DEFINE_ENUM_VALUE(Type, ANGLE);
     SO_NODE_DEFINE_ENUM_VALUE(Type, RADIUS);
+    SO_NODE_DEFINE_ENUM_VALUE(Type, SYMMETRIC);
     SO_NODE_SET_SF_ENUM_TYPE(datumtype, Type);
 
     this->imgWidth = 0;
@@ -870,8 +871,8 @@ void SoDatumLabel::GLRender(SoGLRenderAction * action)
 
         glTexCoord2f(flip ? 0.f : 1.f, 1.f); glVertex2f( -this->imgWidth / 2,  this->imgHeight / 2);
         glTexCoord2f(flip ? 0.f : 1.f, 0.f); glVertex2f( -this->imgWidth / 2, -this->imgHeight / 2);
-        glTexCoord2f(flip ? 1.f : 0.f, 0.f); glVertex2f( this->imgWidth / 2, -this->imgHeight / 2);
-        glTexCoord2f(flip ? 1.f : 0.f, 1.f); glVertex2f( this->imgWidth / 2,  this->imgHeight / 2);
+        glTexCoord2f(flip ? 1.f : 0.f, 0.f); glVertex2f(  this->imgWidth / 2, -this->imgHeight / 2);
+        glTexCoord2f(flip ? 1.f : 0.f, 1.f); glVertex2f(  this->imgWidth / 2,  this->imgHeight / 2);
 
         glEnd();
 
