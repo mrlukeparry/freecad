@@ -53,6 +53,9 @@
 # include <Inventor/details/SoFaceDetail.h>
 # include <Inventor/details/SoLineDetail.h>
 # include <Inventor/misc/SoState.h>
+# include <Inventor/elements/SoViewVolumeElement.h>
+# include <Inventor/elements/SoModelMatrixElement.h>
+# include <Inventor/elements/SoViewportRegionElement.h>
 #endif
 
 #include "SoBrepShape.h"
@@ -61,6 +64,31 @@
 
 using namespace PartGui;
 
+void drawSphere(float r, int lats, int longs) {
+    int i, j;
+    for(i = 0; i <= lats; i++) {
+        float lat0 = M_PI * (-0.5 + (float) (i - 1) / lats);
+        float z0  = sin(lat0);
+        float zr0 =  cos(lat0);
+
+        float lat1 = M_PI * (-0.5 + (float) i / lats);
+        float z1 = sin(lat1);
+        float zr1 = cos(lat1);
+
+        glBegin(GL_QUAD_STRIP);
+        for(j = 0; j <= longs; j++) {
+            float lng = 2 * M_PI * (float) (j - 1) / longs;
+            float x = cos(lng);
+            float y = sin(lng);
+
+            glNormal3f(x * zr0, y * zr0, z0);
+            glVertex3f(x * zr0, y * zr0, z0);
+            glNormal3f(x * zr1, y * zr1, z1);
+            glVertex3f(x * zr1, y * zr1, z1);
+        }
+        glEnd();
+    }
+}
 
 SO_NODE_SOURCE(SoBrepFaceSet);
 
@@ -904,18 +932,28 @@ SoBrepPointSet::SoBrepPointSet()
 
 void SoBrepPointSet::GLRender(SoGLRenderAction *action)
 {
+    SoState * state = action->getState();
+    const SbViewVolume & vv = SoViewVolumeElement::get(state);
+    
+    float scale = vv.getWorldToScreenScale(SbVec3f(0.f,0.f,0.f), 0.4f);
+
+    ps = SoPointSizeElement::get(state);
+    if (ps < 4.0f) SoPointSizeElement::set(state, this, 4.0f);
+
+    ps *= scale * 0.003f; // Set the absolute size for the picking spheres
+
     if (this->selectionIndex.getNum() > 0)
         renderSelection(action);
     if (this->highlightIndex.getValue() >= 0)
         renderHighlight(action);
-    inherited::GLRender(action);
+    renderDefault(action);
 
     // Workaround for #0000433
 //#if !defined(FC_OS_WIN32)
-    if (this->highlightIndex.getValue() >= 0)
-        renderHighlight(action);
-    if (this->selectionIndex.getNum() > 0)
-        renderSelection(action);
+//     if (this->highlightIndex.getValue() >= 0)
+//         renderHighlight(action);
+//     if (this->selectionIndex.getNum() > 0)
+//         renderSelection(action);
 //#endif
 }
 
@@ -924,28 +962,107 @@ void SoBrepPointSet::GLRenderBelowPath(SoGLRenderAction * action)
     inherited::GLRenderBelowPath(action);
 }
 
+// Renders highlight or a selection
 void SoBrepPointSet::renderShape(const SoGLCoordinateElement * const coords, 
                                  const int32_t *cindices,
                                  int numindices)
 {
+
     const SbVec3f * coords3d = coords->getArrayPtr3();
 
     int previ;
     const int32_t *end = cindices + numindices;
-    glBegin(GL_POINTS);
+
+    // Set GL Properties - not necessarily needed
+    glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
+    glShadeModel(GL_SMOOTH);
     while (cindices < end) {
         previ = *cindices++;
-        glVertex3fv((const GLfloat*) (coords3d + previ));
+        const SbVec3f *v = coords3d + previ;
+        glPushMatrix();
+
+        glTranslatef((*v)[0], (*v)[1], (*v)[2]);
+        glScalef(ps,ps,ps);
+        drawSphere(1, 12, 12);
+        glPopMatrix();
     }
-    glEnd();
+    glPopAttrib();
+}
+
+// Renders All The Points
+void SoBrepPointSet::renderShape(const SoGLCoordinateElement * const coords)
+{
+    const SbVec3f * startIx = coords->getArrayPtr3();
+    const int32_t *cindices =  this->selectionIndex.getValues(0); // Selections Indices
+    int numcindices = this->selectionIndex.getNum();
+
+    const int32_t *end = cindices + numcindices;
+
+    int32_t hId = this->highlightIndex.getValue(); // Highlighted Index
+    int i = 0, previ;
+
+    int32_t idx = this->startIndex.getValue();
+    int32_t numpts = this->numPoints.getValue();
+    if (numpts < 0) numpts = coords->getNum() - idx;
+
+    // Set GL Properties - not necessarily needed
+    glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
+    glShadeModel(GL_SMOOTH);
+
+    while (i < numpts) {
+        bool fnd = false;
+        const SbVec3f v = coords->get3(idx++);
+        i++;
+
+        if((hId >= 0 && &v == startIx + hId)) {
+            fnd = true;
+        } else if(numcindices > 0) {
+
+            cindices = this->selectionIndex.getValues(0);
+            while (cindices < end) {
+                previ = *cindices++;
+                if(&v == startIx + previ) {
+                  fnd = true;
+                }
+            }
+        }
+
+        if(fnd)
+            continue;
+
+        glPushMatrix();
+
+        glTranslatef(v[0], v[1], v[2]);
+        glScalef(ps,ps,ps);
+        drawSphere(1, 12, 12);
+        glPopMatrix();
+
+    }
+    glPopAttrib();
+}
+
+void SoBrepPointSet::renderDefault(SoGLRenderAction *action)
+{
+    SoState * state = action->getState();
+    state->push();
+
+    const SoCoordinateElement * coords;
+    const SbVec3f * normals;
+
+    this->getVertexData(state, coords, normals, FALSE);
+
+    SoMaterialBundle mb(action);
+    mb.sendFirst(); // make sure we have the correct material
+
+    SoDrawStyleElement::set(state, SoDrawStyleElement::FILLED);
+    renderShape(static_cast<const SoGLCoordinateElement*>(coords));
+    state->pop();
 }
 
 void SoBrepPointSet::renderHighlight(SoGLRenderAction *action)
 {
     SoState * state = action->getState();
     state->push();
-    float ps = SoPointSizeElement::get(state);
-    if (ps < 4.0f) SoPointSizeElement::set(state, this, 4.0f);
 
     SoLazyElement::setEmissive(state, &this->highlightColor);
     SoOverrideElement::setEmissiveColorOverride(state, this, TRUE);
@@ -958,10 +1075,11 @@ void SoBrepPointSet::renderHighlight(SoGLRenderAction *action)
     this->getVertexData(state, coords, normals, FALSE);
 
     SoMaterialBundle mb(action);
+
     mb.sendFirst(); // make sure we have the correct material
 
     int32_t id = this->highlightIndex.getValue();
-
+    SoDrawStyleElement::set(state, SoDrawStyleElement::FILLED);
     renderShape(static_cast<const SoGLCoordinateElement*>(coords), &id, 1);
     state->pop();
 }
@@ -970,8 +1088,6 @@ void SoBrepPointSet::renderSelection(SoGLRenderAction *action)
 {
     SoState * state = action->getState();
     state->push();
-    float ps = SoPointSizeElement::get(state);
-    if (ps < 4.0f) SoPointSizeElement::set(state, this, 4.0f);
 
     SoLazyElement::setEmissive(state, &this->selectionColor);
     SoOverrideElement::setEmissiveColorOverride(state, this, TRUE);
@@ -990,7 +1106,7 @@ void SoBrepPointSet::renderSelection(SoGLRenderAction *action)
 
     cindices = this->selectionIndex.getValues(0);
     numcindices = this->selectionIndex.getNum();
-
+    SoDrawStyleElement::set(state, SoDrawStyleElement::FILLED);
     renderShape(static_cast<const SoGLCoordinateElement*>(coords), cindices, numcindices);
     state->pop();
 }
@@ -1003,6 +1119,7 @@ void SoBrepPointSet::doAction(SoAction* action)
             this->highlightIndex = -1;
             return;
         }
+
         const SoDetail* detail = hlaction->getElement();
         if (detail) {
             if (!detail->isOfType(SoPointDetail::getClassTypeId())) {
@@ -1061,4 +1178,78 @@ void SoBrepPointSet::doAction(SoAction* action)
     }
 
     inherited::doAction(action);
+}
+
+void SoBrepPointSet::rayPick(SoRayPickAction *action)
+{
+    SoState * state = action->getState();
+
+    // First see if the object is pickable.
+    if (! shouldRayPick(action))
+      return;
+
+    // Compute the picking ray in our current object space.
+    computeObjectSpaceRay(action);
+
+    const SoCoordinateElement * coords;
+    const SbVec3f * normals;
+
+    this->getVertexData(state, coords, normals, FALSE);
+
+    SbVec3f enterPoint, exitPoint, normal;
+    SoPickedPoint *pp;
+
+    // Sphere radius is based on the point size multipled by scalefactor
+    float radius = ps;
+
+    int32_t idx = this->startIndex.getValue();
+    int32_t numpts = this->numPoints.getValue();
+
+    if (numpts < 0)
+        numpts = coords->getNum() - idx; // Assuming reversed index
+
+    for (int i = 0; i < numpts; i++) {
+
+        const SbVec3f v = coords->get3(idx);
+
+        // Create SbSphere at position {v} and radius r
+        SbSphere sph(SbVec3f(v[0], v[1], v[2]), radius);
+
+        // Intersect with pick ray. If found, set up picked point(s).
+        if (sph.intersect(action->getLine(), enterPoint, exitPoint)) {
+            if(action->isBetweenPlanes(enterPoint) && (pp = action->addIntersection(enterPoint)) != NULL) {
+                normal = enterPoint;
+                normal.normalize();
+                pp->setObjectNormal(normal);
+
+                // Create a new point detail and add this to the picked point
+                SoPointDetail * point_detail = new SoPointDetail();
+                point_detail->setCoordinateIndex(idx);
+                pp->setDetail(point_detail,this);
+            }
+
+            // Check the exit point
+            if(action->isBetweenPlanes(exitPoint) && (pp = action->addIntersection(exitPoint)) != NULL) {
+                normal = exitPoint;
+                normal.normalize();
+                pp->setObjectNormal(normal);
+
+                // Create a new point detail and add this to the picked point
+                SoPointDetail * point_detail = new SoPointDetail();
+                point_detail->setCoordinateIndex(idx);
+                pp->setDetail(point_detail,this);
+            }
+        }
+        idx++; // Increment the Index
+    }
+}
+
+SoDetail * SoBrepPointSet::createPointDetail(SoRayPickAction *,
+                           const SoPrimitiveVertex *,
+                           SoPickedPoint *pp)
+{
+  if (pp->getDetail())
+      return  pp->getDetail()->copy();
+
+  return 0;
 }

@@ -33,6 +33,7 @@
 #include <Inventor/elements/SoLazyElement.h>
 #include <Inventor/elements/SoReplacedElement.h>
 #include <vector>
+#include <3rdParty/salomesmesh/inc/Rn.h>
 
 class SoGLCoordinateElement;
 class SoTextureCoordinateBundle;
@@ -146,6 +147,7 @@ class PartGuiExport SoBrepPointSet : public SoPointSet {
     SO_NODE_HEADER(SoBrepPointSet);
 
 public:
+
     static void initClass();
     SoBrepPointSet();
 
@@ -156,19 +158,28 @@ protected:
     virtual ~SoBrepPointSet() {};
     virtual void GLRender(SoGLRenderAction *action);
     virtual void GLRenderBelowPath(SoGLRenderAction * action);
-    virtual void doAction(SoAction* action); 
+    virtual void doAction(SoAction* action);
+    virtual void rayPick(SoRayPickAction *action);
+    virtual SoDetail * createPointDetail(SoRayPickAction *rayP,
+                           const SoPrimitiveVertex *pv,
+                           SoPickedPoint *pp);
 
 private:
     void renderShape(const SoGLCoordinateElement * const vertexlist,
                      const int32_t *vertexindices,
                      int num_vertexindices);
+    void renderShape(const SoGLCoordinateElement * const vertexlist);
+    void renderDefault(SoGLRenderAction *action);
     void renderHighlight(SoGLRenderAction *action);
     void renderSelection(SoGLRenderAction *action);
+
+  
 
 private:
     SbColor selectionColor;
     SbColor highlightColor;
     SoColorPacker colorpacker;
+    float ps;
 };
 
 } // namespace PartGui
