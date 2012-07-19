@@ -57,7 +57,8 @@ Gui::MenuItem* Workbench::setupMenuBar() const
     root->insertItem(item, ray);
     ray->setCommand("&Raytracing");
     *ray
-        << "Raytracing_WriteView" 
+        << "Raytracing_WriteView"
+        << "Raytracing_WriteViewLux" 
         << "Raytracing_WriteCamera" 
         << "Raytracing_WritePart" 
         << "Separator"
@@ -74,7 +75,8 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
     Gui::ToolBarItem* ray = new Gui::ToolBarItem(root);
     ray->setCommand("Raytracing tools");
     *ray
-        << "Raytracing_WriteView" 
+        << "Raytracing_WriteView"
+        << "Raytracing_WriteViewLux" 
         << "Raytracing_WriteCamera" 
         << "Raytracing_WritePart" 
         << "Separator"

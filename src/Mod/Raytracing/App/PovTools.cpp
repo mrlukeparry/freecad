@@ -393,9 +393,11 @@ void PovTools::transferToArray(const TopoDS_Face& aFace,gp_Vec** vertices,gp_Vec
     Standard_Integer i;
     // geting size and create the array
     nbNodesInFace = aPoly->NbNodes();
-    nbTriInFace = aPoly->NbTriangles();
-    *vertices = new gp_Vec[nbNodesInFace];
+    nbTriInFace   = aPoly->NbTriangles();
+
+    *vertices      = new gp_Vec[nbNodesInFace];
     *vertexnormals = new gp_Vec[nbNodesInFace];
+
     for (i=0; i < nbNodesInFace; i++) {
         (*vertexnormals)[i]= gp_Vec(0.0,0.0,0.0);
     }
@@ -480,7 +482,7 @@ void PovTools::transferToArray(const TopoDS_Face& aFace,gp_Vec** vertices,gp_Vec
 
             clNormal = clPropOfFace.Normal();
             gp_Vec temp = clNormal;
-            //Base::Console().Log("unterschied:%.2f",temp.dot((*vertexnormals)[i]));
+
             if ( temp * (*vertexnormals)[i] < 0 )
                 temp = -temp;
             (*vertexnormals)[i] = temp;

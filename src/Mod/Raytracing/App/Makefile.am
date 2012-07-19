@@ -6,6 +6,8 @@ BUILT_SOURCES=\
 
 libRaytracing_la_SOURCES=\
 		AppRaytracingPy.cpp \
+		LuxRender.cpp \
+		LuxRender.h \
 		PovTools.cpp \
 		PovTools.h \
 		PreCompiled.cpp \
@@ -15,7 +17,9 @@ libRaytracing_la_SOURCES=\
 		RayProject.cpp \
 		RayProject.h \
 		RaySegment.cpp \
-		RaySegment.h
+		RaySegment.h \
+		Renderer.cpp \
+		Renderer.h \
 
 
 FreeCADpov.h: FreeCADpov

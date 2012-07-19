@@ -32,6 +32,7 @@
 #include "RayFeature.h"
 #include "RayProject.h"
 #include "RaySegment.h"
+#include "LuxRender.h"
 
 extern struct PyMethodDef Raytracing_methods[];
 
@@ -48,6 +49,7 @@ void AppRaytracingExport initRaytracing()
         return;
     }
 
+        Raytracing::LuxRender        ::init();
 	Raytracing::RaySegment       ::init();
 	Raytracing::RayFeature       ::init();
 	Raytracing::RayProject       ::init();

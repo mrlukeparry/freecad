@@ -39,6 +39,10 @@ SET(Raytracing_SRCS
     AppRaytracing.cpp
     AppRaytracingPy.cpp
     FreeCADpov
+    LuxRender.cpp
+    LuxRender.h
+    LuxRenderProcess.cpp
+    LuxRenderProcess.h
     PovTools.cpp
     PovTools.h
     PreCompiled.cpp
@@ -49,6 +53,10 @@ SET(Raytracing_SRCS
     RayProject.h
     RaySegment.cpp
     RaySegment.h
+    RenderProcess.cpp
+    RenderProcess.h
+    Renderer.cpp
+    Renderer.h
 )
 
 SET(Raytracing_Scripts

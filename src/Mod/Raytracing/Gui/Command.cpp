@@ -33,6 +33,7 @@
 # include <Inventor/nodes/SoOrthographicCamera.h>
 # include <vector>
 # include <Inventor/nodes/SoPerspectiveCamera.h>
+# include <Inventor/SbViewVolume.h>
 # include <QApplication>
 # include <QMessageBox>
 #endif
@@ -52,6 +53,9 @@
 #include <Gui/Selection.h>
 #include <Gui/FileDialog.h>
 #include <Gui/MainWindow.h>
+#include <Gui/View3DInventor.h>
+#include <Gui/View3DInventorViewer.h>
+
 
 #include <Mod/Raytracing/App/RayFeature.h>
 #include <Mod/Raytracing/App/RaySegment.h>
@@ -59,10 +63,11 @@
 #include <Mod/Part/App/PartFeature.h>
   
 #include "FreeCADpov.h"
+#include <Mod/Raytracing/App/LuxRender.h>
 
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+using namespace Raytracing;
 
 //===========================================================================
 // CmdRaytracingWriteCamera
@@ -204,6 +209,7 @@ bool CmdRaytracingWritePart::isActive(void)
     return Gui::Selection().countObjectsOfType(Part::Feature::getClassTypeId()) == 1;
 }
 
+
 //===========================================================================
 // CmdRaytracingWriteView
 //===========================================================================
@@ -228,7 +234,7 @@ void CmdRaytracingWriteView::activated(int iMsg)
     if (ppReturn) {
         std::string str(ppReturn);
         if (str.find("PerspectiveCamera") == std::string::npos) {
-            int ret = QMessageBox::warning(Gui::getMainWindow(), 
+            int ret = QMessageBox::warning(Gui::getMainWindow(),
                 qApp->translate("CmdRaytracingWriteView","No perspective camera"),
                 qApp->translate("CmdRaytracingWriteView","The current view camera is not perspective"
                                 " and thus the result of the povray image later might look different to"
@@ -244,7 +250,7 @@ void CmdRaytracingWriteView::activated(int iMsg)
     filter << QObject::tr("All Files (*.*)");
     QString fn = Gui::FileDialog::getSaveFileName(Gui::getMainWindow(),
         QObject::tr("Export page"), QString(), filter.join(QLatin1String(";;")));
-    if (fn.isEmpty()) 
+    if (fn.isEmpty())
         return;
     std::string cFullName = (const char*)fn.toUtf8();
 
@@ -277,6 +283,104 @@ void CmdRaytracingWriteView::activated(int iMsg)
 }
 
 bool CmdRaytracingWriteView::isActive(void)
+{
+    App::Document* doc = App::GetApplication().getActiveDocument();
+    if (doc) {
+        return doc->countObjectsOfType(Part::Feature::getClassTypeId()) > 0;
+    }
+
+    return false;
+}
+
+//===========================================================================
+// CmdRaytracingWriteViewLux
+//===========================================================================
+DEF_STD_CMD_A(CmdRaytracingWriteViewLux);
+
+CmdRaytracingWriteViewLux::CmdRaytracingWriteViewLux()
+  :Command("Raytracing_WriteViewLux")
+{
+    sAppModule    = "Raytracing";
+    sGroup        = QT_TR_NOOP("Raytracing");
+    sMenuText     = QT_TR_NOOP("Export view to Lux Render...");
+    sToolTipText  = QT_TR_NOOP("Write the active 3D view with camera and all its content to a Lux Render file");
+    sWhatsThis    = sToolTipText;
+    sStatusTip    = sToolTipText;
+    sPixmap       = "Raytrace_Export";
+}
+
+void CmdRaytracingWriteViewLux::activated(int iMsg)
+{
+    // get all objects of the active document
+    std::vector<Part::Feature*> DocObjects = getActiveGuiDocument()->getDocument()->getObjectsOfType<Part::Feature>();
+
+    SoCamera *Cam;
+     Gui::MDIView *mdi = Gui::Application::Instance->activeDocument()->getActiveView();
+    if (mdi && mdi->isDerivedFrom(Gui::View3DInventor::getClassTypeId())) {
+        Gui::View3DInventorViewer *viewer = static_cast<Gui::View3DInventor *>(mdi)->getViewer();
+        Cam =  viewer->getCamera();
+    } else {
+        throw Base::Exception("Could Not Read Camera");
+    }
+
+    SbRotation camrot = Cam->orientation.getValue();
+    SbViewVolume::ProjectionType CamType = Cam->getViewVolume().getProjectionType();
+    
+    SbVec3f upvec(0, 1, 0); // init to default up vector
+    camrot.multVec(upvec, upvec);
+
+    SbVec3f lookat(0, 0, -1); // init to default view direction vector
+    camrot.multVec(lookat, lookat);
+
+    SbVec3f pos = Cam->position.getValue();
+    float Dist = Cam->focalDistance.getValue();
+
+    LuxRender *renderer = new LuxRender();
+
+    // Calculate Camera Properties
+    Base::Vector3d camPos(pos[0], pos[1], pos[2]);
+    Base::Vector3d camDir(lookat[0],lookat[1], lookat[2]);
+    Base::Vector3d camUp(upvec[0],upvec[1], upvec[2]);
+    Base::Vector3d camLookAt = camDir * Dist + camPos;
+    RenderCamera::CamType camType;
+
+    switch(CamType) {
+      case SbViewVolume::ORTHOGRAPHIC:
+        camType = RenderCamera::ORTHOGRAPHIC; break;
+      case SbViewVolume::PERSPECTIVE:
+        camType = RenderCamera::PERSPECTIVE; break;
+    }
+    RenderCamera *camera = new RenderCamera(camPos, camDir, camLookAt, camDir, camType);
+    camera->focaldistance = Dist;
+
+    // Add Camera
+
+    RenderLight *light = new RenderLight();
+    light->Type = RenderLight::INFINITE;
+
+    renderer->addCamera(camera);
+    renderer->addLight(light);
+
+  // go through all document objects
+    for (std::vector<Part::Feature*>::const_iterator it=DocObjects.begin();it!=DocObjects.end();++it) {
+        Gui::ViewProvider* vp = getActiveGuiDocument()->getViewProvider(*it);
+        if (vp && vp->isVisible()) {
+          float meshDev = 0.1;
+          // See if we can obtain the user set mesh deviation // otherwise resort to a default
+//           if(vp->getTypeId() == PartGui::ViewProviderPartExt::getClassTypeId()) {
+//               meshDev = static_cast<PartGui::ViewProviderPartExt *>(vp)->Deviation.getValue();
+//           }
+//             App::PropertyColor *pcColor = dynamic_cast<App::PropertyColor *>(vp->getPropertyByName("ShapeColor"));
+//             App::Color col = pcColor->getValue();
+            renderer->addObject((*it)->getNameInDocument(), (*it)->Shape.getValue(), meshDev);
+        }
+    }
+
+    renderer->setRenderSize(800, 600);
+    renderer->generateScene();
+}
+
+bool CmdRaytracingWriteViewLux::isActive(void)
 {
     App::Document* doc = App::GetApplication().getActiveDocument();
     if (doc) {
@@ -470,6 +574,7 @@ void CreateRaytracingCommands(void)
     rcCmdMgr.addCommand(new CmdRaytracingWriteCamera());
     rcCmdMgr.addCommand(new CmdRaytracingWritePart());
     rcCmdMgr.addCommand(new CmdRaytracingWriteView());
+    rcCmdMgr.addCommand(new CmdRaytracingWriteViewLux());
     rcCmdMgr.addCommand(new CmdRaytracingNewPovrayProject());
     rcCmdMgr.addCommand(new CmdRaytracingExportProject());
     rcCmdMgr.addCommand(new CmdRaytracingNewPartSegment());
