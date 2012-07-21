@@ -8,6 +8,8 @@ libRaytracing_la_SOURCES=\
 		AppRaytracingPy.cpp \
 		LuxRender.cpp \
 		LuxRender.h \
+		LuxRenderProcess.cpp \
+		LuxRenderProcess.h \
 		PovTools.cpp \
 		PovTools.h \
 		PreCompiled.cpp \
@@ -20,6 +22,8 @@ libRaytracing_la_SOURCES=\
 		RaySegment.h \
 		Renderer.cpp \
 		Renderer.h \
+		RendererProcess.cpp \
+		RendererProcess.h \
 
 
 FreeCADpov.h: FreeCADpov

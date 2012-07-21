@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (c) Juergen Riegel         <juergen.riegel@web.de>          *
+ *   Copyright (c) Luke Parry          (l.parry@warwick.ac.uk)    2012     *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -21,43 +21,32 @@
  ***************************************************************************/
 
 
-#include "PreCompiled.h"
-#ifndef _PreComp_
-# include <Python.h>
-#endif
+#ifndef _LuxRender_h_
+#define _LuxRender_h_
 
-#include <Base/Console.h>
-#include <Base/Interpreter.h>
+#include "Renderer.h"
+#include <vector>
+#include <string>
 
-#include "RayFeature.h"
-#include "RayProject.h"
-#include "RaySegment.h"
-#include "LuxRender.h"
-#include "RenderProcess.h"
-
-extern struct PyMethodDef Raytracing_methods[];
-
-
-extern "C" {
-void AppRaytracingExport initRaytracing()
+namespace Raytracing
 {
-    // load dependent module
-    try {
-        Base::Interpreter().loadModule("Part");
-    }
-    catch(const Base::Exception& e) {
-        PyErr_SetString(PyExc_ImportError, e.what());
-        return;
-    }
-        Raytracing::LuxRender        ::init();
-	Raytracing::RaySegment       ::init();
-	Raytracing::RayFeature       ::init();
-	Raytracing::RayProject       ::init();
 
+class AppRaytracingExport LuxRender : public Renderer
+{
+public:
+  LuxRender(void);
+  ~LuxRender(void);
+  void generateScene();
+  void render();
 
-    (void) Py_InitModule("Raytracing", Raytracing_methods);   /* mod name, table ptr */
-    Base::Console().Log("Loading Raytracing module... done\n");
+private:
+    std::string genRenderProps();
+    std::string genCamera(RenderCamera *light) const;
+    std::string genFace(const TopoDS_Face& aFace, int index);
+    std::string genLight(RenderLight *light) const;
+    std::string genObject(const char *PartName, const TopoDS_Shape& Shape, float meshDeviation);
+};
 
-}
+} // namespace Raytracing
 
-} // extern "C" {
+#endif // _LuxRender_h_

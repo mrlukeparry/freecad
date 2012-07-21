@@ -348,16 +348,18 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
       case SbViewVolume::ORTHOGRAPHIC:
         camType = RenderCamera::ORTHOGRAPHIC; break;
       case SbViewVolume::PERSPECTIVE:
-        camType = RenderCamera::PERSPECTIVE; break;
+        camType = RenderCamera::PERSPECTIVE;
+        break;
     }
-    RenderCamera *camera = new RenderCamera(camPos, camDir, camLookAt, camDir, camType);
+    RenderCamera *camera = new RenderCamera(camPos, camDir, camLookAt, camUp, camType);
+    camera->autofocus = true;
     camera->focaldistance = Dist;
 
     // Add Camera
 
     RenderLight *light = new RenderLight();
     light->Type = RenderLight::INFINITE;
-
+    light->Pos = camPos + camDir * 100
     renderer->addCamera(camera);
     renderer->addLight(light);
 
@@ -377,7 +379,7 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
     }
 
     renderer->setRenderSize(800, 600);
-    renderer->generateScene();
+    renderer->render();
 }
 
 bool CmdRaytracingWriteViewLux::isActive(void)

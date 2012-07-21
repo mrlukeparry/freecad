@@ -35,7 +35,14 @@ endmacro(generate_from_py2)
 
 generate_from_py2(FreeCADpov FreeCADpov.h)
 
+set(Raytracing_MOC_HDRS
+    RenderProcess.h
+)
+fc_wrap_cpp(Raytracing_MOC_SRCS ${Raytracing_MOC_HDRS})
+SOURCE_GROUP("Moc" FILES ${Raytracing_MOC_SRCS})
+
 SET(Raytracing_SRCS
+    ${Raytracing_MOC_SRCS}
     AppRaytracing.cpp
     AppRaytracingPy.cpp
     FreeCADpov
@@ -58,6 +65,7 @@ SET(Raytracing_SRCS
     Renderer.cpp
     Renderer.h
 )
+
 
 SET(Raytracing_Scripts
     Init.py
