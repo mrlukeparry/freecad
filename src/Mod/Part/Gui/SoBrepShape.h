@@ -163,6 +163,7 @@ protected:
     virtual SoDetail * createPointDetail(SoRayPickAction *rayP,
                            const SoPrimitiveVertex *pv,
                            SoPickedPoint *pp);
+    virtual void computeBBox(SoAction *, SbBox3f &box, SbVec3f &center);
 
 private:
     void renderShape(const SoGLCoordinateElement * const vertexlist,
@@ -180,6 +181,7 @@ private:
     SbColor highlightColor;
     SoColorPacker colorpacker;
     float ps;
+    float scale;
 };
 
 } // namespace PartGui

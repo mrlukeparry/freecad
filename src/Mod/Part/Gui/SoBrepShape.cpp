@@ -930,12 +930,53 @@ SoBrepPointSet::SoBrepPointSet()
     selectionIndex.setNum(0);
 }
 
+void SoBrepPointSet::computeBBox(SoAction *action, SbBox3f &box, SbVec3f &center)
+{
+    SoState * state = action->getState();
+
+    const SoCoordinateElement * coords;
+    const SbVec3f * normals;
+
+    this->getVertexData(state, coords, normals, FALSE);
+
+    int i = 0, previ;
+
+    int32_t idx = this->startIndex.getValue();
+    int32_t numpts = this->numPoints.getValue();
+    if (numpts < 0) numpts = coords->getNum() - idx;
+
+    // Set GL Properties - not necessarily needed
+
+    float minX = 0, minY = 0, minZ = 0;
+    float maxX = 0 , maxY = 0, maxZ = 0;
+    while (i++ < numpts) {
+        const SbVec3f v = coords->get3(idx++);
+
+        minX = (v[0] < minX) ? v[0] : minX;
+        minY = (v[1] < minY) ? v[1] : minY;
+        minZ = (v[2] < minZ) ? v[2] : minZ;
+
+        maxX = (v[0] > maxX) ? v[0] : maxX;
+        maxY = (v[1] > maxY) ? v[1] : maxY;
+        maxZ = (v[2] > maxZ) ? v[2] : maxZ;
+    }
+    
+    float rad = ps;
+    rad += 4 * scale * 0.003f; // Make the points slightly greedy by a pixel distance
+
+    // Set the bounding box using stored parameters
+    box.setBounds(SbVec3f(minX - rad, minY - rad, minZ - rad),
+                  SbVec3f(maxX + rad, maxY + rad, maxZ + rad));
+
+
+}
+
 void SoBrepPointSet::GLRender(SoGLRenderAction *action)
 {
     SoState * state = action->getState();
     const SbViewVolume & vv = SoViewVolumeElement::get(state);
     
-    float scale = vv.getWorldToScreenScale(SbVec3f(0.f,0.f,0.f), 0.4f);
+    scale = vv.getWorldToScreenScale(SbVec3f(0.f,0.f,0.f), 0.4f);
 
     ps = SoPointSizeElement::get(state);
     if (ps < 4.0f) SoPointSizeElement::set(state, this, 4.0f);
@@ -1201,6 +1242,8 @@ void SoBrepPointSet::rayPick(SoRayPickAction *action)
 
     // Sphere radius is based on the point size multipled by scalefactor
     float radius = ps;
+
+    radius += 4 * scale * 0.003f; // Make the points slightly greedy by a pixel distance
 
     int32_t idx = this->startIndex.getValue();
     int32_t numpts = this->numPoints.getValue();
