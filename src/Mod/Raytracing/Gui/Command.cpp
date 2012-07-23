@@ -359,7 +359,7 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
 
     RenderLight *light = new RenderLight();
     light->Type = RenderLight::INFINITE;
-    light->Pos = camPos + camDir * 100
+
     renderer->addCamera(camera);
     renderer->addLight(light);
 
