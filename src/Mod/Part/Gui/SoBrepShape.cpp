@@ -978,7 +978,8 @@ void SoBrepPointSet::GLRender(SoGLRenderAction *action)
     SoState * state = action->getState();
     
     const SbViewVolume & vv = SoViewVolumeElement::get(state);
-
+    if(vv.getDepth() < FLT_EPSILON)
+      return;
     scale = vv.getWorldToScreenScale(SbVec3f(0.f,0.f,0.f), 0.4f);
 
     ps = SoPointSizeElement::get(state);
