@@ -939,17 +939,19 @@ void SoBrepPointSet::computeBBox(SoAction *action, SbBox3f &box, SbVec3f &center
 
     this->getVertexData(state, coords, normals, FALSE);
 
-    int i = 0, previ;
-
     int32_t idx = this->startIndex.getValue();
     int32_t numpts = this->numPoints.getValue();
     if (numpts < 0) numpts = coords->getNum() - idx;
 
+    if(numpts == 0)
+      return;
     // Set GL Properties - not necessarily needed
 
-    float minX = 0, minY = 0, minZ = 0;
-    float maxX = 0 , maxY = 0, maxZ = 0;
-    while (i++ < numpts) {
+    // Get First coordinate
+    const SbVec3f pnt1 = coords->get3(idx);
+    float minX = pnt1[0], minY = pnt1[1], minZ = pnt1[2];
+    float maxX = pnt1[0], maxY = pnt1[1], maxZ = pnt1[2];
+    for( int i = 0 ; i < numpts; i++) {
         const SbVec3f v = coords->get3(idx++);
 
         minX = (v[0] < minX) ? v[0] : minX;
@@ -967,15 +969,16 @@ void SoBrepPointSet::computeBBox(SoAction *action, SbBox3f &box, SbVec3f &center
     // Set the bounding box using stored parameters
     box.setBounds(SbVec3f(minX - rad, minY - rad, minZ - rad),
                   SbVec3f(maxX + rad, maxY + rad, maxZ + rad));
-
+    center.setValue((minX + maxX) /2, (minY + maxY) / 2, (minZ + maxZ) / 2);
 
 }
 
 void SoBrepPointSet::GLRender(SoGLRenderAction *action)
 {
     SoState * state = action->getState();
-    const SbViewVolume & vv = SoViewVolumeElement::get(state);
     
+    const SbViewVolume & vv = SoViewVolumeElement::get(state);
+
     scale = vv.getWorldToScreenScale(SbVec3f(0.f,0.f,0.f), 0.4f);
 
     ps = SoPointSizeElement::get(state);
@@ -1229,8 +1232,11 @@ void SoBrepPointSet::rayPick(SoRayPickAction *action)
     if (! shouldRayPick(action))
       return;
 
+    if(!action->hasWorldSpaceRay())
+      return;
     // Compute the picking ray in our current object space.
     computeObjectSpaceRay(action);
+
 
     const SoCoordinateElement * coords;
     const SbVec3f * normals;
@@ -1251,6 +1257,9 @@ void SoBrepPointSet::rayPick(SoRayPickAction *action)
     if (numpts < 0)
         numpts = coords->getNum() - idx; // Assuming reversed index
 
+    //This maynot be valid on some compilers needs a workaround 
+    if(isnan(action->getLine().getDirection()[0]))
+        return;
     for (int i = 0; i < numpts; i++) {
 
         const SbVec3f v = coords->get3(idx);
