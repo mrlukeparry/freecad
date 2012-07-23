@@ -32,8 +32,8 @@
 #include "RayFeature.h"
 #include "RayProject.h"
 #include "RaySegment.h"
-#include "LuxRender.h"
-#include "RenderProcess.h"
+#include "renderer/lux/LuxRender.h"
+
 
 extern struct PyMethodDef Raytracing_methods[];
 

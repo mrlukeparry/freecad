@@ -63,7 +63,7 @@
 #include <Mod/Part/App/PartFeature.h>
   
 #include "FreeCADpov.h"
-#include <Mod/Raytracing/App/LuxRender.h>
+#include <Mod/Raytracing/App/renderer/lux/LuxRender.h>
 
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -379,7 +379,7 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
     }
 
     renderer->setRenderSize(800, 600);
-    renderer->render();
+    renderer->preview();
 }
 
 bool CmdRaytracingWriteViewLux::isActive(void)

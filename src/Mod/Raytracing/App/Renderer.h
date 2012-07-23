@@ -111,6 +111,7 @@ public:
     void addObject(const char *PartName, const TopoDS_Shape &Shape, float meshDeviation);
     void addPart(RenderPart *part);
     void attachRenderProcess(RenderProcess *process);
+    virtual void preview();
     virtual void render();
     virtual void finish();
 

@@ -26,14 +26,26 @@
 #endif
 
 #include <Base/Console.h>
+#include <QWidget>
 #include <QFile>
 #include <Base/Exception.h>
+#include <Base/Console.h>
 
 #include "RenderProcess.h"
 
 using namespace Raytracing;
 
-RenderProcess::RenderProcess() : status(INVALID) {}
+RenderProcess::RenderProcess() : status(INVALID)
+{
+    updateInterval = 3000;
+
+    // Connect the signals to update status
+    QObject::connect(
+        this, SIGNAL(error(ProcessError)),
+        this, SLOT  (processError())
+       );
+  
+}
 RenderProcess::~RenderProcess() {}
 
 void RenderProcess::setExecPath(const QString &str)
@@ -59,11 +71,20 @@ bool RenderProcess::isActive()
 {
     return (this->status == STARTED || this->status == RUNNING); 
 }
-bool RenderProcess::isOutputAvailable()
-{
-    if(this->status != RUNNING || this->status != FINISHED)
-        return false;
 
+bool RenderProcess::getOutput(QImage &img)
+{
+  QFile file(outputPath);
+  file.open(QIODevice::ReadOnly);
+
+
+  if(file.size() == 0)
+    return false; // empty file
+  Base::Console().Log("got Image");
+  return img.load(outputPath);
+}
+bool RenderProcess::isInputAvailable()
+{
     // Load the Input File
     QFile inputFile(this->inputPath);
     if(inputFile.open(QIODevice::ReadOnly))
@@ -92,6 +113,7 @@ void RenderProcess::begin()
     {
         this->status = VALID;
         this->start(execPath, args);
+        this->timer.start(this->updateInterval, this);
         std::string inputFilestr = this->inputPath.toStdString();
         bool test = true;
         std::string str = this->errorString().toStdString();
@@ -99,7 +121,35 @@ void RenderProcess::begin()
     }
 }
 
+void RenderProcess::processError(void)
+{
+  if(this->timer.isActive()) {
+      this->timer.stop();
+  }
+  this->status = ERROR;
+}
+
 void RenderProcess::stop()
 {
-  this->terminate();  
+  this->status = FINISHED;
+  this->terminate();
+  this->timer.stop();
 }
+
+void RenderProcess::setUpdateInterval(float time)
+{
+  this->updateInterval = time;
+  if(this->timer.isActive()) {
+      this->timer.stop();
+      this->timer.start(this->updateInterval, this);
+  }
+}
+
+void RenderProcess::timerEvent(QTimerEvent *event)
+{
+    if (event->timerId() == timer.timerId()) {
+      getOutput(imageOutput);
+    } else {
+        QProcess::timerEvent(event);
+    }
+ }

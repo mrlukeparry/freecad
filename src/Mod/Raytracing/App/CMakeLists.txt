@@ -41,15 +41,24 @@ set(Raytracing_MOC_HDRS
 fc_wrap_cpp(Raytracing_MOC_SRCS ${Raytracing_MOC_HDRS})
 SOURCE_GROUP("Moc" FILES ${Raytracing_MOC_SRCS})
 
-SET(Raytracing_SRCS
+SET(LuxRender_SRCS
+    renderer/lux/LuxRender.cpp
+    renderer/lux/LuxRender.h
+    renderer/lux/LuxRenderProcess.cpp
+    renderer/lux/LuxRenderProcess.h
+)
+SOURCE_GROUP("LuxRender" FILES ${LuxRender_SRCS})
+
+SET(RendererPlugins_SRCS
+    ${LuxRender_SRCS}
+)
+SOURCE_GROUP("RendererPlugins" FILES ${RendererPlugins_SRCS})
+
+SET(RenderModule_SRCS
     ${Raytracing_MOC_SRCS}
     AppRaytracing.cpp
     AppRaytracingPy.cpp
     FreeCADpov
-    LuxRender.cpp
-    LuxRender.h
-    LuxRenderProcess.cpp
-    LuxRenderProcess.h
     PovTools.cpp
     PovTools.h
     PreCompiled.cpp
@@ -65,7 +74,12 @@ SET(Raytracing_SRCS
     Renderer.cpp
     Renderer.h
 )
+SOURCE_GROUP("RenderModule" FILES ${RenderModule_SRCS})
 
+SET(Raytracing_SRCS
+    ${RendererPlugins_SRCS}
+    ${RenderModule_SRCS}
+)
 
 SET(Raytracing_Scripts
     Init.py

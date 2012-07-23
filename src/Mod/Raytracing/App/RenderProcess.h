@@ -27,6 +27,8 @@
 #include "PreCompiled.h"
 #include <QProcess>
 #include <QImage>
+#include <QBasicTimer>
+#include <QTimerEvent>
 #include <QString>
 # include <TopoDS.hxx>
 # include <gp_Vec.hxx>
@@ -58,28 +60,40 @@ public:
   void begin(void);
   void stop();
 
+  
+  void timerEvent(QTimerEvent *event);
+  void setUpdateInterval(float time);
+
   bool isActive();
   State getState() { return status; };
-
+  bool getOutput(QImage &img);
   bool isExecPathValid(void);
 //   virtual QImage getOutput() = 0;
 //   virtual QImage getPreview() = 0;
 
-  virtual bool isOutputAvailable();
+  virtual bool isInputAvailable();
 
+  virtual void initialiseSettings() = 0; // This sets the argument list for the process and is renderer dependant
   void setArguments(const QStringList &args);
   void setExecPath(const QString &str);
   void setInputPath(const QString &str);
   void setOutputPath(const QString &str);
 
+public Q_SLOTS:
+    void processError();
+
 protected:
- 
+  QImage imageOutput;
   QStringList args;
   QString execPath;
   QString inputPath;
   QString tmpPath;
   QString outputPath;
   State status;
+
+private:
+  float updateInterval;
+  QBasicTimer timer;
 };
 
 }

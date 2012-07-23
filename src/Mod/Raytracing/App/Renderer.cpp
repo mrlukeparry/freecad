@@ -51,11 +51,11 @@ TYPESYSTEM_SOURCE_ABSTRACT(Raytracing::Renderer, Base::BaseClass)
 
 Renderer::Renderer(void)
 {
-    process = 0;
-    camera  = 0;
-    xRes = 0;
-    yRes = 0;
-  
+    this->process = 0;
+    this->camera  = 0;
+    this->xRes = 0;
+    this->yRes = 0;
+
 }
 Renderer::~Renderer(void)
 {
@@ -65,8 +65,10 @@ Renderer::~Renderer(void)
 void Renderer::clear()
 {
     delete this->camera;
-    camera = 0;
+    this->camera = 0;
 
+    delete this->process;
+    this->process = 0;
     for (std::vector<RenderLight *>::iterator it = lights.begin(); it != lights.end(); ++it) {
       delete *it;
     }
@@ -115,7 +117,25 @@ void Renderer::finish()
 {
   if(!process || !process->isActive())
       return; // The process cannot be stopped because it's not active
+      
   this->process->stop();
+}
+
+void Renderer::preview()
+{
+    // Create a temporary file to store the render preview
+    QTemporaryFile tempFile;
+    tempFile.open();
+    QString tmpFileName = tempFile.fileName();
+
+    //An Extension is usually required.
+    QString extension = QString::fromAscii(".png");
+    tmpFileName.append(extension);
+
+    outputPath.clear();
+    outputPath = tmpFileName.toStdString();
+
+    render();
 }
 
 void Renderer::render()
@@ -130,13 +150,25 @@ void Renderer::render()
     generateScene();
 
     process->setInputPath(inputFile.fileName());
-    process->setOutputPath(QString::fromAscii(outputPath.c_str()));
+
+    QString filepath = QString::fromAscii(outputPath.c_str());
+    // Create the output file
+    QFile file(filepath);
+
+    if(!file.open(QIODevice::ReadWrite))
+      return; // Throw an exception output file couldn't be created
+    file.close();
+    process->setOutputPath(filepath);
+
+    // Initialise the Process
+    process->initialiseSettings();
     process->begin();
 }
+
 void Renderer::setCamera(const Base::Vector3d &camPos, const Base::Vector3d &camDir, const Base::Vector3d &lookAt, const Base::Vector3d &up) {
   if(!camera)
     return;
-  
+
     camera->CamPos = camPos;
     camera->CamDir = camDir;
     camera->LookAt = lookAt;
@@ -259,7 +291,6 @@ void Renderer::transferToArray(const TopoDS_Face& aFace,gp_Vec** vertices,gp_Vec
 
             clNormal = clPropOfFace.Normal();
             gp_Vec temp = clNormal;
-            //Base::Console().Log("unterschied:%.2f",temp.dot((*vertexnormals)[i]));
             if ( temp * (*vertexnormals)[i] < 0 )
                 temp = -temp;
             (*vertexnormals)[i] = temp;
