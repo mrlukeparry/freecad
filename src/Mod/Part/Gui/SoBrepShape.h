@@ -24,6 +24,7 @@
 #define PARTGUI_SOBREPSHAPE_H
 
 #include <Inventor/fields/SoMFInt32.h>
+#include <Inventor/fields/SoSFFloat.h>
 #include <Inventor/fields/SoSFNode.h>
 #include <Inventor/fields/SoSubField.h>
 #include <Inventor/nodes/SoSubNode.h>
@@ -153,6 +154,7 @@ public:
 
     SoSFInt32 highlightIndex;
     SoMFInt32 selectionIndex;
+    SoSFFloat ps;
 
 protected:
     virtual ~SoBrepPointSet() {};
@@ -180,7 +182,6 @@ private:
     SbColor selectionColor;
     SbColor highlightColor;
     SoColorPacker colorpacker;
-    float ps;
     float scale;
 };
 

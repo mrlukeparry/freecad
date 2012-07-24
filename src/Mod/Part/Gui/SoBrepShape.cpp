@@ -58,6 +58,8 @@
 # include <Inventor/elements/SoViewportRegionElement.h>
 #endif
 
+#include <boost/math/special_functions/fpclassify.hpp>
+
 #include "SoBrepShape.h"
 #include <Gui/SoFCUnifiedSelection.h>
 #include <Gui/SoFCSelectionAction.h>
@@ -927,6 +929,7 @@ SoBrepPointSet::SoBrepPointSet()
     SO_NODE_CONSTRUCTOR(SoBrepPointSet);
     SO_NODE_ADD_FIELD(highlightIndex, (-1));
     SO_NODE_ADD_FIELD(selectionIndex, (-1));
+    SO_NODE_ADD_FIELD(ps, (0));
     selectionIndex.setNum(0);
 }
 
@@ -934,20 +937,16 @@ void SoBrepPointSet::computeBBox(SoAction *action, SbBox3f &box, SbVec3f &center
 {
     inherited::computeBBox(action, box, center);
 
-    float rad = ps;
+    float rad = ps.getValue();
     if(rad < FLT_EPSILON)
       return;
-    rad += 4 * scale * 0.003f; // Make the points slightly greedy by a pixel distance
+    rad += 10 * scale * 0.003f; // Make the points slightly greedy by a pixel distance
 
     // Set the bounding box using stored parameters
-    SbVec3f min, max;
-    min = box.getMin();
-    max = box.getMax();
-    min = SbVec3f(min[0] - rad,min[1] - rad, min[2] - rad);
-    max = SbVec3f(max[0] + rad,max[1] + rad, max[2] + rad);
-    box.setBounds(min, max);
-
-
+    SbVec3f &min = box.getMin();
+    SbVec3f &max = box.getMax();
+    min.setValue(min[0] -rad ,min[1] - rad , min[2] -rad );
+    max.setValue(max[0] + rad,max[1] + rad, max[2] + rad );
 }
 
 void SoBrepPointSet::GLRender(SoGLRenderAction *action)
@@ -955,15 +954,17 @@ void SoBrepPointSet::GLRender(SoGLRenderAction *action)
     SoState * state = action->getState();
 
     const SbViewVolume & vv = SoViewVolumeElement::get(state);
-    if(vv.getDepth() < FLT_EPSILON)
+    if(vv.getHeight() < FLT_EPSILON && vv.getWidth() < FLT_EPSILON)
       return;
     scale = vv.getWorldToScreenScale(SbVec3f(0.f,0.f,0.f), 0.4f);
 
-    ps = SoPointSizeElement::get(state);
-    if (ps < 4.0f) SoPointSizeElement::set(state, this, 4.0f);
+    float pointSize = SoPointSizeElement::get(state);
+    if (pointSize < 4.0f) SoPointSizeElement::set(state, this, 4.0f);
+    pointSize /= 2;
+    pointSize *= scale * 0.003f; // Set the absolute size for the picking spheres
 
-    ps *= scale * 0.003f; // Set the absolute size for the picking spheres
-
+    ps.setValue(pointSize);
+    
     if (this->selectionIndex.getNum() > 0)
         renderSelection(action);
     if (this->highlightIndex.getValue() >= 0)
@@ -1004,7 +1005,8 @@ void SoBrepPointSet::renderShape(const SoGLCoordinateElement * const coords,
         glPushMatrix();
 
         glTranslatef((*v)[0], (*v)[1], (*v)[2]);
-        glScalef(ps,ps,ps);
+        float scale = ps.getValue();
+        glScalef(scale,scale, scale);
         drawSphere(1, 12, 12);
         glPopMatrix();
     }
@@ -1055,7 +1057,8 @@ void SoBrepPointSet::renderShape(const SoGLCoordinateElement * const coords)
         glPushMatrix();
 
         glTranslatef(v[0], v[1], v[2]);
-        glScalef(ps,ps,ps);
+        float scale = ps.getValue();
+        glScalef(scale, scale, scale);
         drawSphere(1, 12, 12);
         glPopMatrix();
 
@@ -1225,9 +1228,9 @@ void SoBrepPointSet::rayPick(SoRayPickAction *action)
     SoPickedPoint *pp;
 
     // Sphere radius is based on the point size multipled by scalefactor
-    float radius = ps;
+    float radius = ps.getValue();
 
-    radius += 4 * scale * 0.003f; // Make the points slightly greedy by a pixel distance
+    radius += 1 * scale * 0.003f; // Make the points slightly greedy by a pixel distance
 
     int32_t idx = this->startIndex.getValue();
     int32_t numpts = this->numPoints.getValue();
@@ -1236,7 +1239,7 @@ void SoBrepPointSet::rayPick(SoRayPickAction *action)
         numpts = coords->getNum() - idx; // Assuming reversed index
 
     //This maynot be valid on some compilers needs a workaround 
-    if(isnan(action->getLine().getDirection()[0]))
+    if((boost::math::isnan)(action->getLine().getDirection()[0]))
         return;
     for (int i = 0; i < numpts; i++) {
 
