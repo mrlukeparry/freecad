@@ -56,9 +56,13 @@ SOURCE_GROUP("RendererPlugins" FILES ${RendererPlugins_SRCS})
 
 SET(RenderModule_SRCS
     ${Raytracing_MOC_SRCS}
+    Appearances.cpp
+    Appearances.h
     AppRaytracing.cpp
     AppRaytracingPy.cpp
     FreeCADpov
+    Material.cpp
+    Material.h
     PovTools.cpp
     PovTools.h
     PreCompiled.cpp

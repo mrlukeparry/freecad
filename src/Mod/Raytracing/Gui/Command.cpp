@@ -64,6 +64,7 @@
   
 #include "FreeCADpov.h"
 #include <Mod/Raytracing/App/renderer/lux/LuxRender.h>
+#include <Mod/Raytracing/App/Appearances.h>
 
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -379,7 +380,11 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
     }
 
     renderer->setRenderSize(800, 600);
-    renderer->preview();
+//     renderer->preview();
+
+    Appearances *appearances = new Appearances();
+    appearances->setUserMaterialsPath("/home/mrlukeparry/freeCadMaterials");
+    appearances->scanMaterials();
 }
 
 bool CmdRaytracingWriteViewLux::isActive(void)
