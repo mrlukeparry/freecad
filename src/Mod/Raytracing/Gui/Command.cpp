@@ -364,6 +364,9 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
     renderer->addCamera(camera);
     renderer->addLight(light);
 
+    // Get a list of Materials
+    Appearances().setUserMaterialsPath("/home/mrlukeparry/freeCadMaterials");
+    Appearances().scanMaterials();
   // go through all document objects
     for (std::vector<Part::Feature*>::const_iterator it=DocObjects.begin();it!=DocObjects.end();++it) {
         Gui::ViewProvider* vp = getActiveGuiDocument()->getViewProvider(*it);
@@ -375,16 +378,18 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
 //           }
 //             App::PropertyColor *pcColor = dynamic_cast<App::PropertyColor *>(vp->getPropertyByName("ShapeColor"));
 //             App::Color col = pcColor->getValue();
-            renderer->addObject((*it)->getNameInDocument(), (*it)->Shape.getValue(), meshDev);
+
+            RenderPart *part = new RenderPart((*it)->getNameInDocument(), (*it)->Shape.getValue(), meshDev);
+            Material *matte = Appearances().getMaterialById("lux_default_matteTranscluent")->copy();
+            Material *defaultMatte = Appearances().getMaterial("diffuseTranslucent", "lux")->copy();
+            part->setMaterial(matte);
+            renderer->addObject(part);
         }
     }
 
     renderer->setRenderSize(800, 600);
-//     renderer->preview();
+    renderer->preview();
 
-    Appearances *appearances = new Appearances();
-    appearances->setUserMaterialsPath("/home/mrlukeparry/freeCadMaterials");
-    appearances->scanMaterials();
 }
 
 bool CmdRaytracingWriteViewLux::isActive(void)

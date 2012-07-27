@@ -102,8 +102,7 @@ void LuxRender::generateScene()
         out << genLight(*it).c_str();
     }
     for (std::vector<RenderPart *>::iterator it = parts.begin(); it != parts.end(); ++it) {
-        RenderPart *part = *it;
-        out << genObject(part->getName(), part->getShape(), part->getMeshDeviation()).c_str();
+        out << genObject(*it).c_str();
     }
 
     out << "\nWorldEnd" << endl;
@@ -191,25 +190,65 @@ std::string LuxRender::genCamera(RenderCamera *camera) const
     return out.str();
 }
 
-std::string LuxRender::genObject(const char *PartName,const TopoDS_Shape& Shape, float meshDeviation)
+std::string LuxRender::genMaterial(Material *mat)
+{
+    // Texture "checks" "color" "checkerboard"
+    //         "float uscale" [4] "float vscale" [4]
+    //         "color tex1" [1 0 0] "color tex2" [0 0 1]
+    //
+    // Material "matte"
+    //         "texture Kd" "checks"
+    // Texture "SolidColor" "color" "constant" "color value" [1.000 0.910 0.518]
+
+    
+    std::stringstream out;
+    if(mat->source == Material::BUILTIN) {
+        out << "\nTexture \"SolidColor\" \"color\" \"constant\" \"color value\" [1.0 1.0 1.0]" << endl;
+        out << "Material \"" << mat->compat.toStdString() << "\"" << endl;
+
+        // Add the parameters
+        out << "\t\"texture Kd\" \"SolidColor\"" << endl;
+    } else {
+        //Open the filename and append
+        QFile file(mat->filename);
+        if(!file.open(QFile::ReadOnly))
+            return std::string("");
+
+        QTextStream textStr(&file);
+        while(!textStr.atEnd())
+        {
+          out << textStr.readLine().toStdString() << endl;
+        }
+    }
+
+    return out.str();
+}
+
+std::string LuxRender::genObject(RenderPart *obj)
 {
     //fMeshDeviation is a class variable
-    Base::Console().Log("Meshing with Deviation: %f\n",meshDeviation);
+    Base::Console().Log("Meshing with Deviation: %f\n", obj->getMeshDeviation());
 
+    const TopoDS_Shape &Shape = obj->getShape();
     TopExp_Explorer ex;
-    BRepMesh_IncrementalMesh MESH(Shape,meshDeviation);
+    BRepMesh_IncrementalMesh MESH(Shape,obj->getMeshDeviation());
 
+    const char * name = obj->getName();
     // counting faces and start sequencer
     int l = 1;
     std::stringstream out;
-    out << "\nObjectBegin \"" << PartName << "\"" << endl;
+    out << "\nObjectBegin \"" << name << "\"" << endl;
 
+    // Generate the material
+    out << genMaterial(obj->getMaterial());
+
+    //Generate each face
     for (ex.Init(Shape, TopAbs_FACE); ex.More(); ex.Next(),l++) { 
         const TopoDS_Face& aFace = TopoDS::Face(ex.Current());
         out << genFace(aFace, l);
     }
-    out << "ObjectEnd"  << endl
-        << "ObjectInstance \"" << PartName << "\"" << endl;
+    out << "ObjectEnd" << name << endl
+        << "ObjectInstance \"" << name << "\"" << endl;
     return out.str();
 }
 

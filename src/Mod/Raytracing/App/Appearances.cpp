@@ -36,26 +36,56 @@
 
 using namespace Raytracing;
 
-TYPESYSTEM_SOURCE_ABSTRACT(Raytracing::Appearances, Base::BaseClass)
-
-Appearances::Appearances(void)
+namespace Raytracing
 {
+class AppearancesInstP
+{
+public:
+  std::vector<Material *> materials;
+  QString userMaterialsPath;
+};
 }
-Appearances::~Appearances(void)
+
+AppearancesInst* AppearancesInst::_pcSingleton = NULL;
+
+AppearancesInst& AppearancesInst::instance(void)
 {
-    for (std::vector<Material *>::const_iterator it=materials.begin(); it!=materials.end(); ++it)
+    if (_pcSingleton == NULL)
+    {
+        _pcSingleton = new AppearancesInst;
+    }
+
+    return *_pcSingleton;
+}
+
+AppearancesInst::AppearancesInst(void)
+{
+  d = new AppearancesInstP;
+}
+
+AppearancesInst::~AppearancesInst(void)
+{
+    for (std::vector<Material *>::const_iterator it=d->materials.begin(); it!= d->materials.end(); ++it)
     {
       delete (*it);
     }
-    materials.empty();
+    d->materials.empty();
+    delete d;
 }
 
-void Appearances::setUserMaterialsPath(const char *path)
+void AppearancesInst::destruct (void)
 {
-  userMaterialsPath = QString::fromAscii(path);
+    if (_pcSingleton != 0)
+    delete _pcSingleton;
+    _pcSingleton = 0;
 }
 
-Material * Appearances::readMaterialXML()
+void AppearancesInst::setUserMaterialsPath(const char *path)
+{
+  d->userMaterialsPath = QString::fromAscii(path);
+}
+
+Material * AppearancesInst::readMaterialXML()
 {
     // Create a new material on the heap
     Material *material = new Material();
@@ -104,7 +134,7 @@ Material * Appearances::readMaterialXML()
 }
 
 // It may be possible that multiple materials are defined within an XML File
-std::vector<Material *> Appearances::parseXML(QString filename)
+std::vector<Material *> AppearancesInst::parseXML(QString filename)
 {
     std::vector<Material *> materials;
     // Load the XML File
@@ -129,7 +159,7 @@ std::vector<Material *> Appearances::parseXML(QString filename)
               if(!mat->previewFilename.isEmpty())
                   mat->previewFilename = fileDir.absoluteFilePath(mat->previewFilename);
 
-              materials.push_back(mat);
+              d->materials.push_back(mat);
           }
       } 
 
@@ -142,17 +172,17 @@ std::vector<Material *> Appearances::parseXML(QString filename)
     }
     file.close();
 
-    return materials;
+    return d->materials;
 }
 
-const Material * Appearances::getMaterial(const char *provides, const char *provider)
+const Material * AppearancesInst::getMaterial(const char *provides, const char *provider)
 {
   QString prov = QString::fromAscii(provides);
   QString render = QString::fromAscii(provider);
   // Search all available materials
 
-  for (std::vector<Material *>::const_iterator it= materials.begin(); it!=materials.end(); ++it){
-    if(*it->prov == provides && *it->provider == render) {
+  for (std::vector<Material *>::const_iterator it= d->materials.begin(); it!= d->materials.end(); ++it){
+    if((*it)->provides == prov && (*it)->provider == render) {
       const Material *fndMat =  *it;
       return fndMat;
     }
@@ -161,13 +191,27 @@ const Material * Appearances::getMaterial(const char *provides, const char *prov
   return 0;
 }
 
-const Material * Appearances::getMaterialById(const char *id)
+std::vector<Material *> AppearancesInst::getMaterialsByProvider(const char *provider)
+{
+  QString renderer = QString::fromAscii(provider);
+  // Search all available materials
+  std::vector<Material *> mats;
+  for (std::vector<Material *>::const_iterator it= d->materials.begin(); it!= d->materials.end(); ++it){
+    if( (*it)->provider == renderer) {
+        mats.push_back(*it);
+    }
+  }
+
+  return mats;
+}
+
+const Material * AppearancesInst::getMaterialById(const char *id)
 {
   QString matId = QString::fromAscii(id);
   // Search all available materials
   Material *mat = 0;
-  for (std::vector<Material *>::const_iterator it= materials.begin(); it!=materials.end(); ++it){
-    if(*it->id == matId) {
+  for (std::vector<Material *>::const_iterator it= d->materials.begin(); it!= d->materials.end(); ++it){
+    if((*it)->id == matId) {
         const Material *fndMat =  *it;
         return fndMat;
     }
@@ -176,14 +220,14 @@ const Material * Appearances::getMaterialById(const char *id)
   return 0;
 }
 
-void Appearances::scanMaterials()
+void AppearancesInst::scanMaterials()
 {
 
     // List of all XML files with absolute path name
     QStringList parseList;
 
       //Find a list of xml files within the
-    QDir myDir(userMaterialsPath);
+    QDir myDir(d->userMaterialsPath);
 
     //Find any subdirectories containing materials but only one level down
     QStringList dirlist = myDir.entryList(QDir::Dirs | QDir::NoDotDot);
@@ -220,7 +264,7 @@ void Appearances::scanMaterials()
         {
             //If successful store these materials in the collection
             for ( std::vector<Material *>::const_iterator mat=mats.begin(); mat!=mats.end(); ++mat)
-                materials.push_back(*mat);
+                d->materials.push_back(*mat);
         } else {
           // Throw an exception?
         }

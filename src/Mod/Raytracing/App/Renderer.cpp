@@ -89,14 +89,14 @@ void Renderer::addLight(RenderLight *light) {
 }
 
 
-void Renderer::addPart( RenderPart *part) {
+void Renderer::addObject( RenderPart *part) {
   this->parts.push_back(part);
 }
 
 void Renderer::addObject(const char *PartName, const TopoDS_Shape &Shape, float meshDeviation)
 {
     RenderPart *part = new RenderPart(PartName, Shape, meshDeviation);
-    addPart(part);
+    addObject(part);
 }
 
 void Renderer::attachRenderProcess(RenderProcess *Process)

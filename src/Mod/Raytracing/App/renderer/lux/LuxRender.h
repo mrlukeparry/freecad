@@ -40,11 +40,12 @@ public:
   void render();
 
 private:
-    std::string genRenderProps();
-    std::string genCamera(RenderCamera *light) const;
+    std::string genCamera(RenderCamera *camera) const;
     std::string genFace(const TopoDS_Face& aFace, int index);
     std::string genLight(RenderLight *light) const;
-    std::string genObject(const char *PartName, const TopoDS_Shape& Shape, float meshDeviation);
+    std::string genMaterial(Material *mat);
+    std::string genObject(RenderPart *object);
+    std::string genRenderProps();
 };
 
 } // namespace Raytracing

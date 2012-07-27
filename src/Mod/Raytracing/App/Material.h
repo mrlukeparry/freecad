@@ -43,6 +43,11 @@
 namespace Raytracing
 {
 
+class MaterialParameter
+{
+
+};
+
 class AppRaytracingExport Material
 {
 public:
@@ -50,9 +55,10 @@ public:
     BUILTIN,
     EXTERNAL};
 
-    Material(void);
-    ~Material(void);
+    Material();
+    ~Material();
 
+  Material * copy() const;
   QString label;
   QString id;
   QString provides;

@@ -82,7 +82,7 @@ public:
     const TopoDS_Shape getShape() {return Shape;}
     const char * getName() { return PartName;};
     const float getMeshDeviation() { return meshDeviation;}
-    setMaterial(Material *mat) { material = mat; }
+    void setMaterial(Material *mat) { material = mat; }
     Material * getMaterial(void) { return material;}
 private:
     const char *PartName;
@@ -117,7 +117,7 @@ public:
     void addCamera(RenderCamera *cam);
     void addLight(RenderLight *light);
     void addObject(const char *PartName, const TopoDS_Shape &Shape, float meshDeviation);
-    void addPart(RenderPart *part);
+    void addObject(RenderPart *part);
     void attachRenderProcess(RenderProcess *process);
     virtual void preview();
     virtual void render();
@@ -135,9 +135,10 @@ protected:
 
     //All these methods must be defined by the subclass as they determine the actual output
     virtual std::string genCamera(RenderCamera *light) const = 0;
-    virtual std::string genLight(RenderLight *light) const = 0;
-    virtual std::string genObject(const char *PartName, const TopoDS_Shape& Shape, float meshDeviation) = 0;
     virtual std::string genFace(const TopoDS_Face& aFace, int index ) = 0;
+    virtual std::string genLight(RenderLight *light) const = 0;
+    virtual std::string genObject(RenderPart *part) = 0;
+    virtual std::string genMaterial(Material *mat) = 0;
     virtual std::string genRenderProps() = 0;
 
     bool getOutputStream(QTextStream &ts);

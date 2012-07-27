@@ -24,17 +24,20 @@
 #ifndef _PreComp_
 #endif
 
-#include <Base/Console.h>
-#include <Base/Exception.h>
-#include <Base/Sequencer.h>
-
 #include "Material.h"
 
 using namespace Raytracing;
 
-Material::Material(void)
+
+Material::Material()
 {
 }
-Material::~Material(void)
+Material::~Material()
 {
+}
+
+Material * Material::copy() const
+{
+  Material *pnt = new Material(*this);
+  return pnt;
 }

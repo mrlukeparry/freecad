@@ -21,40 +21,49 @@
  ***************************************************************************/
 
 
-#ifndef _Appearances_h_
-#define _Appearances_h_
+#ifndef _AppearancesInst_h_
+#define _AppearancesInst_h_
 
-#include <Base/BaseClass.h>
+#include <Base/Factory.h>
 #include <QXmlStreamReader>
 #include <QFile>
 #include "Material.h"
 
 namespace Raytracing
 {
+class AppearancesInstP;
 
-class AppRaytracingExport Appearances : public Base::BaseClass
+class AppRaytracingExport AppearancesInst : public Base::Factory
 {
-    TYPESYSTEM_HEADER();
 public:
 //     static void initialiseMaterials();
-    Appearances(void);
-    ~Appearances(void);
+    static AppearancesInst& instance(void);
+    static void destruct (void);
+    AppearancesInst(void);
+    ~AppearancesInst(void);
     const Material * getMaterial(const char *provides, const char *provider);
     const Material * getMaterialById(const char *id);
+    std::vector<Material *> getMaterialsByProvider(const char *provider);
     void scanMaterials();
     void setUserMaterialsPath(const char *);
 
 //     static Material getMaterial();
-protected:
+private:
   std::vector<Material *> parseXML(QString filename);
   std::vector<Material *> parseXML(const QFile &file);
   Material * readMaterialXML();
 
   QXmlStreamReader xml;
+  static AppearancesInst* _pcSingleton;
 
-  std::vector<Material *> materials;
-  QString userMaterialsPath;
+  AppearancesInstP* d;
+
 };
 
+/// Get the global instance
+inline AppearancesInst& Appearances(void)
+{
+    return AppearancesInst::instance();
 }
-#endif //_Appearances_h_
+}
+#endif //_AppearancesInst_h_

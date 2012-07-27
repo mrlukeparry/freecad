@@ -49,7 +49,6 @@ void AppRaytracingExport initRaytracing()
         PyErr_SetString(PyExc_ImportError, e.what());
         return;
     }
-        Raytracing::Appearances      ::init();
         Raytracing::LuxRender        ::init();
 	Raytracing::RaySegment       ::init();
 	Raytracing::RayFeature       ::init();
