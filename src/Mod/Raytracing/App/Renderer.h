@@ -34,6 +34,7 @@
 #include <vector>
 
 #include "RenderProcess.h"
+#include "Appearances.h"
 
 class TopoDS_Shape;
 class TopoDS_Face;
@@ -73,14 +74,21 @@ class RenderPart
 public:
     RenderPart(const char *partName, const TopoDS_Shape &shape, float meshDev)
                : PartName(partName),Shape(shape), meshDeviation(meshDev) {}
-    ~RenderPart() {}
+    ~RenderPart()
+    {
+      delete material;
+      material = 0;
+    }
     const TopoDS_Shape getShape() {return Shape;}
     const char * getName() { return PartName;};
     const float getMeshDeviation() { return meshDeviation;}
+    setMaterial(Material *mat) { material = mat; }
+    Material * getMaterial(void) { return material;}
 private:
     const char *PartName;
     TopoDS_Shape Shape;
     float meshDeviation;
+    Material *material;
 };
 
 class RenderLight

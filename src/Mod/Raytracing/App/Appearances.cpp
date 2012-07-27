@@ -145,6 +145,37 @@ std::vector<Material *> Appearances::parseXML(QString filename)
     return materials;
 }
 
+const Material * Appearances::getMaterial(const char *provides, const char *provider)
+{
+  QString prov = QString::fromAscii(provides);
+  QString render = QString::fromAscii(provider);
+  // Search all available materials
+
+  for (std::vector<Material *>::const_iterator it= materials.begin(); it!=materials.end(); ++it){
+    if(*it->prov == provides && *it->provider == render) {
+      const Material *fndMat =  *it;
+      return fndMat;
+    }
+  }
+
+  return 0;
+}
+
+const Material * Appearances::getMaterialById(const char *id)
+{
+  QString matId = QString::fromAscii(id);
+  // Search all available materials
+  Material *mat = 0;
+  for (std::vector<Material *>::const_iterator it= materials.begin(); it!=materials.end(); ++it){
+    if(*it->id == matId) {
+        const Material *fndMat =  *it;
+        return fndMat;
+    }
+  }
+
+  return 0;
+}
+
 void Appearances::scanMaterials()
 {
 
@@ -188,7 +219,7 @@ void Appearances::scanMaterials()
         if(mats.size() > 0)
         {
             //If successful store these materials in the collection
-k            for ( std::vector<Material *>::const_iterator mat=mats.begin(); mat!=mats.end(); ++mat)
+            for ( std::vector<Material *>::const_iterator mat=mats.begin(); mat!=mats.end(); ++mat)
                 materials.push_back(*mat);
         } else {
           // Throw an exception?

@@ -39,6 +39,8 @@ public:
 //     static void initialiseMaterials();
     Appearances(void);
     ~Appearances(void);
+    const Material * getMaterial(const char *provides, const char *provider);
+    const Material * getMaterialById(const char *id);
     void scanMaterials();
     void setUserMaterialsPath(const char *);
 
