@@ -326,6 +326,23 @@ void ViewProviderSketch::boxSelectionCallback(void * ud, SoEventCallback * cb)
                         }
                     }
                 }
+            }  else if ((*it)->getTypeId() == Part::GeomPoint::getClassTypeId()) {
+                // ----- Check if a single point lies inside box selection -----/
+                const Part::GeomPoint *point = dynamic_cast<const Part::GeomPoint *>(*it);
+                Base::Vector3d pnt = proj(point->getPoint());
+                Base::Vector2D p1(pnt.x, pnt.y);
+
+                std::stringstream ss;
+
+                points.push_back(p1);
+                if(polygon.Contains(p1)) {
+                    ss << "Vertex" << points.size() - 1;
+                    if (Gui::Selection().isSelected(doc->getName(),sketchObject->getNameInDocument(), ss.str().c_str())){
+                        //Do nothing
+                    } else {
+                        Gui::Selection().addSelection(doc->getName() ,sketchObject->getNameInDocument(),ss.str().c_str());
+                    }
+                }
             } else if ((*it)->getTypeId() == Part::GeomCircle::getClassTypeId()) {
                 // ----- Check if circle lies inside box selection -----/
                 const Part::GeomCircle *circle = dynamic_cast<const Part::GeomCircle *>(*it);
