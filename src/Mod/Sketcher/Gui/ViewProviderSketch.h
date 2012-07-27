@@ -111,7 +111,9 @@ public:
         STATUS_SKETCH_DragPoint,  /**< enum value while dragging a point. */
         STATUS_SKETCH_DragCurve,  /**< enum value while dragging a curve. */
         STATUS_SKETCH_DragConstraint,  /**< enum value while dragging a compatible constraint. */
-        STATUS_SKETCH_UseHandler  /**< enum value a DrawSketchHandler is in control. */
+        STATUS_SKETCH_UseHandler,
+        STATUS_SKETCH_StartRubberBand, /**< enum value for initiating a rubber band selection */
+        STATUS_SKETCH_UseRubberBand /**< enum value when making a rubber band selection *//**< enum value a DrawSketchHandler is in control. */
     };
     /// is called by GuiCommands to set the drawing mode
     void setSketchMode(SketchMode mode) {Mode = mode;}
@@ -143,6 +145,9 @@ public:
     Base::Vector3d seekConstraintPosition(const Base::Vector3d &suggestedPos,
                                           const Base::Vector3d &dir, float step,
                                           const SoNode *constraint);
+
+    static void boxSelectionCallback(void * ud, SoEventCallback * cb);
+    void boxSelectionInit(int x, int y);
 
     float getScaleFactor();
     int getPreselectPoint(void) const;
