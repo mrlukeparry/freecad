@@ -27,10 +27,11 @@
 #include <Base/Factory.h>
 #include <QXmlStreamReader>
 #include <QFile>
-#include "Material.h"
+#include "LibraryMaterial.h"
 
 namespace Raytracing
 {
+
 class AppearancesInstP;
 
 class AppRaytracingExport AppearancesInst : public Base::Factory
@@ -41,17 +42,18 @@ public:
     static void destruct (void);
     AppearancesInst(void);
     ~AppearancesInst(void);
-    const Material * getMaterial(const char *provides, const char *provider);
-    const Material * getMaterialById(const char *id);
-    std::vector<Material *> getMaterialsByProvider(const char *provider);
+    const LibraryMaterial * getMaterial(const char *provides, const char *provider);
+    const LibraryMaterial * getMaterialById(const char *id);
+    std::vector<LibraryMaterial *> getMaterialsByProvider(const char *provider);
     void scanMaterials();
     void setUserMaterialsPath(const char *);
 
 //     static Material getMaterial();
 private:
-  std::vector<Material *> parseXML(QString filename);
-  std::vector<Material *> parseXML(const QFile &file);
-  Material * readMaterialXML();
+  std::vector<LibraryMaterial *> parseXML(QString filename);
+  std::vector<LibraryMaterial *> parseXML(const QFile &file);
+  LibraryMaterial * readMaterialXML();
+  MaterialParameter * readMaterialParamXML();
 
   QXmlStreamReader xml;
   static AppearancesInst* _pcSingleton;

@@ -61,8 +61,8 @@ SET(RenderModule_SRCS
     AppRaytracing.cpp
     AppRaytracingPy.cpp
     FreeCADpov
-    Material.cpp
-    Material.h
+    LibraryMaterial.cpp
+    LibraryMaterial.h
     PovTools.cpp
     PovTools.h
     PreCompiled.cpp

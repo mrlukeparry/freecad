@@ -41,7 +41,7 @@ namespace Raytracing
 class AppearancesInstP
 {
 public:
-  std::vector<Material *> materials;
+  std::vector<LibraryMaterial *> materials;
   QString userMaterialsPath;
 };
 }
@@ -65,7 +65,7 @@ AppearancesInst::AppearancesInst(void)
 
 AppearancesInst::~AppearancesInst(void)
 {
-    for (std::vector<Material *>::const_iterator it=d->materials.begin(); it!= d->materials.end(); ++it)
+    for (std::vector<LibraryMaterial *>::const_iterator it=d->materials.begin(); it!= d->materials.end(); ++it)
     {
       delete (*it);
     }
@@ -85,27 +85,68 @@ void AppearancesInst::setUserMaterialsPath(const char *path)
   d->userMaterialsPath = QString::fromAscii(path);
 }
 
-Material * AppearancesInst::readMaterialXML()
+MaterialParameter * AppearancesInst::readMaterialParamXML()
+{
+  QString id, label, description, def, from, to;
+  QString paramType;
+   do {
+           QString str = xml.name().toString();
+      if (xml.name() == "parameter") {
+        paramType = xml.attributes().value(QString::fromAscii("type")).toString();
+        id = xml.attributes().value(QString::fromAscii("id")).toString();
+      } else if(xml.name() == "range") {
+        to = xml.attributes().value(QString::fromAscii("to")).toString();
+        from = xml.attributes().value(QString::fromAscii("from")).toString();
+      } else if(xml.name() == "default")
+        def = xml.readElementText();
+      else if(xml.name() == "label")
+        label = xml.readElementText();
+      else if(xml.name() == "description")
+        description = xml.readElementText();
+
+   } while (xml.readNextStartElement());
+
+   // Check if required paramater fields are set
+   if(id.isEmpty() || label.isEmpty())
+      return 0;
+
+   MaterialParameter *prop;
+    if(paramType == QString::fromAscii("float")) {
+      MaterialParameterFloat *propFloat = new MaterialParameterFloat(id, MaterialParameter::FLOAT, label, description);
+      prop = propFloat;
+    } else if (paramType == QString::fromAscii("bool")) {
+      MaterialParameterBool *propBool = new MaterialParameterBool(id, MaterialParameter::BOOL, label, description);
+      prop = propBool;
+    } else if (paramType == QString::fromAscii("color")) {
+      MaterialParameterColor *propColor = new MaterialParameterColor(id, MaterialParameter::COLOR, label, description);
+      prop = propColor;
+    }
+    return prop;
+}
+
+LibraryMaterial * AppearancesInst::readMaterialXML()
 {
     // Create a new material on the heap
-    Material *material = new Material();
+    LibraryMaterial *material = new LibraryMaterial();
     bool valid = true;
 
     // Currently on the material element so find attributes if any
     // e.g id="lux_extra_blackLeather" type="external" render="lux" version="0.8"
-    material->id          = xml.attributes().value(QString::fromAscii("id")).toString(); // possibly should be hased to ensure unique
-    material->provider    = xml.attributes().value(QString::fromAscii("render")).toString();
-    material->providerVer = xml.attributes().value(QString::fromAscii("version")).toString(); // Doesn't have to be set
-
-    //Check if an builtin or external material
-    if(xml.attributes().value(QString::fromAscii("type")) == "external")
-      material->source = Material::EXTERNAL;
-    else
-      material->source = Material::BUILTIN;
 
     // -- Look at <material> child elements --- //
-    while (xml.readNextStartElement()) {
-      if (xml.name() == "label")
+    do {
+      QString str = xml.name().toString();
+      if(xml.name() == "Material") {
+          material->id          = xml.attributes().value(QString::fromAscii("id")).toString(); // possibly should be hased to ensure unique
+          material->provider    = xml.attributes().value(QString::fromAscii("render")).toString();
+          material->providerVer = xml.attributes().value(QString::fromAscii("version")).toString(); // Doesn't have to be set
+
+          //Check if an builtin or external material
+          if(xml.attributes().value(QString::fromAscii("type")) == "external")
+            material->source = LibraryMaterial::EXTERNAL;
+          else
+            material->source = LibraryMaterial::BUILTIN;
+      } else if (xml.name() == "label")
           material->label = xml.readElementText();
       else if (xml.name() == "compat")
           material->compat = xml.readElementText();
@@ -117,12 +158,18 @@ Material * AppearancesInst::readMaterialXML()
           material->filename = xml.readElementText();
       else if (xml.name() == "previewFilename")
           material->previewFilename = xml.readElementText();
-    }
-
+      else if (xml.name() == "parameter") {
+          MaterialParameter *prop = readMaterialParamXML();
+          if(prop)
+              material->parameters.insert(prop->getId(), prop);
+      }
+    } while(xml.readNextStartElement());
+    xml.skipCurrentElement();
+    QString str = xml.name().toString();
     // Check if the correct properties were set
     if(material->id.isEmpty()    || material->provider.isEmpty() ||
        material->label.isEmpty() || material->provider.isEmpty() ||
-       (material->source == Material::EXTERNAL && material->filename.isEmpty()))
+       (material->source == LibraryMaterial::EXTERNAL && material->filename.isEmpty()))
        valid = false;
 
     if(!valid) {
@@ -134,9 +181,9 @@ Material * AppearancesInst::readMaterialXML()
 }
 
 // It may be possible that multiple materials are defined within an XML File
-std::vector<Material *> AppearancesInst::parseXML(QString filename)
+std::vector<LibraryMaterial *> AppearancesInst::parseXML(QString filename)
 {
-    std::vector<Material *> materials;
+    std::vector<LibraryMaterial *> materials;
     // Load the XML File
     QFile file(filename);
     if (!file.open(QFile::ReadOnly | QFile::Text))
@@ -147,9 +194,10 @@ std::vector<Material *> AppearancesInst::parseXML(QString filename)
         
     // Set the xml stream to use the file
     xml.setDevice(&file);
-    while (!xml.atEnd()) {
+    while (xml.readNextStartElement()) {
+      QString str = xml.name().toString();
       if (xml.name() == "Material") {
-          Material *mat = readMaterialXML();
+          LibraryMaterial *mat = readMaterialXML();
           if(mat)
           {
               //If file referneces make these absolute on the XML
@@ -162,9 +210,6 @@ std::vector<Material *> AppearancesInst::parseXML(QString filename)
               d->materials.push_back(mat);
           }
       } 
-
-      xml.readNextStartElement();
-
     }
 
     if (xml.hasError()) {
@@ -175,15 +220,15 @@ std::vector<Material *> AppearancesInst::parseXML(QString filename)
     return d->materials;
 }
 
-const Material * AppearancesInst::getMaterial(const char *provides, const char *provider)
+const LibraryMaterial * AppearancesInst::getMaterial(const char *provides, const char *provider)
 {
   QString prov = QString::fromAscii(provides);
   QString render = QString::fromAscii(provider);
   // Search all available materials
 
-  for (std::vector<Material *>::const_iterator it= d->materials.begin(); it!= d->materials.end(); ++it){
+  for (std::vector<LibraryMaterial *>::const_iterator it= d->materials.begin(); it!= d->materials.end(); ++it){
     if((*it)->provides == prov && (*it)->provider == render) {
-      const Material *fndMat =  *it;
+      const LibraryMaterial *fndMat =  *it;
       return fndMat;
     }
   }
@@ -191,12 +236,12 @@ const Material * AppearancesInst::getMaterial(const char *provides, const char *
   return 0;
 }
 
-std::vector<Material *> AppearancesInst::getMaterialsByProvider(const char *provider)
+std::vector<LibraryMaterial *> AppearancesInst::getMaterialsByProvider(const char *provider)
 {
   QString renderer = QString::fromAscii(provider);
   // Search all available materials
-  std::vector<Material *> mats;
-  for (std::vector<Material *>::const_iterator it= d->materials.begin(); it!= d->materials.end(); ++it){
+  std::vector<LibraryMaterial *> mats;
+  for (std::vector<LibraryMaterial *>::const_iterator it= d->materials.begin(); it!= d->materials.end(); ++it){
     if( (*it)->provider == renderer) {
         mats.push_back(*it);
     }
@@ -205,14 +250,14 @@ std::vector<Material *> AppearancesInst::getMaterialsByProvider(const char *prov
   return mats;
 }
 
-const Material * AppearancesInst::getMaterialById(const char *id)
+const LibraryMaterial * AppearancesInst::getMaterialById(const char *id)
 {
   QString matId = QString::fromAscii(id);
   // Search all available materials
-  Material *mat = 0;
-  for (std::vector<Material *>::const_iterator it= d->materials.begin(); it!= d->materials.end(); ++it){
+  LibraryMaterial *mat = 0;
+  for (std::vector<LibraryMaterial *>::const_iterator it= d->materials.begin(); it!= d->materials.end(); ++it){
     if((*it)->id == matId) {
-        const Material *fndMat =  *it;
+        const LibraryMaterial *fndMat =  *it;
         return fndMat;
     }
   }
@@ -259,11 +304,11 @@ void AppearancesInst::scanMaterials()
     for (QStringList::const_iterator it=parseList.begin(); it!=parseList.end(); ++it)
     {
         //Parse the XML
-        std::vector<Material *> mats = parseXML(*it);
+        std::vector<LibraryMaterial *> mats = parseXML(*it);
         if(mats.size() > 0)
         {
             //If successful store these materials in the collection
-            for ( std::vector<Material *>::const_iterator mat=mats.begin(); mat!=mats.end(); ++mat)
+            for ( std::vector<LibraryMaterial *>::const_iterator mat=mats.begin(); mat!=mats.end(); ++mat)
                 d->materials.push_back(*mat);
         } else {
           // Throw an exception?

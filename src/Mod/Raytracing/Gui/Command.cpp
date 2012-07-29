@@ -380,9 +380,12 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
 //             App::Color col = pcColor->getValue();
 
             RenderPart *part = new RenderPart((*it)->getNameInDocument(), (*it)->Shape.getValue(), meshDev);
-            Material *matte = Appearances().getMaterialById("lux_default_matteTranscluent")->copy();
-            Material *defaultMatte = Appearances().getMaterial("diffuseTranslucent", "lux")->copy();
-            part->setMaterial(matte);
+            const LibraryMaterial *matte = Appearances().getMaterialById("lux_default_matteTranscluent");
+            RenderMaterial *defaultMatte = new RenderMaterial(matte);
+
+            MaterialFloatProperty *value = new MaterialFloatProperty(MaterialParameter::FLOAT, 0.5);
+            defaultMatte->properties.insert(QString::fromAscii("sigma"), value);
+            part->setMaterial(defaultMatte);
             renderer->addObject(part);
         }
     }

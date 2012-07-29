@@ -190,7 +190,7 @@ std::string LuxRender::genCamera(RenderCamera *camera) const
     return out.str();
 }
 
-std::string LuxRender::genMaterial(Material *mat)
+std::string LuxRender::genMaterial(RenderMaterial *mat)
 {
     // Texture "checks" "color" "checkerboard"
     //         "float uscale" [4] "float vscale" [4]
@@ -202,15 +202,27 @@ std::string LuxRender::genMaterial(Material *mat)
 
     
     std::stringstream out;
-    if(mat->source == Material::BUILTIN) {
-        out << "\nTexture \"SolidColor\" \"color\" \"constant\" \"color value\" [1.0 1.0 1.0]" << endl;
-        out << "Material \"" << mat->compat.toStdString() << "\"" << endl;
 
+    if(mat->getMaterial()->source == LibraryMaterial::BUILTIN) {
+        out << "\nTexture \"SolidColor\" \"color\" \"constant\" \"color value\" [1.0 1.0 1.0]" << endl;
+        out << "Material \"" << mat->getMaterial()->compat.toStdString() << "\"" << endl;
+        QMap<QString, MaterialProperty *>::const_iterator it = mat->properties.constBegin();
+        while (it != mat->properties.constEnd()) {
+          switch(it.value()->getType()) {
+            case MaterialParameter::BOOL: break;
+            case MaterialParameter::FLOAT: {
+              MaterialFloatProperty *prop = static_cast<MaterialFloatProperty *>(it.value());
+              out << "\"float " << it.key().toStdString() << "\" [" << prop->getValue() <<  "]"; break;}
+            default: break;
+          }
+          ++it;
+        }
+    
         // Add the parameters
         out << "\t\"texture Kd\" \"SolidColor\"" << endl;
     } else {
         //Open the filename and append
-        QFile file(mat->filename);
+        QFile file(mat->getMaterial()->filename);
         if(!file.open(QFile::ReadOnly))
             return std::string("");
 

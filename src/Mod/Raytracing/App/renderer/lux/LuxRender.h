@@ -43,7 +43,7 @@ private:
     std::string genCamera(RenderCamera *camera) const;
     std::string genFace(const TopoDS_Face& aFace, int index);
     std::string genLight(RenderLight *light) const;
-    std::string genMaterial(Material *mat);
+    std::string genMaterial(RenderMaterial *mat);
     std::string genObject(RenderPart *object);
     std::string genRenderProps();
 };

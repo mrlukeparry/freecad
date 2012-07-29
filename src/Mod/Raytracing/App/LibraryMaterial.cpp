@@ -24,20 +24,22 @@
 #ifndef _PreComp_
 #endif
 
-#include "Material.h"
+#include "LibraryMaterial.h"
 
 using namespace Raytracing;
 
 
-Material::Material()
+LibraryMaterial::LibraryMaterial()
 {
 }
-Material::~Material()
+LibraryMaterial::~LibraryMaterial()
 {
-}
-
-Material * Material::copy() const
-{
-  Material *pnt = new Material(*this);
-  return pnt;
+    // Delete all the parameters stored under the material
+    QMap<QString, MaterialParameter *>::iterator it = parameters.begin();
+    while (it != parameters.end()) {
+        delete (it.value());
+        it.value() = 0;
+        ++it;
+    }
+    parameters.clear();
 }

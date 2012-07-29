@@ -35,6 +35,7 @@
 
 #include "RenderProcess.h"
 #include "Appearances.h"
+#include <3rdParty/salomesmesh/inc/Rn.h>
 
 class TopoDS_Shape;
 class TopoDS_Face;
@@ -42,6 +43,78 @@ class TopoDS_Face;
 namespace Raytracing
 { 
 
+// These are for storing actual material properties within a hash and are designed to be lightweight
+class MaterialProperty
+{
+public:
+  MaterialProperty(MaterialParameter::Type propType): type(propType) {};
+  ~MaterialProperty() {};
+  MaterialParameter::Type getType() { return type;}
+private:
+  MaterialParameter::Type type;
+};
+
+// Template class used for storing material types
+// Property Type must be either FLOAT, COLOR, BOOL, TEXTURE, STRING
+class MaterialBoolProperty : public MaterialProperty
+{
+public:
+  MaterialBoolProperty (MaterialParameter::Type propType, bool val)
+  : MaterialProperty(propType), value(val) {}
+  ~MaterialBoolProperty (){}
+
+  void setValue(bool val) { val = value;}
+  bool getValue(void) { return value; }
+private:
+  bool value;
+};
+
+class MaterialFloatProperty : public MaterialProperty
+{
+public:
+  MaterialFloatProperty(MaterialParameter::Type propType, float val)
+  : MaterialProperty(propType), value(val) {}
+  ~MaterialFloatProperty(){}
+
+  void setValue(float val) { val = value;}
+  float getValue(void) { return value; }
+private:
+  float value;
+};
+
+// class MaterialColorProperty : public MaterialProperty
+// {
+//   MaterialPropertyValue(MaterialParameter::Type propType, T val)
+//   : MaterialProperty(propType), value(val) {}
+//   ~MaterialPropertyValue(){}
+// 
+//   void setVal(T val) { val = value;}
+//    getVal(void) { return value; }
+// private:
+//   T value;
+// };
+
+class RenderMaterial
+{
+public:
+  RenderMaterial(const LibraryMaterial *mat) : material(mat) {}
+  ~RenderMaterial()
+  {
+        // Delete all the parameters stored under the material
+    QMap<QString, MaterialProperty *>::iterator it = properties.begin();
+    while (it != properties.end()) {
+        delete (it.value());
+        it.value() = 0;
+        ++it;
+    }
+    properties.clear();
+  }
+
+  QMap<QString, MaterialProperty *> properties;
+  const LibraryMaterial * getMaterial() const { return material; }
+private:
+  const LibraryMaterial *material;
+};
 class RenderCamera
 {
 public:
@@ -80,15 +153,15 @@ public:
       material = 0;
     }
     const TopoDS_Shape getShape() {return Shape;}
-    const char * getName() { return PartName;};
+    const char * getName() { return PartName;}
     const float getMeshDeviation() { return meshDeviation;}
-    void setMaterial(Material *mat) { material = mat; }
-    Material * getMaterial(void) { return material;}
+    void setMaterial(RenderMaterial *mat) { material = mat; }
+    RenderMaterial * getMaterial(void) { return material;}
 private:
     const char *PartName;
     TopoDS_Shape Shape;
     float meshDeviation;
-    Material *material;
+    RenderMaterial *material;
 };
 
 class RenderLight
@@ -138,7 +211,7 @@ protected:
     virtual std::string genFace(const TopoDS_Face& aFace, int index ) = 0;
     virtual std::string genLight(RenderLight *light) const = 0;
     virtual std::string genObject(RenderPart *part) = 0;
-    virtual std::string genMaterial(Material *mat) = 0;
+    virtual std::string genMaterial(RenderMaterial *mat) = 0;
     virtual std::string genRenderProps() = 0;
 
     bool getOutputStream(QTextStream &ts);
