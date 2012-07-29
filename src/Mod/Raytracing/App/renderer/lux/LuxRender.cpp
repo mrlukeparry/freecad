@@ -153,11 +153,43 @@ std::string LuxRender::genLight(RenderLight *light) const
 {
     std::stringstream out;
     out <<  "\nAttributeBegin " << endl
-        <<  "\tCoordSysTransform \"camera\" " << endl
-        <<  "\tLightSource \"distant\"" << endl
-        <<  "\t\t\"point from\" [0 0 0] \"point to\" [0 0 1]" << endl
-        <<  "\t\t\"color L\" [3 3 3]" << endl
-        <<  "AttributeEnd" << endl;
+        <<  "\tLightGroup \"default\"" << endl;
+
+    // Switch the camera type
+    switch(light->getType()) {
+      case RenderLight::AREA: {
+
+        const float * color = light->getColor();
+        out << "\n\tMaterial \"matte\" \"color Kd\" [" << color[0] << " " << color[1] << " " << color[2] << "]" << endl;
+
+        // Actual area light
+        out << "\n\tAreaLightSource \"area\"" << endl
+            << "\t\t\"float power\" [" << light->getPower() << "]" << endl
+            << "\t\t\"color L\" [" << color[0] << " " << color[1] << " " << color[2] << "]" << endl;
+
+        // Create the area light
+        // Generate Points for plane centered around origin
+        RenderAreaLight *areaLight = static_cast<RenderAreaLight *>(light);
+        Base::Vector3d pnts[4];
+        areaLight->generateGeometry(pnts);
+
+        // More Efficient to create geometry straight away
+        out << "Shape \"trianglemesh\"" << endl
+            << "\t\"integer indices\" [0 2 3 0 3 1]" << endl
+            << "\t\"point P\" [" << pnts[0][0] << " " << pnts[0][1] << " " << pnts[0][2] << " "
+                                 << pnts[1][0] << " " << pnts[1][1] << " " << pnts[1][2] << " "
+                                 << pnts[2][0] << " " << pnts[2][1] << " " << pnts[2][2] << " "
+                                 << pnts[3][0] << " " << pnts[3][1] << " " << pnts[3][2] << "]" << endl
+            << "\t\"string name\" [\"Lamp\"]" << endl;
+      } break;
+      case RenderLight::DISTANT: {
+        out <<  "\tCoordSysTransform \"camera\"" << endl
+            <<  "\n\tLightSource \"distant\"" << endl
+            <<  "\t\t\"point from\" [0 0 0] \"point to\" [0 0 1]" << endl
+            <<  "\t\t\"color L\" [3 3 3]" << endl;
+      }
+    }
+    out <<  "AttributeEnd" << endl;
 
     return out.str();
 }
@@ -177,16 +209,15 @@ std::string LuxRender::genCamera(RenderCamera *camera) const
     }
 
     std::stringstream out;
+    out << "\nLookAt " << camera->CamPos.x << " " << camera->CamPos.y << " " << camera->CamPos.z << " "
+                     << camera->LookAt.x << " " << camera->LookAt.y << " " << camera->LookAt.z << " "
+                     << camera->Up.x     << " " << camera->Up.y     << " " << camera->Up.z     << "\n " << endl;
+
     out << "# Camera Declaration and View Direction" << endl
         << "Camera \"" << camType << "\" \"float fov\" [50]" << endl;
     if(camera->Type == RenderCamera::PERSPECTIVE && camera->autofocus)
         out << "\t\"bool autofocus\" [\"true\"]" << endl;
     out << "\t\"float focaldistance\" [" << camera->focaldistance << "]" << endl;
-
-    out << "\nLookAt " << camera->CamPos.x << " " << camera->CamPos.y << " " << camera->CamPos.z << " "
-                     << camera->LookAt.x << " " << camera->LookAt.y << " " << camera->LookAt.z << " "
-                     << camera->Up.x     << " " << camera->Up.y     << " " << camera->Up.z     << "\n " << endl;
-
     return out.str();
 }
 
@@ -259,7 +290,7 @@ std::string LuxRender::genObject(RenderPart *obj)
         const TopoDS_Face& aFace = TopoDS::Face(ex.Current());
         out << genFace(aFace, l);
     }
-    out << "ObjectEnd" << name << endl
+    out << "ObjectEnd" << endl
         << "ObjectInstance \"" << name << "\"" << endl;
     return out.str();
 }
@@ -302,7 +333,7 @@ std::string LuxRender::genFace(const TopoDS_Face& aFace, int index )
     out << "\n\t\"integer indices\"" << endl
         << "\t[" << endl;
    for (int k=0; k < nbTriInFace; k++) {
-        out << "\t\t" <<  cons[3*k] << " " << cons[3*k + 1] << " " << cons[3*k + 2] << endl;
+        out << "\t\t" <<  cons[3*k] << " " << cons[3*k + 2] << " " << cons[3*k + 1] << endl;
     }
     out << "\t]" << endl; // End Property
 

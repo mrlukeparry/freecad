@@ -358,8 +358,14 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
 
     // Add Camera
 
-    RenderLight *light = new RenderLight();
-    light->Type = RenderLight::INFINITE;
+    RenderAreaLight *light = new RenderAreaLight();
+    light->setColor(255, 255, 255);
+    light->setHeight(100);
+    light->setWidth(100);
+
+    Base::Rotation lightRot = Base::Rotation(Base::Vector3d(0, 1, 0), 0.);
+    Base::Vector3d lightPos = Base::Vector3d(-50., -50., 200);
+    light->setPlacement(lightPos, lightRot);
 
     renderer->addCamera(camera);
     renderer->addLight(light);
@@ -380,7 +386,7 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
 //             App::Color col = pcColor->getValue();
 
             RenderPart *part = new RenderPart((*it)->getNameInDocument(), (*it)->Shape.getValue(), meshDev);
-            const LibraryMaterial *matte = Appearances().getMaterialById("lux_default_matteTranscluent");
+            const LibraryMaterial *matte = Appearances().getMaterialById("lux_default_matte");
             RenderMaterial *defaultMatte = new RenderMaterial(matte);
 
             MaterialFloatProperty *value = new MaterialFloatProperty(MaterialParameter::FLOAT, 0.5);

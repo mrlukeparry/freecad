@@ -65,11 +65,7 @@ AppearancesInst::AppearancesInst(void)
 
 AppearancesInst::~AppearancesInst(void)
 {
-    for (std::vector<LibraryMaterial *>::const_iterator it=d->materials.begin(); it!= d->materials.end(); ++it)
-    {
-      delete (*it);
-    }
-    d->materials.empty();
+    clearMaterials();
     delete d;
 }
 
@@ -265,9 +261,19 @@ const LibraryMaterial * AppearancesInst::getMaterialById(const char *id)
   return 0;
 }
 
-void AppearancesInst::scanMaterials()
+void AppearancesInst::clearMaterials(void)
 {
+    for (std::vector<LibraryMaterial *>::const_iterator it=d->materials.begin(); it!= d->materials.end(); ++it) {
+      delete (*it);
+    }
+    d->materials.empty();
+}
+void AppearancesInst::scanMaterials(void)
+{
+    // Clear the materials - since the user may want to refresh the libraries
+    clearMaterials();
 
+    // Note this is not recursive, it will only find XML files one level down. 
     // List of all XML files with absolute path name
     QStringList parseList;
 
@@ -308,7 +314,7 @@ void AppearancesInst::scanMaterials()
         if(mats.size() > 0)
         {
             //If successful store these materials in the collection
-            for ( std::vector<LibraryMaterial *>::const_iterator mat=mats.begin(); mat!=mats.end(); ++mat)
+            for ( std::vector<LibraryMaterial *>::const_iterator mat = mats.begin(); mat != mats.end(); ++mat)
                 d->materials.push_back(*mat);
         } else {
           // Throw an exception?

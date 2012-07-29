@@ -41,7 +41,7 @@ RenderProcess::RenderProcess() : status(INVALID)
 
     // Connect the signals to update status
     QObject::connect(
-        this, SIGNAL(error(ProcessError)),
+        this, SIGNAL(error(QProcess::ProcessError)),
         this, SLOT  (processError())
        );
   

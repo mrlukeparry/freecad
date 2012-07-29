@@ -54,25 +54,31 @@ SET(RendererPlugins_SRCS
 )
 SOURCE_GROUP("RendererPlugins" FILES ${RendererPlugins_SRCS})
 
-SET(RenderModule_SRCS
-    ${Raytracing_MOC_SRCS}
-    Appearances.cpp
-    Appearances.h
-    AppRaytracing.cpp
-    AppRaytracingPy.cpp
+SET(RenderModulePov_SRCS
     FreeCADpov
-    LibraryMaterial.cpp
-    LibraryMaterial.h
     PovTools.cpp
     PovTools.h
-    PreCompiled.cpp
-    PreCompiled.h
     RayFeature.cpp
     RayFeature.h
     RayProject.cpp
     RayProject.h
     RaySegment.cpp
     RaySegment.h
+)
+SOURCE_GROUP("RenderModulePov" FILES ${RenderModulePov_SRCS})
+
+SET(RenderModule_SRCS
+    ${Raytracing_MOC_SRCS}
+    ${RenderModulePov_SRCS}
+    Appearances.cpp
+    Appearances.h
+    AppRaytracing.cpp
+    AppRaytracingPy.cpp
+    LibraryMaterial.cpp
+    LibraryMaterial.h
+    PreCompiled.cpp
+    PreCompiled.h
+    RenderLights.h
     RenderProcess.cpp
     RenderProcess.h
     Renderer.cpp

@@ -50,6 +50,7 @@ public:
 
 //     static Material getMaterial();
 private:
+  void clearMaterials(void);
   std::vector<LibraryMaterial *> parseXML(QString filename);
   std::vector<LibraryMaterial *> parseXML(const QFile &file);
   LibraryMaterial * readMaterialXML();
@@ -59,7 +60,6 @@ private:
   static AppearancesInst* _pcSingleton;
 
   AppearancesInstP* d;
-
 };
 
 /// Get the global instance

@@ -33,6 +33,7 @@
 # include <gp_Vec.hxx>
 #include <vector>
 
+#include "RenderLights.h"
 #include "RenderProcess.h"
 #include "Appearances.h"
 #include <3rdParty/salomesmesh/inc/Rn.h>
@@ -115,6 +116,7 @@ public:
 private:
   const LibraryMaterial *material;
 };
+
 class RenderCamera
 {
 public:
@@ -163,23 +165,6 @@ private:
     float meshDeviation;
     RenderMaterial *material;
 };
-
-class RenderLight
-{
-public:
-    enum LightType {
-    AREA,
-    INFINITE,
-    POINT,
-    SPOT };
-
-    RenderLight(){}
-    ~RenderLight(){}
-    LightType Type;
-    Base::Vector3d  Pos;
-    float Color[3];
-};
-
 
 class AppRaytracingExport Renderer : public Base::BaseClass
 {
