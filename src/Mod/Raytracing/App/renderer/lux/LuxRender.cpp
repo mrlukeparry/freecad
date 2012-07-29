@@ -235,22 +235,28 @@ std::string LuxRender::genMaterial(RenderMaterial *mat)
     std::stringstream out;
 
     if(mat->getMaterial()->source == LibraryMaterial::BUILTIN) {
-        out << "\nTexture \"SolidColor\" \"color\" \"constant\" \"color value\" [1.0 1.0 1.0]" << endl;
         out << "Material \"" << mat->getMaterial()->compat.toStdString() << "\"" << endl;
         QMap<QString, MaterialProperty *>::const_iterator it = mat->properties.constBegin();
         while (it != mat->properties.constEnd()) {
+          if(!it.value())
+            continue; //No key perhaps throw error
+
           switch(it.value()->getType()) {
             case MaterialParameter::BOOL: break;
             case MaterialParameter::FLOAT: {
               MaterialFloatProperty *prop = static_cast<MaterialFloatProperty *>(it.value());
-              out << "\"float " << it.key().toStdString() << "\" [" << prop->getValue() <<  "]"; break;}
+              out << "\"float " << it.key().toStdString() << "\" [" << prop->getValue() <<  "]"; } break;
+            case MaterialParameter::COLOR: {
+              MaterialColorProperty *prop = static_cast<MaterialColorProperty *>(it.value());
+              const float *color = prop->getValue();
+              if(!color)
+                continue;
+              out << "\"color " << it.key().toStdString() << "\" [" << color[0] << " " << color[1] << " " << color[2] <<  "]" << endl;
+            } break;
             default: break;
           }
           ++it;
         }
-    
-        // Add the parameters
-        out << "\t\"texture Kd\" \"SolidColor\"" << endl;
     } else {
         //Open the filename and append
         QFile file(mat->getMaterial()->filename);
@@ -262,6 +268,8 @@ std::string LuxRender::genMaterial(RenderMaterial *mat)
         {
           out << textStr.readLine().toStdString() << endl;
         }
+
+        out << "\nNamedMaterial \"" << mat->getMaterial()->compat.toStdString() << "\"" << endl;
     }
 
     return out.str();

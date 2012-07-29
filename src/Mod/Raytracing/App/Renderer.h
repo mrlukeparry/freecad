@@ -60,8 +60,8 @@ private:
 class MaterialBoolProperty : public MaterialProperty
 {
 public:
-  MaterialBoolProperty (MaterialParameter::Type propType, bool val)
-  : MaterialProperty(propType), value(val) {}
+  MaterialBoolProperty (bool val)
+  : MaterialProperty(MaterialParameter::BOOL), value(val) {}
   ~MaterialBoolProperty (){}
 
   void setValue(bool val) { val = value;}
@@ -73,8 +73,8 @@ private:
 class MaterialFloatProperty : public MaterialProperty
 {
 public:
-  MaterialFloatProperty(MaterialParameter::Type propType, float val)
-  : MaterialProperty(propType), value(val) {}
+  MaterialFloatProperty(float val)
+  : MaterialProperty(MaterialParameter::FLOAT), value(val) {}
   ~MaterialFloatProperty(){}
 
   void setValue(float val) { val = value;}
@@ -83,17 +83,23 @@ private:
   float value;
 };
 
-// class MaterialColorProperty : public MaterialProperty
-// {
-//   MaterialPropertyValue(MaterialParameter::Type propType, T val)
-//   : MaterialProperty(propType), value(val) {}
-//   ~MaterialPropertyValue(){}
-// 
-//   void setVal(T val) { val = value;}
-//    getVal(void) { return value; }
-// private:
-//   T value;
-// };
+class MaterialColorProperty : public MaterialProperty
+{
+public:
+  MaterialColorProperty(int r, int b, int g)
+  : MaterialProperty(MaterialParameter::COLOR) { setValue(r,g,b); }
+  ~MaterialColorProperty(){}
+
+  void setValue(int r, int b, int g)
+  {
+    color[0] = (float) r / 255;
+    color[1] = (float) g / 255;
+    color[2] = (float) b / 255;
+  }
+  const float * getValue(void) { return color; }
+private:
+  float color[3];
+};
 
 class RenderMaterial
 {

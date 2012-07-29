@@ -382,15 +382,22 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
 //           if(vp->getTypeId() == PartGui::ViewProviderPartExt::getClassTypeId()) {
 //               meshDev = static_cast<PartGui::ViewProviderPartExt *>(vp)->Deviation.getValue();
 //           }
-//             App::PropertyColor *pcColor = dynamic_cast<App::PropertyColor *>(vp->getPropertyByName("ShapeColor"));
-//             App::Color col = pcColor->getValue();
+            App::PropertyColor *pcColor = dynamic_cast<App::PropertyColor *>(vp->getPropertyByName("ShapeColor"));
+            App::Color col = pcColor->getValue();
 
             RenderPart *part = new RenderPart((*it)->getNameInDocument(), (*it)->Shape.getValue(), meshDev);
+//             const LibraryMaterial *gold = Appearances().getMaterialById("lux_extra_gold");
+//             RenderMaterial *defaultMat = new RenderMaterial(gold);
+//             part->setMaterial(defaultMat);
+
             const LibraryMaterial *matte = Appearances().getMaterialById("lux_default_matte");
             RenderMaterial *defaultMatte = new RenderMaterial(matte);
 
-            MaterialFloatProperty *value = new MaterialFloatProperty(MaterialParameter::FLOAT, 0.5);
-            defaultMatte->properties.insert(QString::fromAscii("sigma"), value);
+            MaterialFloatProperty *sigmaValue = new MaterialFloatProperty(0.5);
+            MaterialColorProperty *colorValue = new MaterialColorProperty(col.r * 255, col.g * 255, col.b * 255);
+
+            defaultMatte->properties.insert(QString::fromAscii("Kd"), colorValue);
+            defaultMatte->properties.insert(QString::fromAscii("sigma"), sigmaValue);
             part->setMaterial(defaultMatte);
             renderer->addObject(part);
         }
