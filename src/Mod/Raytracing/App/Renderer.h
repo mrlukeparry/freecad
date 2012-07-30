@@ -34,8 +34,10 @@
 #include <vector>
 
 #include "RenderLights.h"
+#include "RenderPreset.h"
 #include "RenderProcess.h"
 #include "Appearances.h"
+
 #include <3rdParty/salomesmesh/inc/Rn.h>
 
 class TopoDS_Shape;
@@ -107,10 +109,25 @@ public:
   RenderMaterial(const LibraryMaterial *mat) : material(mat) {}
   ~RenderMaterial()
   {
+    
         // Delete all the parameters stored under the material
     QMap<QString, MaterialProperty *>::iterator it = properties.begin();
     while (it != properties.end()) {
-        delete (it.value());
+        switch(it.value()->getType()) {
+          case MaterialParameter::COLOR: {
+            MaterialColorProperty *prop = static_cast<MaterialColorProperty*>(it.value());
+            delete prop;
+          } break;
+          case MaterialParameter::BOOL: {
+            MaterialBoolProperty *prop = static_cast<MaterialBoolProperty*>(it.value());
+            delete prop;
+          } break;
+          case MaterialParameter::FLOAT: {
+            MaterialFloatProperty *prop = static_cast<MaterialFloatProperty*>(it.value());
+            delete prop;
+          } break;
+        }
+
         it.value() = 0;
         ++it;
     }
@@ -182,12 +199,22 @@ public:
     void addLight(RenderLight *light);
     void addObject(const char *PartName, const TopoDS_Shape &Shape, float meshDeviation);
     void addObject(RenderPart *part);
+    void setRenderPreset(const char *presetId);
     void attachRenderProcess(RenderProcess *process);
+
+    /// Functions for find Render Presets
+    void scanPresets(void);
+    std::vector<RenderPreset *> parsePresetXML(QString filename);
+    void clearPresets(void);
+    RenderPreset * getRenderPreset(const char *id) const;
+    std::vector<RenderPreset *> getRenderPresets(void) const;
+
+    ///Render Actions
     virtual void preview();
     virtual void render();
     virtual void finish();
 
-    virtual void generateScene() = 0;
+    ///Setter methods
     void setCamera(const Base::Vector3d &camPos, const Base::Vector3d &CamDir, const Base::Vector3d &lookAt, const Base::Vector3d &Up);
     void setOutputPath(const char *loc);
     void setRenderSize(int x, int y) { xRes = x; yRes = y;};
@@ -197,31 +224,37 @@ public:
 
 protected:
 
-    //All these methods must be defined by the subclass as they determine the actual output
+    /// All these methods must be defined by the Render plugin subclass because they generate the scene file used for rendering
     virtual std::string genCamera(RenderCamera *light) const = 0;
     virtual std::string genFace(const TopoDS_Face& aFace, int index ) = 0;
     virtual std::string genLight(RenderLight *light) const = 0;
     virtual std::string genObject(RenderPart *part) = 0;
     virtual std::string genMaterial(RenderMaterial *mat) = 0;
     virtual std::string genRenderProps() = 0;
+    virtual void generateScene() = 0;
 
     bool getOutputStream(QTextStream &ts);
 
     void clear();
+
+    /// Useful helpful function for calculating the mesh for individual face
     void transferToArray(const TopoDS_Face& aFace,gp_Vec** vertices,gp_Vec** vertexnormals, long** cons,int &nbNodesInFace,int &nbTriInFace );
 
-    // Common Properties
+    /// Common Properties
     RenderCamera *camera;
     RenderProcess *process;
+    RenderPreset *preset;
     std::vector<RenderLight *> lights;
     std::vector<RenderPart *> parts;
+    std::vector<RenderPreset *> libraryPresets;
+
     std::string outputPath;
+    std::string renderPresetsPath;
 
     QTemporaryFile inputFile;
 
     int xRes;
     int yRes;
-
 };
 
 }

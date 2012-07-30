@@ -402,7 +402,7 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
             renderer->addObject(part);
         }
     }
-
+    renderer->setRenderPreset("directLighting");
     renderer->setRenderSize(800, 600);
     renderer->preview();
 

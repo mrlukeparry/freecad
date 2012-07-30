@@ -31,7 +31,9 @@
 # include <TopExp_Explorer.hxx>
 # include <sstream>
 # include <QString>
-#include <boost/concept_check.hpp>
+# include <QFile>
+# include <QDir>
+# include <QXmlStreamReader>
 # include <TopoDS.hxx>
 # include <TopoDS_Face.hxx>
 #endif
@@ -75,7 +77,7 @@ void Renderer::clear()
     for (std::vector<RenderPart *>::iterator it = parts.begin(); it != parts.end(); ++it) {
       delete *it;
     }
-
+    clearPresets();
     lights.clear();
     parts.clear();
 }
@@ -111,6 +113,135 @@ bool Renderer::getOutputStream(QTextStream &ts)
         return false;
 
     ts.setDevice(&inputFile);
+}
+
+void Renderer::clearPresets(void)
+{
+    // For safety reset the render preset to null pointer
+    preset = 0;
+
+    for (std::vector<RenderPreset *>::iterator it = libraryPresets.begin(); it != libraryPresets.end(); ++it) {
+      delete *it;
+    }
+    libraryPresets.empty();
+}
+
+std::vector<RenderPreset *> Renderer::parsePresetXML(QString filename)
+{
+    std::vector<RenderPreset *> fndPresets;
+    // Load the XML File
+    QFile file(filename);
+    if (!file.open(QFile::ReadOnly | QFile::Text))
+      return fndPresets; // The file couldn't be read
+
+    QFileInfo fileInfo(file);
+    QDir fileDir = fileInfo.absoluteDir();
+
+    QXmlStreamReader xml;
+    // Set the xml stream to use the file
+    xml.setDevice(&file);
+
+    QString provider;
+    while (xml.readNextStartElement()) {
+        if (xml.name() == "Presets") {
+            provider = xml.attributes().value(QString::fromAscii("render")).toString();
+        } else if (xml.name() == "Preset") {
+            // Process this Preset Attribute
+            QString id, label, filename, description;
+            id = xml.attributes().value(QString::fromAscii("id")).toString(); // possibly should be hased to ensure unique
+            do {
+                if (xml.name() == "label")
+                    label = xml.readElementText();
+                else if (xml.name() == "description")
+                    description = xml.readElementText();
+                else if (xml.name() == "filename")
+                    filename = xml.readElementText();
+            } while(xml.readNextStartElement());
+
+            if(id.isEmpty() || label.isEmpty() || filename.isEmpty() ||
+               description.isEmpty() || provider.isEmpty())
+                continue;
+
+            // Make the filename absolute
+            filename = fileDir.absoluteFilePath(filename);
+            RenderPreset *preset = new RenderPreset(id, label, filename, description, provider);
+
+            // Append this preset
+            fndPresets.push_back(preset);
+        }
+    }
+
+    if (xml.hasError()) {
+    //           ... // do error handling
+    }
+    file.close();
+
+    return fndPresets;
+
+}
+
+void Renderer::setRenderPreset(const char *presetId)
+{
+    RenderPreset *fndPreset = getRenderPreset(presetId);
+    if(!fndPreset)
+      return; // Thrown an exception?
+
+    preset = fndPreset;
+}
+
+void Renderer::scanPresets(void)
+{
+  // Clear the materials - since the user may want to refresh the libraries
+    clearPresets();
+
+    // Note this is not recursive, it will only find XML files one level down.
+    // List of all XML files with absolute path name
+    QStringList parseList;
+
+      //Find a list of xml files within the
+    QDir presetDir(QString::fromStdString(renderPresetsPath));
+
+    QStringList fileExt;
+    fileExt.push_back(QString::fromAscii("*.xml"));
+
+    // Looks for xml files in directory
+    QStringList xmlFiles = presetDir.entryList(fileExt);
+    for (QStringList::const_iterator file=xmlFiles.begin(); file!=xmlFiles.end(); ++file){
+        parseList.append(presetDir.absoluteFilePath(*file));
+    }
+
+    // Need to add parselist from  own library
+    if(parseList.size() == 0)
+      return;
+    // Process all these xml file into Materials
+
+        // Iterate through
+    for (QStringList::const_iterator it=parseList.begin(); it!=parseList.end(); ++it)
+    {
+        //Parse the XML
+        std::vector<RenderPreset *> fndPresets = parsePresetXML(*it);
+        if(fndPresets.size() > 0)
+        {
+            //If successful store these materials in the collection
+            for ( std::vector<RenderPreset *>::const_iterator preset = fndPresets.begin(); preset != fndPresets.end(); ++preset)
+                libraryPresets.push_back(*preset);
+        } else {
+          // Throw an exception?
+        }
+    }
+}
+
+RenderPreset * Renderer::getRenderPreset(const char *id) const
+{
+    for (std::vector<RenderPreset *>::const_iterator it = libraryPresets.begin(); it != libraryPresets.end(); ++it) {
+        if((*it)->getId() == QString::fromAscii(id))
+            return *it;
+    }
+}
+
+std::vector<RenderPreset *> Renderer::getRenderPresets(void) const
+{
+  return libraryPresets;
 }
 
 void Renderer::finish()

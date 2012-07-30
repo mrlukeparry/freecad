@@ -187,7 +187,9 @@ std::vector<LibraryMaterial *> AppearancesInst::parseXML(QString filename)
 
     QFileInfo fileInfo(file);
     QDir fileDir = fileInfo.absoluteDir();
-        
+
+    //Reset the xml stream if it has been used before
+    xml.clear();
     // Set the xml stream to use the file
     xml.setDevice(&file);
     while (xml.readNextStartElement()) {
@@ -203,7 +205,7 @@ std::vector<LibraryMaterial *> AppearancesInst::parseXML(QString filename)
               if(!mat->previewFilename.isEmpty())
                   mat->previewFilename = fileDir.absoluteFilePath(mat->previewFilename);
 
-              d->materials.push_back(mat);
+              materials.push_back(mat);
           }
       } 
     }
@@ -213,7 +215,7 @@ std::vector<LibraryMaterial *> AppearancesInst::parseXML(QString filename)
     }
     file.close();
 
-    return d->materials;
+    return materials;
 }
 
 const LibraryMaterial * AppearancesInst::getMaterial(const char *provides, const char *provider)
@@ -263,10 +265,11 @@ const LibraryMaterial * AppearancesInst::getMaterialById(const char *id)
 
 void AppearancesInst::clearMaterials(void)
 {
-    for (std::vector<LibraryMaterial *>::const_iterator it=d->materials.begin(); it!= d->materials.end(); ++it) {
+    for (std::vector<LibraryMaterial *>::iterator it=d->materials.begin(); it!= d->materials.end(); ++it) {
       delete (*it);
+      *it = 0;
     }
-    d->materials.empty();
+    d->materials.clear();
 }
 void AppearancesInst::scanMaterials(void)
 {

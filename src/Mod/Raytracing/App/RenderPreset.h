@@ -20,44 +20,40 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "PreCompiled.h"
-#ifndef _PreComp_
-#endif
 
-#include "LibraryMaterial.h"
+#ifndef _RendererPreset_h_
+#define _RendererPreset_h_
 
-using namespace Raytracing;
-
-
-LibraryMaterial::LibraryMaterial()
+#include <QString>
+namespace Raytracing
 {
-}
-LibraryMaterial::~LibraryMaterial()
-{
-    if(parameters.isEmpty())
-        return;
 
-    // Delete all the parameters stored under the material
-    QMap<QString, MaterialParameter *>::iterator it = parameters.begin();
-    while (it != parameters.end()) {
-        switch(it.value()->getType())
-        {
-          case MaterialParameter::BOOL: {
-            MaterialParameterBool *param = static_cast<MaterialParameterBool *>(it.value());
-            delete param;
-          } break;
-          case MaterialParameter::COLOR: {
-            MaterialParameterColor *param = static_cast<MaterialParameterColor *>(it.value());
-            delete param;
-          } break;
-          case MaterialParameter::FLOAT: {
-            MaterialParameterFloat *param = static_cast<MaterialParameterFloat *>(it.value());
-            delete param;
-          } break;
-          default: break;
-        }
-        it.value() = 0;
-        ++it;
-    }
-    parameters.clear();
+class RenderPreset
+{
+public:
+  RenderPreset(QString id, QString label, QString filename, QString description, QString provider)
+             : id(id),
+               label(label),
+               filename(filename),
+               description(description),
+               provider(provider)
+               {}
+  ~RenderPreset(){}
+
+  QString getId() const { return id;}
+  QString getFilename() const { return filename;}
+  QString getLabel() const { return label;}
+  QString getDescription() const { return description;}
+  QString getProvider() const { return provider;}
+  
+private:
+  QString id;
+  QString filename;
+  QString label;
+  QString description;
+  QString provider;
+};
+
 }
+
+#endif //_RendererPreset_h_

@@ -83,7 +83,11 @@ using namespace std;
 // 
 // WorldEnd
 
-LuxRender::LuxRender(void){}
+LuxRender::LuxRender(void)
+{
+    renderPresetsPath = "/home/mrlukeparry/luxRenderPresets";
+    scanPresets();
+}
 LuxRender::~LuxRender(void){}
 
 void LuxRender::generateScene()
@@ -93,8 +97,8 @@ void LuxRender::generateScene()
       return;
 
     out << "#Global Information:" << endl
-        << genCamera(camera).c_str()
         << genRenderProps().c_str()
+        << genCamera(camera).c_str()
         << "#Scene Specific Information:" << endl
         << "WorldBegin" << endl;
 
@@ -105,7 +109,7 @@ void LuxRender::generateScene()
         out << genObject(*it).c_str();
     }
 
-    out << "\nWorldEnd" << endl;
+    out << "\nWorldEnd";
 }
 
 
@@ -129,21 +133,25 @@ void LuxRender::generateScene()
         
 std::string LuxRender::genRenderProps()
 {
+  
     std::stringstream out;
-    out << "# Scene render Properties:" << endl
-        << "Renderer \"sampler\"" << endl
-        << "\nSampler \"metropolis\"" << endl
-        << "\t \"float largemutationprob\" [0.400000005960464]" << endl
-        << "\"bool usevariance\" [\"false\"]" << endl
-        << "\nAccelerator \"qbvh\"" << endl
-        << "SurfaceIntegrator \"bidirectional\""
-        << "\t\"integer eyedepth\" [48]" << endl
-        << "\t\"integer lightdepth\" [48]" << endl
-        << "VolumeIntegrator \"multi\"" << endl
-        << "\t\"float stepsize\" [1.000000000000000]"
-        << "\nPixelFilter \"mitchell\"" << endl
-        << "\t\"bool supersample\" [\"true\"]" << endl
-        << "\nFilm \"fleximage\" \"integer xresolution\" [" << this->xRes << "] \"integer yresolution\" [" << yRes << "]" << endl
+    if(!preset)
+      return out.str(); // Throw exception?
+
+    out << "# Scene render Properties:" << endl;
+
+    //Open the filename and append
+    QFile file(preset->getFilename());
+    if(!file.open(QFile::ReadOnly))
+        return std::string("");
+
+    QTextStream textStr(&file);
+    while(!textStr.atEnd())
+    {
+      out << textStr.readLine().toStdString() << endl;
+    }
+
+    out << "\nFilm \"fleximage\" \"integer xresolution\" [" << this->xRes << "] \"integer yresolution\" [" << yRes << "]" << endl
         << "PixelFilter \"mitchell\" \"float xwidth\" [2] \"float ywidth\" [2]" << endl;
 
     return out.str();
@@ -231,7 +239,6 @@ std::string LuxRender::genMaterial(RenderMaterial *mat)
     //         "texture Kd" "checks"
     // Texture "SolidColor" "color" "constant" "color value" [1.000 0.910 0.518]
 
-    
     std::stringstream out;
 
     if(mat->getMaterial()->source == LibraryMaterial::BUILTIN) {
@@ -324,7 +331,7 @@ std::string LuxRender::genFace(const TopoDS_Face& aFace, int index )
     // Write the Vertex Points in order
     out << "\n\t\"point P\"" << endl
         << "\t[" << endl;
-    for (int i=0; i < nbNodesInFace; i++) {
+    for (int i = 0; i < nbNodesInFace; i++) {
         out << "\t\t" <<  verts[i].X() << " " << verts[i].Y() << " " << verts[i].Z() << " " << endl;
     }
     out << "\t]" << endl; // End Property
@@ -332,7 +339,7 @@ std::string LuxRender::genFace(const TopoDS_Face& aFace, int index )
     // Write the Normals in order
     out << "\n\t\"normal N\"" << endl
         << "\t[" << endl;
-    for (int j=0; j < nbNodesInFace; j++) {
+    for (int j = 0; j < nbNodesInFace; j++) {
         out << "\t\t" <<  vertNorms[j].X() << " " << vertNorms[j].Y() << " " << vertNorms[j].Z() << " " << endl;
     }
     out << "\t]" << endl; // End Property
@@ -340,8 +347,8 @@ std::string LuxRender::genFace(const TopoDS_Face& aFace, int index )
     // Write the Face Indices in order
     out << "\n\t\"integer indices\"" << endl
         << "\t[" << endl;
-   for (int k=0; k < nbTriInFace; k++) {
-        out << "\t\t" <<  cons[3*k] << " " << cons[3*k + 2] << " " << cons[3*k + 1] << endl;
+   for (int k = 0; k < nbTriInFace; k++) {
+        out << "\t\t" <<  cons[3 * k] << " " << cons[3 * k + 2] << " " << cons[3 * k + 1] << endl;
     }
     out << "\t]" << endl; // End Property
 
