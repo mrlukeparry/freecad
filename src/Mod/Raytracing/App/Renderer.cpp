@@ -248,12 +248,36 @@ void Renderer::finish()
 {
   if(!process || !process->isActive())
       return; // The process cannot be stopped because it's not active
-      
+
   this->process->stop();
+}
+
+void Renderer::preview(int x1, int y1, int x2, int y2)
+{
+  reset();
+
+  previewCoords[0] = x1;
+  previewCoords[1] = y1;
+  previewCoords[2] = x2;
+  previewCoords[3] = y2;
+
+  QTemporaryFile tempFile;
+  tempFile.open();
+  QString tmpFileName = tempFile.fileName();
+
+  //An Extension is usually required.
+  QString extension = QString::fromAscii(".png");
+  tmpFileName.append(extension);
+
+  outputPath.clear();
+  outputPath = tmpFileName.toStdString();
+
+  initRender(PREVIEW_AREA);
 }
 
 void Renderer::preview()
 {
+    reset();
     // Create a temporary file to store the render preview
     QTemporaryFile tempFile;
     tempFile.open();
@@ -266,20 +290,37 @@ void Renderer::preview()
     outputPath.clear();
     outputPath = tmpFileName.toStdString();
 
-    render();
+    this->initRender(PREVIEW);
 }
 
 void Renderer::render()
+{
+    reset();
+    this->initRender(RENDER);
+}
+
+void Renderer::reset()
+{
+    //Clear up any previously stored data associated with a render process or preview
+     // Clear the previous contents and regenerate
+    previewCoords[0] = -1;
+    previewCoords[1] = -1;
+    previewCoords[2] = -1;
+    previewCoords[3] = -1;
+}
+
+void Renderer::initRender(RenderMode renderMode)
 {
     if(this->process && this->process->isActive())
       return;
 
     if(!inputFile.open())
       return;
+    inputFile.resize(0);
 
-    inputFile.resize(0); // Clear the previous contents and regenerate
+    mode = renderMode;
+
     generateScene();
-
     process->setInputPath(inputFile.fileName());
 
     QString filepath = QString::fromAscii(outputPath.c_str());

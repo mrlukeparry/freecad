@@ -193,6 +193,11 @@ class AppRaytracingExport Renderer : public Base::BaseClass
 {
     TYPESYSTEM_HEADER();
 public:
+    enum RenderMode {
+      PREVIEW_AREA,
+      PREVIEW,
+      RENDER};
+
     Renderer(void);
     ~Renderer(void);
     void addCamera(RenderCamera *cam);
@@ -211,7 +216,9 @@ public:
 
     ///Render Actions
     virtual void preview();
+    virtual void preview(int x1, int y1, int x2, int y2);
     virtual void render();
+    virtual void initRender(RenderMode mode);
     virtual void finish();
 
     ///Setter methods
@@ -236,6 +243,7 @@ protected:
     bool getOutputStream(QTextStream &ts);
 
     void clear();
+    void reset();
 
     /// Useful helpful function for calculating the mesh for individual face
     void transferToArray(const TopoDS_Face& aFace,gp_Vec** vertices,gp_Vec** vertexnormals, long** cons,int &nbNodesInFace,int &nbTriInFace );
@@ -255,6 +263,8 @@ protected:
 
     int xRes;
     int yRes;
+    RenderMode mode;
+    int previewCoords[4];
 };
 
 }

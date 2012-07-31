@@ -37,7 +37,7 @@ public:
   LuxRender(void);
   ~LuxRender(void);
   void generateScene();
-  void render();
+  void initRender(RenderMode renderMode);
 
 private:
     std::string genCamera(RenderCamera *camera) const;

@@ -151,9 +151,7 @@ std::string LuxRender::genRenderProps()
       out << textStr.readLine().toStdString() << endl;
     }
 
-    out << "\nFilm \"fleximage\" \"integer xresolution\" [" << this->xRes << "] \"integer yresolution\" [" << yRes << "]" << endl
-        << "PixelFilter \"mitchell\" \"float xwidth\" [2] \"float ywidth\" [2]" << endl;
-
+    out << "\nFilm \"fleximage\" \"integer xresolution\" [" << this->xRes << "] \"integer yresolution\" [" << yRes << "]" << endl;
     return out.str();
 }
 
@@ -226,6 +224,16 @@ std::string LuxRender::genCamera(RenderCamera *camera) const
     if(camera->Type == RenderCamera::PERSPECTIVE && camera->autofocus)
         out << "\t\"bool autofocus\" [\"true\"]" << endl;
     out << "\t\"float focaldistance\" [" << camera->focaldistance << "]" << endl;
+
+    // Process Preview Areas
+    float x1, y1, x2, y2;
+    if(mode == PREVIEW_AREA) {
+        x1 = (float) previewCoords[0] / xRes * 2 - 1;
+        y1 = (float) previewCoords[1] / yRes * 2 - 1;
+        x2 = (float) previewCoords[2] / xRes * 2 - 1;
+        y2 = (float) previewCoords[3] / yRes * 2 - 1;
+        out << "\t\"float screenwindow\" [" << x1 << " " << y1 << " " << x2 << " " << y2 << "]";
+    }
     return out.str();
 }
 
@@ -362,7 +370,7 @@ std::string LuxRender::genFace(const TopoDS_Face& aFace, int index )
     return out.str();
 }
 
-void LuxRender::render()
+void LuxRender::initRender(RenderMode renderMode)
 {
     // Check if there are any processes running;
     if(process && process->isActive())
@@ -371,5 +379,5 @@ void LuxRender::render()
     // Create a new Render Process
     LuxRenderProcess * process = new LuxRenderProcess();
     this->attachRenderProcess(process);
-    Renderer::render();
+    Renderer::initRender(renderMode);
 }

@@ -404,7 +404,7 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
     }
     renderer->setRenderPreset("directLighting");
     renderer->setRenderSize(800, 600);
-    renderer->preview();
+    renderer->preview(300, 400, 600, 200);
 
 }
 
