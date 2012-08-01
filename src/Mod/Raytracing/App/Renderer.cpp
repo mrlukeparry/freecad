@@ -323,7 +323,7 @@ void Renderer::initRender(RenderMode renderMode)
     generateScene();
     process->setInputPath(inputFile.fileName());
 
-    QString filepath = QString::fromAscii(outputPath.c_str());
+    QString filepath = QString::fromStdString(outputPath);
     // Create the output file
     QFile file(filepath);
 

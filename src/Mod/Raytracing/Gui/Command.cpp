@@ -63,13 +63,14 @@
 #include <Mod/Part/App/PartFeature.h>
   
 #include "FreeCADpov.h"
+#include "RenderView.h"
 #include <Mod/Raytracing/App/renderer/lux/LuxRender.h>
 #include <Mod/Raytracing/App/Appearances.h>
 
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 using namespace Raytracing;
-
+using namespace RaytracingGui;
 //===========================================================================
 // CmdRaytracingWriteCamera
 //===========================================================================
@@ -402,9 +403,20 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
             renderer->addObject(part);
         }
     }
-    renderer->setRenderPreset("directLighting");
+    renderer->setRenderPreset("metropolisUnbiased");
     renderer->setRenderSize(800, 600);
-    renderer->preview(300, 400, 600, 200);
+    renderer->preview();
+
+    if(renderer->getRenderProcess() && renderer->getRenderProcess())
+    {
+        Gui::Document * doc = getActiveGuiDocument();
+        RenderView *view = new RenderView(doc, Gui::getMainWindow());
+
+        view->attachRender(renderer);
+
+        view->setWindowTitle(QObject::tr("Render viewer") + QString::fromAscii("[*]"));
+        Gui::getMainWindow()->addWindow(view);
+    }
 
 }
 

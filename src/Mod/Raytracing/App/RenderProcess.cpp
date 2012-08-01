@@ -75,13 +75,15 @@ bool RenderProcess::isActive()
 bool RenderProcess::getOutput(QImage &img)
 {
   QFile file(outputPath);
-  file.open(QIODevice::ReadOnly);
 
-
-  if(file.size() == 0)
+  if(!file.open(QIODevice::ReadOnly) || file.size() == 0)
     return false; // empty file
-  Base::Console().Log("got Image");
-  return img.load(outputPath);
+
+  // Emit a signal
+  Base::Console().Log("Render Output Update:");
+  Q_EMIT updateOutput();
+
+  return true;
 }
 bool RenderProcess::isInputAvailable()
 {

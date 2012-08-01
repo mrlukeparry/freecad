@@ -161,6 +161,10 @@
 #include <QUiLoader>
 #include <QtDesigner/QFormBuilder>
 
+// QtDeclartive
+#if QT_VERSION >= 0x040700
+#include <QDeclarativeView>
+#endif
 // QtWebKit
 #if QT_VERSION >= 0x040400
 // Only needed in Web module

@@ -38,6 +38,7 @@ generate_from_py2(FreeCADpov FreeCADpov.h)
 
 set(RaytracingGui_MOC_HDRS
     DlgSettingsRayImp.h
+    RenderView.h
 )
 fc_wrap_cpp(RaytracingGui_MOC_SRCS ${RaytracingGui_MOC_HDRS})
 SOURCE_GROUP("Moc" FILES ${RaytracingGui_MOC_SRCS})
@@ -67,6 +68,8 @@ SET(RaytracingGui_SRCS
     PovrayHighlighter.h
     PreCompiled.cpp
     PreCompiled.h
+    RenderView.cpp
+    RenderView.h
     Workbench.cpp
     Workbench.h
 )

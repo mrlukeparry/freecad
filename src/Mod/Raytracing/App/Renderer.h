@@ -206,6 +206,7 @@ public:
     void addObject(RenderPart *part);
     void setRenderPreset(const char *presetId);
     void attachRenderProcess(RenderProcess *process);
+    RenderProcess * getRenderProcess() { return process; }
 
     /// Functions for find Render Presets
     void scanPresets(void);
@@ -213,6 +214,7 @@ public:
     void clearPresets(void);
     RenderPreset * getRenderPreset(const char *id) const;
     std::vector<RenderPreset *> getRenderPresets(void) const;
+    const char * getOutputPath() const { return outputPath.c_str(); }
 
     ///Render Actions
     virtual void preview();

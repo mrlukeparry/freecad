@@ -1,4 +1,5 @@
-<RCC>
+<!DOCTYPE RCC>
+<RCC version="1.0">
     <qresource> 
         <file>icons/preferences-raytracing.svg</file>
         <file>icons/Raytrace_Camera.svg</file>
@@ -22,5 +23,9 @@
         <file>translations/Raytracing_se.qm</file>
         <file>translations/Raytracing_uk.qm</file>
         <file>translations/Raytracing_zh.qm</file>
+        <file>qml/renderPreviewUi.qml</file>
+        <file>qml/PreviewImage.qml</file>
+        <file>qml/ScrollBar.qml</file>
+        <file>qml/images/luxout.png</file>
     </qresource>
 </RCC> 

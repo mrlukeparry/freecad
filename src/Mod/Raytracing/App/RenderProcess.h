@@ -82,6 +82,9 @@ public:
 public Q_SLOTS:
     void processError();
 
+Q_SIGNALS:
+    void updateOutput();
+
 protected:
   QImage imageOutput;
   QStringList args;
