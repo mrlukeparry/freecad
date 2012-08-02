@@ -34,9 +34,35 @@
 #include <Gui/WaitCursor.h>
 #include <QGraphicsObject>
 #include <QGLWidget>
+#include <QDeclarativeImageProvider>
+#include <QDeclarativeEngine>
+#include <QRegExp>
 using namespace RaytracingGui;
 
 // ----------------------------------------------------------------------------
+
+class ImageProvider : public QDeclarativeImageProvider
+{
+
+public:
+    ImageProvider(): QDeclarativeImageProvider(QDeclarativeImageProvider::Image){}
+    QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize)
+    {
+      QRegExp reg(QString::fromAscii("^reload/(.*)$"));
+      reg.indexIn(id);
+      QString str = QString::fromAscii("picture");
+
+      if(id == str ||  reg.cap(1)  == str)
+          return image;
+
+      QImage img;
+      return img;
+      }
+
+      void setImage(QImage img) { image = img;}
+private:
+  QImage image;
+};
 
 /* TRANSLATOR DrawingGui::DrawingView */
 
@@ -44,6 +70,7 @@ RenderView::RenderView(Gui::Document* doc, QWidget* parent)
   : Gui::MDIView(doc, parent)
 {
     view = new QDeclarativeView (this);
+    
     view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
     view->setSource(QUrl(QString::fromAscii("qrc:/qml/renderPreviewUi.qml")));
 
@@ -62,8 +89,11 @@ RenderView::RenderView(Gui::Document* doc, QWidget* parent)
     view->viewport()->setAttribute(Qt::WA_OpaquePaintEvent);
     view->viewport()->setAttribute(Qt::WA_NoSystemBackground);
 
+    imgProv = new ImageProvider();
+    view->engine()->addImageProvider(QString::fromAscii("previewImage"), imgProv);
+
     QObject *rootObject = view->rootObject();
-    QObject::connect(this, SIGNAL(updatePreview(QVariant)), rootObject , SLOT(updatePreview(QVariant)));
+    QObject::connect(this, SIGNAL(updatePreview()), rootObject , SLOT(updatePreview()));
     setCentralWidget(view);
     
     //setWindowTitle(tr("SVG Viewer"));
@@ -115,9 +145,14 @@ bool RenderView::onHasMsg(const char* pMsg) const
 
 void RenderView::updateOutput()
 {
-    // Need to prepend 'file:/'
-    QUrl url(QString::fromAscii(render->getOutputPath()).prepend(QString::fromAscii("file:/")));
-    Q_EMIT updatePreview(QVariant(url));
+    // Attempt to load the image
+    QImage img;
+    if( !img.load(QString::fromAscii(render->getOutputPath())) )
+        return; // The file may be being written to, attempt to read later or perhaps set poll.
+
+    imgProv->setImage(img);
+
+    Q_EMIT updatePreview();
 }
 
 PyObject* RenderView::getPyObject()

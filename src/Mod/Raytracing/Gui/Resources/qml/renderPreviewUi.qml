@@ -2,10 +2,14 @@ import QtQuick 1.1
 Item {
 
     id: previewWidget
-    function updatePreview(text) {
-        previewImage.source = "images/luxout.png"
+    function updatePreview() {
         previewLoading = false;
-        previewImage.source = text;
+        // Bit of a hack to reload the image
+        if(previewImage.source = "image://previewImage/reload/picture"){
+             previewImage.source = "image://previewImage/picture"
+        } else {
+              previewImage.source = "image://previewImage/reload/picture"
+        }
     }
 
     signal stopRender()

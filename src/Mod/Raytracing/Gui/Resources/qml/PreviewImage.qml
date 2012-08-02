@@ -11,7 +11,6 @@ Item {
     Image {
         cache: false
         id: pictureSrc
-        source: "images/luxout.png"
         asynchronous: true
     }
 

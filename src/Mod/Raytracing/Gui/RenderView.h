@@ -27,6 +27,7 @@
 #include <QDeclarativeView>
 #include <Mod/Raytracing/App/Renderer.h>
 
+class ImageProvider;
 using namespace Raytracing;
 namespace RaytracingGui
 {
@@ -44,7 +45,7 @@ public Q_SLOTS:
   void saveRender();
 
 Q_SIGNALS:
-  void updatePreview(QVariant);
+  void updatePreview();
 
 public:
     bool onMsg(const char* pMsg,const char** ppReturn);
@@ -57,6 +58,7 @@ protected:
 //     void contextMenuEvent(QContextMenuEvent *event);
 
 private:
+    ImageProvider *imgProv;
     QDeclarativeView *view;
     Renderer *render;
 };
