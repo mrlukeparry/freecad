@@ -372,7 +372,8 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
     renderer->addLight(light);
 
     // Get a list of Materials
-    Appearances().setUserMaterialsPath("/home/mrlukeparry/freeCadMaterials");
+    std::string matPath = App::Application::getResourceDir() + "Mod/Raytracing/Materials/Lux";
+    Appearances().setUserMaterialsPath(matPath.c_str());
     Appearances().scanMaterials();
   // go through all document objects
     for (std::vector<Part::Feature*>::const_iterator it=DocObjects.begin();it!=DocObjects.end();++it) {

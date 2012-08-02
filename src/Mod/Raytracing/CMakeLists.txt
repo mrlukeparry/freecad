@@ -15,6 +15,23 @@ INSTALL(
 
 INSTALL(
     DIRECTORY
+      Materials
+    DESTINATION
+        ${CMAKE_INSTALL_DATADIR}/Mod/Raytracing
+    PATTERN "Makefile*" EXCLUDE
+)
+
+
+INSTALL(
+    DIRECTORY
+      Presets
+    DESTINATION
+        ${CMAKE_INSTALL_DATADIR}/Mod/Raytracing
+    PATTERN "Makefile*" EXCLUDE
+)
+
+INSTALL(
+    DIRECTORY
         Templates
     DESTINATION
         ${CMAKE_INSTALL_DATADIR}/Mod/Raytracing

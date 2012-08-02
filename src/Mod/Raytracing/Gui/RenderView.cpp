@@ -64,15 +64,15 @@ private:
   QImage image;
 };
 
-/* TRANSLATOR DrawingGui::DrawingView */
+
 
 RenderView::RenderView(Gui::Document* doc, QWidget* parent)
   : Gui::MDIView(doc, parent)
 {
     view = new QDeclarativeView (this);
-    
+
     view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
-    view->setSource(QUrl(QString::fromAscii("qrc:/qml/renderPreviewUi.qml")));
+    view->setSource(QUrl(QString::fromAscii("qrc:/qml/renderPreviewUi.qml"))); // Load the Main QML File
 
     // Needed to improve performance by using Opengl Backend which should be guaranteed within Freecad
     QGLFormat format = QGLFormat::defaultFormat();
@@ -89,14 +89,16 @@ RenderView::RenderView(Gui::Document* doc, QWidget* parent)
     view->viewport()->setAttribute(Qt::WA_OpaquePaintEvent);
     view->viewport()->setAttribute(Qt::WA_NoSystemBackground);
 
+    // Image provider contains the image file loaded that can be accessed through QML
     imgProv = new ImageProvider();
     view->engine()->addImageProvider(QString::fromAscii("previewImage"), imgProv);
 
+    // Connect an Update Signal when an image is available
     QObject *rootObject = view->rootObject();
     QObject::connect(this, SIGNAL(updatePreview()), rootObject , SLOT(updatePreview()));
+
+    // Set the QML View to MDI window
     setCentralWidget(view);
-    
-    //setWindowTitle(tr("SVG Viewer"));
 }
 
 bool RenderView::onMsg(const char* pMsg, const char** ppReturn)
@@ -107,9 +109,14 @@ bool RenderView::onMsg(const char* pMsg, const char** ppReturn)
 void RenderView::attachRender(Renderer *attachedRender)
 {
     render = attachedRender;
+
+    // When the render process polls with a successful update connect this classes signal
     QObject *renderProcQObj = qobject_cast<QObject *>(render->getRenderProcess());
     QObject::connect(renderProcQObj , SIGNAL(updateOutput()), this , SLOT(updateOutput()));
+
     view->show();
+
+    // Connect signals from the QML Preview to Slots in RenderView
     QObject *item = view->rootObject();
     QObject::connect(item , SIGNAL(stopRender()), this , SLOT(stopRender()) );
     QObject::connect(item , SIGNAL(saveOutput()), this , SLOT(saveRender()) );
@@ -134,8 +141,8 @@ void RenderView::saveRender()
 }
 void RenderView::stopRender()
 {
-  Base::Console().Log("Stopping Render");
-  render->getRenderProcess()->stop();
+    Base::Console().Log("Stopping Render");
+    render->getRenderProcess()->stop();
 }
 
 bool RenderView::onHasMsg(const char* pMsg) const

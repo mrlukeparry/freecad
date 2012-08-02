@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+ FreeCAD Materials LUX Render, see http://free-cad.sourceforge.net for more information...
+-->
+<Document SchemaVersion="1">
+  <Materials>
+    <Material id="lux_extra_blackLeather" type="external" render="lux" version="0.8">
+      <label>Shiny Black Leather</label>
+      <description>Black Leather Provided by Lux Materials Library</description>
+      <filename>Black Leather.lbm2</filename>
+      <previewFilename>preview.jpg</previewFilename>
+    </Material>
+  </Materials>
+</Document> 

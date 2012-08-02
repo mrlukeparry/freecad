@@ -1,0 +1,133 @@
+# BEGIN DB Material 'gold' ID 50
+# Author LadeHeria, Mon, 30 May 11 08:46:51 -0700
+# Version 0.8.0. ; Rated 0 / 5.0 ; 0 Votes
+# interior : 
+# exterior : 
+# previewsamples : 704
+
+# DB Object ID 226
+Texture "gold::bumpmap:amount" "float" "blender_distortednoise"
+	# ParamSet ID 115
+	"float bright" [1]
+	"float contrast" [0.5]
+	"string type" ["voronoi_f1"]
+	"string noisebasis" ["improved_perlin"]
+	"float distamount" [1]
+	"float noisesize" [0.079999998211861]
+	"float nabla" [0.025000000372529]
+	"string coordinates" ["global"]
+	"vector translate" [-0 -0 -0]
+	"vector rotate" [0 0 0]
+	"vector scale" [3 1 1]
+
+# DB Object ID 227
+Texture "gold::bumpmap:tex1" "float" "blender_distortednoise"
+	# ParamSet ID 116
+	"float bright" [1]
+	"float contrast" [0.5]
+	"string type" ["voronoi_f1"]
+	"string noisebasis" ["improved_perlin"]
+	"float distamount" [1]
+	"float noisesize" [0.0099999997764826]
+	"float nabla" [0.025000000372529]
+	"string coordinates" ["global"]
+	"vector translate" [0 0 0]
+	"vector rotate" [0 0 0]
+	"vector scale" [3 1 1]
+
+# DB Object ID 228
+Texture "gold::bumpmap:tex2" "float" "blender_musgrave"
+	# ParamSet ID 117
+	"float bright" [1]
+	"float contrast" [0.69999998807907]
+	"string type" ["multifractal"]
+	"float h" [0.20000000298023]
+	"float lacu" [1.6039999723434]
+	"string noisebasis" ["blender_original"]
+	"float noisesize" [0.25]
+	"float octs" [8]
+	"string coordinates" ["global"]
+	"vector translate" [0 0 0]
+	"vector rotate" [0 0 0]
+	"vector scale" [1 1 1]
+
+# DB Object ID 229
+Texture "gold::bumpmap" "float" "mix"
+	# ParamSet ID 118
+	"texture amount" ["gold::bumpmap:amount"]
+	"texture tex1" ["gold::bumpmap:tex1"]
+	"texture tex2" ["gold::bumpmap:tex2"]
+
+# DB Object ID 230
+Texture "gold::bumpmap.scale" "float" "scale"
+	# ParamSet ID 119
+	"texture tex1" ["gold::bumpmap"]
+	"float tex2" [0.0020000000949949]
+
+# DB Object ID 231
+Texture "gold::Kr::amount" "float" "blender_clouds"
+	# ParamSet ID 120
+	"float bright" [1]
+	"float contrast" [0.079999998211861]
+	"string noisetype" ["soft_noise"]
+	"string noisebasis" ["blender_original"]
+	"float noisesize" [0.18104900419712]
+	"integer noisedepth" [0]
+	"string coordinates" ["global"]
+	"vector translate" [0 0 0]
+	"vector rotate" [0 0 0]
+	"vector scale" [0.10000000149012 0.10000000149012 0.10000000149012]
+
+# DB Object ID 232
+Texture "gold::Kr" "color" "mix"
+	# ParamSet ID 121
+	"texture amount" ["gold::Kr::amount"]
+	"color tex1" [0.30090999603271 0.16948300600052 0.073191002011299]
+	"color tex2" [0.011289999820292 0.011289999820292 0.011289999820292]
+
+# DB Object ID 233
+Texture "gold::Kr.scale" "color" "scale"
+	# ParamSet ID 122
+	"texture tex1" ["gold::Kr"]
+	"color tex2" [0.62368100881577 0.4777860045433 0.30032598972321]
+
+# DB Object ID 234
+Texture "gold::Ks::amount" "float" "blender_clouds"
+	# ParamSet ID 123
+	"float bright" [1]
+	"float contrast" [0.14000000059605]
+	"string noisetype" ["soft_noise"]
+	"string noisebasis" ["blender_original"]
+	"float noisesize" [0.18104900419712]
+	"integer noisedepth" [0]
+	"string coordinates" ["global"]
+	"vector translate" [0 0 0]
+	"vector rotate" [0 0 0]
+	"vector scale" [0.10000000149012 0.10000000149012 0.10000000149012]
+
+# DB Object ID 235
+Texture "gold::Ks" "color" "mix"
+	# ParamSet ID 124
+	"texture amount" ["gold::Ks::amount"]
+	"color tex1" [0.30090999603271 0.16948300600052 0.073191002011299]
+	"color tex2" [0.011289999820292 0.011289999820292 0.011289999820292]
+
+# DB Object ID 236
+Texture "gold::Ks.scale" "color" "scale"
+	# ParamSet ID 125
+	"texture tex1" ["gold::Ks"]
+	"color tex2" [0.62368100881577 0.4777860045433 0.30032598972321]
+
+# DB Object ID 237
+MakeNamedMaterial "gold" 
+	# ParamSet ID 126
+	"texture bumpmap" ["gold::bumpmap.scale"]
+	"float film" [0]
+	"float filmindex" [1.3332999944687]
+	"texture Kr" ["gold::Kr.scale"]
+	"texture Ks" ["gold::Ks.scale"]
+	"float uroughness" [0.019999999552965]
+	"float vroughness" [0.019999999552965]
+	"string type" ["shinymetal"]
+
+# END DB Material 'gold' ID 50

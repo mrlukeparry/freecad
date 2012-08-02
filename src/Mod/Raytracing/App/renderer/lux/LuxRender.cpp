@@ -33,6 +33,7 @@
 # include <sstream>
 #endif
 
+#include <App/Application.h>
 #include <Base/Console.h>
 #include <Base/Exception.h>
 #include <Base/Sequencer.h>
@@ -85,7 +86,7 @@ using namespace std;
 
 LuxRender::LuxRender(void)
 {
-    renderPresetsPath = "/home/mrlukeparry/luxRenderPresets";
+    renderPresetsPath = App::Application::getResourceDir() + "Mod/Raytracing/Presets/Lux";
     scanPresets();
 }
 LuxRender::~LuxRender(void){}

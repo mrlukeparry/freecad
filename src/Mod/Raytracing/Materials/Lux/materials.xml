@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!--
+ FreeCAD Materials LUX Render, see http://free-cad.sourceforge.net for more information...
+-->
+<Document SchemaVersion="1">
+  <Materials>
+    <Material id="lux_default_matte" type="builtin" render="lux">
+      <label>Matte</label>
+      <description>The default Matte material provided by LuxRender. Equivalent to diffuse</description>
+      <compat>matte</compat>
+      <provides>diffuse</provides>
+      <parameters>
+        <parameter type="color" id="color">
+          <label>Diffuse Colour</label>
+        </parameter>
+        <parameter type="texture" id="bumpmap">
+          <label>Bump Map</label>
+        </parameter>
+        <parameter type="float" id="sigma">
+          <label>Sigma Value</label>
+          <default>0.0</default>
+          <description>Sigma Parameter</description>
+        </parameter>
+        <parameter type="float" id="Kd">
+          <label>Diffuse Reflectivitiy</label>
+          <default>1.0</default>
+          <description>Coefficient of Diffuse</description>
+        </parameter>
+      </parameters>
+    </Material>
+    <Material id="lux_default_matteTranscluent" type="builtin" render="lux">
+      <label>Matte Translucent</label>
+      <description>Default matte transparent</description>
+      <compat>mattetranslucent</compat>
+  </Materials>
+</Document>

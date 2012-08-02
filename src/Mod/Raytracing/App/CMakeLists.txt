@@ -41,6 +41,19 @@ set(Raytracing_MOC_HDRS
 fc_wrap_cpp(Raytracing_MOC_SRCS ${Raytracing_MOC_HDRS})
 SOURCE_GROUP("Moc" FILES ${Raytracing_MOC_SRCS})
 
+
+SET(LuxRenderPresets
+    Presets/Lux/luxPresets.xml
+    Presets/Lux/files/directLighting.lbs
+    Presets/Lux/files/metropolisUnbiased.lbs
+)
+
+SET(LuxMaterials
+    Materials/Lux/materials.xml
+    Materials/Lux/Gold/Gold.xml
+    Materials/Lux/Gold/gold.lxm
+)
+
 SET(LuxRender_SRCS
     renderer/lux/LuxRender.cpp
     renderer/lux/LuxRender.h
@@ -91,6 +104,14 @@ SET(Raytracing_SRCS
     ${RenderModule_SRCS}
 )
 
+SET(Raytracing_Materials
+    ${LuxMaterials}
+)
+
+SET(Raytracing_RenderPresets
+    ${LuxRenderPresets}
+)
+
 SET(Raytracing_Scripts
     Init.py
     RaytracingExample.py
@@ -106,11 +127,14 @@ target_link_libraries(Raytracing ${Raytracing_LIBS})
 fc_target_copy_resource(Raytracing 
     ${CMAKE_SOURCE_DIR}/src/Mod/Raytracing
     ${CMAKE_BINARY_DIR}/Mod/Raytracing
-    ${Raytracing_Scripts})
+    ${Raytracing_Scripts}
+    )
 
 fc_target_copy_resource(Raytracing 
     ${CMAKE_SOURCE_DIR}/src/Mod/Raytracing
     ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_DATADIR}/Mod/Raytracing
+    ${Raytracing_Materials}
+    ${Raytracing_RenderPresets}
     ${Raytracing_Templates})
 
 if(MSVC)

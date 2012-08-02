@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!--
+ FreeCAD Render Presets LUX Render, see http://free-cad.sourceforge.net for more information...
+-->
+<Document SchemaVersion="1">
+  <Presets render="lux">
+    <Preset id="directLighting">
+      <label>Direct Lighting Preview</label>
+      <description> A very fast, dirty preview mode</description>
+      <filename>files/directLighting.lbs</filename>
+    </Preset>
+    <Preset id="metropolisUnbiased">
+      <label>MLT Unbiased</label>
+      <description>A setting for Lux's classic metropolis light transport mode, to get you back to sane, simple, unbiased settings</description>
+      <filename>files/metropolisUnbiased.lbs</filename>
+    </Preset>
+  </Presets>
+</Document>
