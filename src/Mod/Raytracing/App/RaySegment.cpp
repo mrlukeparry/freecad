@@ -22,11 +22,9 @@
 
 
 #include "PreCompiled.h"
-
 #ifndef _PreComp_
 # include <sstream>
 #endif
-
 
 #include <strstream>
 #include <Base/Writer.h>
@@ -44,8 +42,6 @@ using namespace Raytracing;
 //===========================================================================
 
 PROPERTY_SOURCE(Raytracing::RaySegment, App::DocumentObject)
-
-
 
 RaySegment::RaySegment(void) 
 {

@@ -31,7 +31,7 @@
 namespace Raytracing
 {
 
-class AppRaytracingExport LuxRender : public Renderer
+class RaytracingExport LuxRender : public Renderer
 {
 public:
   LuxRender(void);

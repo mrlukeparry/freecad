@@ -38,7 +38,7 @@ namespace Raytracing
 
 /** Base class of all View Features in the drawing module
  */
-class AppRaytracingExport RaySegment: public App::DocumentObject
+class RaytracingExport RaySegment: public App::DocumentObject
 {
   PROPERTY_HEADER(Raytracing::RaySegment);
 

@@ -189,7 +189,7 @@ private:
     RenderMaterial *material;
 };
 
-class AppRaytracingExport Renderer : public Base::BaseClass
+class RaytracingExport Renderer : public Base::BaseClass
 {
     TYPESYSTEM_HEADER();
 public:
@@ -220,19 +220,19 @@ public:
     virtual void preview();
     virtual void preview(int x1, int y1, int x2, int y2);
     virtual void render();
-    virtual void initRender(RenderMode mode);
+
     virtual void finish();
 
     ///Setter methods
     void setCamera(const Base::Vector3d &camPos, const Base::Vector3d &CamDir, const Base::Vector3d &lookAt, const Base::Vector3d &Up);
-    void setOutputPath(const char *loc);
-    void setRenderSize(int x, int y) { xRes = x; yRes = y;};
+    void setOutputPath(const char *loc) { outputPath = loc; }
+    void setRenderSize(int x, int y) { xRes = x; yRes = y;}
 
     //virtual void loadSceneDefinition(const char *file);
     //virtual void Restore(Base::XMLReader &/*reader*/);
 
 protected:
-
+    virtual void initRender(RenderMode mode);
     /// All these methods must be defined by the Render plugin subclass because they generate the scene file used for rendering
     virtual std::string genCamera(RenderCamera *light) const = 0;
     virtual std::string genFace(const TopoDS_Face& aFace, int index ) = 0;

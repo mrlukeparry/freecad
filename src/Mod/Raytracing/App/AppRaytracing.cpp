@@ -37,9 +37,11 @@
 
 extern struct PyMethodDef Raytracing_methods[];
 
+PyDoc_STRVAR(module_Raytracing_doc,
+"This module is the Raytracing module.");
 
 extern "C" {
-void AppRaytracingExport initRaytracing()
+void RaytracingExport initRaytracing()
 {
     // load dependent module
     try {
@@ -49,13 +51,14 @@ void AppRaytracingExport initRaytracing()
         PyErr_SetString(PyExc_ImportError, e.what());
         return;
     }
+     PyObject* sketcherModule = Py_InitModule3("Raytracing", Raytracing_methods, module_Raytracing_doc);   /* mod name, table ptr */
+     
         Raytracing::LuxRender        ::init();
 	Raytracing::RaySegment       ::init();
 	Raytracing::RayFeature       ::init();
 	Raytracing::RayProject       ::init();
 
-
-    (void) Py_InitModule("Raytracing", Raytracing_methods);   /* mod name, table ptr */
+   
     Base::Console().Log("Loading Raytracing module... done\n");
 
 }

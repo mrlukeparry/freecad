@@ -22,6 +22,9 @@
 
 
 #include "PreCompiled.h"
+#ifndef _PreComp_
+# include <Python.h>
+#endif
 
 #include <Base/Console.h>
 #include <Base/Interpreter.h>
@@ -36,7 +39,7 @@
 
 using namespace RaytracingGui;
 
-// use a different name to CreateCommand()
+// Create the commands
 void CreateRaytracingCommands(void);
 
 void loadRaytracingResource()
@@ -50,7 +53,7 @@ extern struct PyMethodDef RaytracingGui_methods[];
 
 
 extern "C" {
-void AppRaytracingGuiExport initRaytracingGui()
+void RaytracingGuiExport initRaytracingGui()
 {
     if (!Gui::Application::Instance) {
         PyErr_SetString(PyExc_ImportError, "Cannot load Gui module in console application.");
@@ -58,7 +61,7 @@ void AppRaytracingGuiExport initRaytracingGui()
     }
 
     try {
-        Base::Interpreter().loadModule("Raytracing");
+        Base::Interpreter().runString("import Raytracing");
     }
     catch(const Base::Exception& e) {
         PyErr_SetString(PyExc_ImportError, e.what());
@@ -69,6 +72,7 @@ void AppRaytracingGuiExport initRaytracingGui()
 
     // instantiating the commands
     CreateRaytracingCommands();
+
     RaytracingGui::Workbench::init();
 
     // register preferences pages

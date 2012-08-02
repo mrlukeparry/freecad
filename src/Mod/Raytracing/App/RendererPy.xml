@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<GenerateModel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="generateMetaModel_Module.xsd">
+  <PythonExport
+    Father="BaseClassPy"
+    Name="RendererPy"
+    Twin="Renderer"
+    TwinPointer="Renderer"
+    Include="Mod/Raytracing/App/Renderer.h"
+    Namespace="Raytracing"
+    FatherInclude="Base/BaseClassPy.h"
+    FatherNamespace="Base"
+    Constructor="false">
+
+    <Documentation>
+      <Author Licence="LGPL" Name="Luke Parry" EMail="l.parry@warwick.ac.uk" />
+      <UserDocu>With this objects you can manage the rendering process</UserDocu>
+    </Documentation>
+    <Methode Name="preview">
+      <Documentation>
+        <UserDocu>Start a Render Preview</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="render">
+      <Documentation>
+        <UserDocu>Start a Render</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="finish">
+      <Documentation>
+        <UserDocu>Stop the Render</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="setRenderSize">
+      <Documentation>
+        <UserDocu>Set the output size for the render</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="setOutputPath">
+      <Documentation>
+        <UserDocu>Set the output path for the render</UserDocu>
+      </Documentation>
+    </Methode>
+     <Methode Name="setCamera">
+      <Documentation>
+        <UserDocu>Set the properties for the current render camera</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="clear">
+      <Documentation>
+        <UserDocu>Clear the camera, process, lights</UserDocu>
+      </Documentation>
+    </Methode>
+  </PythonExport>
+</GenerateModel>

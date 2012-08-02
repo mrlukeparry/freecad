@@ -1,5 +1,5 @@
 if(MSVC)
-    add_definitions(-DFCAppRaytracing -DHAVE_ACOSH -DHAVE_ASINH -DHAVE_ATANH)
+    add_definitions(-DFCRaytracing -DHAVE_ACOSH -DHAVE_ASINH -DHAVE_ATANH)
 else(MSVC)
     add_definitions(-DHAVE_LIMITS_H -DHAVE_CONFIG_H)
 endif(MSVC)
@@ -21,6 +21,8 @@ set(Raytracing_LIBS
     ${OCC_LIBRARIES}
     FreeCADApp
 )
+
+generate_from_xml(RendererPy)
 
 macro(generate_from_py2 BASE_NAME OUTPUT_FILE)
     file(TO_NATIVE_PATH ${CMAKE_SOURCE_DIR}/src/Tools/PythonToCPP.py TOOL_PATH)
@@ -99,9 +101,17 @@ SET(RenderModule_SRCS
 )
 SOURCE_GROUP("RenderModule" FILES ${RenderModule_SRCS})
 
+SET(Python_SRCS
+    RendererPy.xml
+    RendererPyImp.cpp
+)
+SOURCE_GROUP("Python" FILES ${Python_SRCS})
+
+
 SET(Raytracing_SRCS
     ${RendererPlugins_SRCS}
     ${RenderModule_SRCS}
+    ${Python_SRCS}
 )
 
 SET(Raytracing_Materials

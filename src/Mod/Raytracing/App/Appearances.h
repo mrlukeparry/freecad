@@ -34,7 +34,7 @@ namespace Raytracing
 
 class AppearancesInstP;
 
-class AppRaytracingExport AppearancesInst : public Base::Factory
+class RaytracingExport AppearancesInst : public Base::Factory
 {
 public:
 //     static void initialiseMaterials();

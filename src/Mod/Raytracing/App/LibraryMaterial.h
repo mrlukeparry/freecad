@@ -126,7 +126,7 @@ private:
   float color[3];
 };
 
-class AppRaytracingExport LibraryMaterial
+class RaytracingExport LibraryMaterial
 {
 
 public:

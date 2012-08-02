@@ -39,7 +39,6 @@
 #include <Base/Sequencer.h>
 #include <App/ComplexGeoData.h>
 
-
 #include "PovTools.h"
 
 using Base::Console;
@@ -47,7 +46,6 @@ using Base::Console;
 using namespace Raytracing;
 using namespace std;
 
-#include "PovTools.h"
 
 //#include "TempCamera.inc"
 //camera {

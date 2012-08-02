@@ -71,7 +71,7 @@ public:
 };
 
 
-class AppRaytracingExport PovTools
+class RaytracingExport PovTools
 {
 public:
     /// returns the given camera position as povray defines in a file
