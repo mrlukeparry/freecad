@@ -25,7 +25,6 @@
 #ifndef _PreComp_
 #endif
 
-#include <Base/Console.h>
 #include <QWidget>
 #include <QFile>
 #include <Base/Exception.h>

@@ -5,25 +5,22 @@ Item {
     id: previewImage
     property alias myWidth: pictureSrc.width
     property alias myHeight: pictureSrc.height
-    property alias src: pictureSrc.source
-
-    height: pictureSrc.height
-    width: pictureSrc.width
+    property alias source: pictureSrc.source
+    width: 800
+    height: 600
     Image {
+        cache: false
         id: pictureSrc
         source: "images/luxout.png"
-        asynchronous: false
-        cache: false
-        onStatusChanged: if (pictureSrc.status == Image.Ready) console.log('Loaded')
+        asynchronous: true
     }
 
     Rectangle {
         anchors.fill: pictureSrc
         border.color: "white"
-        border.width: 3
-        radius: 2
+        border.width: 2
+        radius: 3
         color: "transparent"
     }
-
 
 }

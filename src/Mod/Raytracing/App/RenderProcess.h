@@ -57,10 +57,7 @@ public:
   ~RenderProcess(void);
 
   void addArguments(const QString &arg);
-  void begin(void);
-  void stop();
 
-  
   void timerEvent(QTimerEvent *event);
   void setUpdateInterval(float time);
 
@@ -81,6 +78,8 @@ public:
 
 public Q_SLOTS:
     void processError();
+    void begin(void);
+    void stop();
 
 Q_SIGNALS:
     void updateOutput();

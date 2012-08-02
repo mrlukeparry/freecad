@@ -40,6 +40,8 @@ public:
 
 public Q_SLOTS:
   void updateOutput();
+  void stopRender();
+  void saveRender();
 
 Q_SIGNALS:
   void updatePreview(QVariant);

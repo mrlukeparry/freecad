@@ -27,6 +27,8 @@
 
 #include "RenderView.h"
 
+#include <Base/Console.h>
+#include <QFileDialog>
 #include <Base/PyObjectBase.h>
 #include <Gui/FileDialog.h>
 #include <Gui/WaitCursor.h>
@@ -41,7 +43,7 @@ using namespace RaytracingGui;
 RenderView::RenderView(Gui::Document* doc, QWidget* parent)
   : Gui::MDIView(doc, parent)
 {
-    QDeclarativeView *view = new QDeclarativeView (this);
+    view = new QDeclarativeView (this);
     view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
     view->setSource(QUrl(QString::fromAscii("qrc:/qml/renderPreviewUi.qml")));
 
@@ -60,10 +62,10 @@ RenderView::RenderView(Gui::Document* doc, QWidget* parent)
     view->viewport()->setAttribute(Qt::WA_OpaquePaintEvent);
     view->viewport()->setAttribute(Qt::WA_NoSystemBackground);
 
-    QObject *rootObject = qobject_cast<QObject *>(view->rootObject());
+    QObject *rootObject = view->rootObject();
     QObject::connect(this, SIGNAL(updatePreview(QVariant)), rootObject , SLOT(updatePreview(QVariant)));
     setCentralWidget(view);
-    view->show();
+    
     //setWindowTitle(tr("SVG Viewer"));
 }
 
@@ -75,7 +77,35 @@ bool RenderView::onMsg(const char* pMsg, const char** ppReturn)
 void RenderView::attachRender(Renderer *attachedRender)
 {
     render = attachedRender;
-    QObject::connect(qobject_cast<QObject *>(render->getRenderProcess()), SIGNAL(updateOutput()), this , SLOT(updateOutput()));
+    QObject *renderProcQObj = qobject_cast<QObject *>(render->getRenderProcess());
+    QObject::connect(renderProcQObj , SIGNAL(updateOutput()), this , SLOT(updateOutput()));
+    view->show();
+    QObject *item = view->rootObject();
+    QObject::connect(item , SIGNAL(stopRender()), this , SLOT(stopRender()) );
+    QObject::connect(item , SIGNAL(saveOutput()), this , SLOT(saveRender()) );
+}
+
+void RenderView::saveRender()
+{
+    QFile file(QString::fromAscii(render->getOutputPath()));
+    file.read(QFile::ReadOnly);
+
+    QFileInfo fileInfo(file);
+    QString ext = fileInfo.suffix();
+
+    QString selectString = QString::fromAscii("*.").append(ext);
+    QString fileName = Gui::FileDialog::getSaveFileName(this,
+        QObject::tr("Save Render"), QString(), selectString, &selectString);
+
+
+    if (!fileName.isEmpty()) {
+       bool result = QFile::copy(QString::fromAscii(render->getOutputPath()), fileName);
+    }
+}
+void RenderView::stopRender()
+{
+  Base::Console().Log("Stopping Render");
+  render->getRenderProcess()->stop();
 }
 
 bool RenderView::onHasMsg(const char* pMsg) const

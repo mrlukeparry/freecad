@@ -1,58 +1,71 @@
 import QtQuick 1.1
+Item {
 
-Rectangle {
-    function updatePreview(text) { picture.src = ""; picture.src = text; }
+    id: previewWidget
+    function updatePreview(text) {
+        previewImage.source = "images/luxout.png"
+        previewLoading = false;
+        previewImage.source = text;
+    }
 
-   gradient: Gradient {
-       GradientStop { position: 0.0; color: "#333"}
-               GradientStop { position: 1.0; color: "#555" }
-           }
-    // Create a flickable to view a large image.
-    Flickable {
+    signal stopRender()
+    signal saveOutput()
 
-        id: view
+    width: 1600
+    height: 1000
+    property bool previewLoading: true
+
+    Rectangle {
+        id: rectangle1
         anchors.fill: parent
-        contentWidth: picture.myWidth
-        contentHeight: picture.myHeight
+       gradient: Gradient {
+           GradientStop { position: 0.0; color: "#333"}
+                   GradientStop { position: 1.0; color: "#555" }
+               }
 
-       PreviewImage {
-           id: picture
-           x: (view.width - width) / 2
-           y: (view.height - height) / 2
+      Loading {
+          id: imageLoading
+           anchors.centerIn:  rectangle1
+
+           transitions: Transition {
+               ColorAnimation { duration: 200 }
+           }
+        }
+
+        PreviewImage {
+            id: previewImage
+            anchors.centerIn: parent;
+        }
+
+       Row {
+           anchors.right: parent.right
+           anchors.rightMargin: 30
+           anchors.bottom: parent.bottom
+           anchors.bottomMargin: 25
+           spacing: 10
+
+            Button {
+                id: saveButton
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 0
+                text: qsTr("Save")
+                enabled: false
+                onClicked: previewWidget.saveOutput()
+
+            }
+            Button {
+                id: stopButton
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 0
+                text: qsTr("Stop Render")
+                onClicked: previewWidget.stopRender()
+            }
        }
-        // Only show the scrollbars when the view is moving.
-        states: State {
-            name: "ShowBars"
-            when: (view.movingVertically || view.movingHorizontally)
-            PropertyChanges { target: verticalScrollBar; opacity: 1 }
-            PropertyChanges { target: horizontalScrollBar; opacity: 1 }
-        }
-
-        transitions: Transition {
-            NumberAnimation { properties: "opacity"; duration: 400 }
-        }
     }
+    states: [
+        State {name:"enabled"; when: !previewLoading;
+            PropertyChanges { target: saveButton; enabled: true}
+            PropertyChanges { target: imageLoading; visible: false}
+    }]
 
-
-
-    // Attach scrollbars to the right and bottom edges of the view.
-    ScrollBar {
-        id: verticalScrollBar
-        width: 12; height: view.height-12
-        anchors.right: view.right
-        opacity: 0
-        orientation: Qt.Vertical
-        position: view.visibleArea.yPosition
-        pageSize: view.visibleArea.heightRatio
-    }
-
-    ScrollBar {
-        id: horizontalScrollBar
-        width: view.width-12; height: 12
-        anchors.bottom: view.bottom
-        opacity: 0
-        orientation: Qt.Horizontal
-        position: view.visibleArea.xPosition
-        pageSize: view.visibleArea.widthRatio
-    }
 }

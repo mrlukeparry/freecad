@@ -25,6 +25,8 @@
         <file>translations/Raytracing_zh.qm</file>
         <file>qml/renderPreviewUi.qml</file>
         <file>qml/PreviewImage.qml</file>
+        <file>qml/Button.qml</file>
+        <file>qml/Loading.qml</file>
         <file>qml/ScrollBar.qml</file>
         <file>qml/images/luxout.png</file>
     </qresource>
