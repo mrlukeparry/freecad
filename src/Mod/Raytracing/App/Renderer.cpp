@@ -352,21 +352,20 @@ void Renderer::setCamera(const Base::Vector3d &camPos, const Base::Vector3d &cam
 void Renderer::transferToArray(const TopoDS_Face& aFace,gp_Vec** vertices,gp_Vec** vertexnormals, long** cons,int &nbNodesInFace,int &nbTriInFace ) {
     TopLoc_Location aLoc;
 
-    // doing the meshing and checking the result
-    //BRepMesh_IncrementalMesh MESH(aFace,fDeflection);
     Handle(Poly_Triangulation) aPoly = BRep_Tool::Triangulation(aFace,aLoc);
     if (aPoly.IsNull()) {
         Base::Console().Log("Empty face trianglutaion\n");
-        nbNodesInFace =0;
-        nbTriInFace = 0;
-        vertices = 0l;
-        cons = 0l;
+        nbNodesInFace = 0;
+        nbTriInFace   = 0;
+        vertices      = 0l;
+        cons          = 0l;
         return;
     }
 
     // geting the transformation of the shape/face
     gp_Trsf myTransf;
-    Standard_Boolean identity = true;
+    bool identity = true;
+    
     if (!aLoc.IsIdentity())  {
         identity = false;
         myTransf = aLoc.Transformation();
@@ -374,10 +373,11 @@ void Renderer::transferToArray(const TopoDS_Face& aFace,gp_Vec** vertices,gp_Vec
 
     Standard_Integer i;
     // geting size and create the array
-    nbNodesInFace = aPoly->NbNodes();
-    nbTriInFace = aPoly->NbTriangles();
-    *vertices = new gp_Vec[nbNodesInFace];
+    nbNodesInFace  = aPoly->NbNodes();
+    nbTriInFace    = aPoly->NbTriangles();
+    *vertices      = new gp_Vec[nbNodesInFace];
     *vertexnormals = new gp_Vec[nbNodesInFace];
+    
     for (i=0; i < nbNodesInFace; i++) {
         (*vertexnormals)[i]= gp_Vec(0.0,0.0,0.0);
     }
@@ -428,9 +428,11 @@ void Renderer::transferToArray(const TopoDS_Face& aFace,gp_Vec** vertices,gp_Vec
         (*vertices)[N1-1].SetX((float)(V1.X()));
         (*vertices)[N1-1].SetY((float)(V1.Y()));
         (*vertices)[N1-1].SetZ((float)(V1.Z()));
+
         (*vertices)[N2-1].SetX((float)(V2.X()));
         (*vertices)[N2-1].SetY((float)(V2.Y()));
         (*vertices)[N2-1].SetZ((float)(V2.Z()));
+
         (*vertices)[N3-1].SetX((float)(V3.X()));
         (*vertices)[N3-1].SetY((float)(V3.Y()));
         (*vertices)[N3-1].SetZ((float)(V3.Z()));
@@ -447,28 +449,28 @@ void Renderer::transferToArray(const TopoDS_Face& aFace,gp_Vec** vertices,gp_Vec
     // normalize all vertex normals
     for (i=0; i < nbNodesInFace; i++) {
 
-        gp_Dir clNormal;
-
-        try {
-            Handle_Geom_Surface Surface = BRep_Tool::Surface(aFace);
-
-            gp_Pnt vertex((*vertices)[i].XYZ());
-//     gp_Pnt vertex((*vertices)[i][0], (*vertices)[i][1], (*vertices)[i][2]);
-            GeomAPI_ProjectPointOnSurf ProPntSrf(vertex, Surface);
-            Standard_Real fU, fV;
-            ProPntSrf.Parameters(1, fU, fV);
-
-            GeomLProp_SLProps clPropOfFace(Surface, fU, fV, 2, gp::Resolution());
-
-            clNormal = clPropOfFace.Normal();
-            gp_Vec temp = clNormal;
-            if ( temp * (*vertexnormals)[i] < 0 )
-                temp = -temp;
-            (*vertexnormals)[i] = temp;
-
-        }
-        catch (...) {
-        }
+//         gp_Dir clNormal;
+// 
+//         try {
+//             Handle_Geom_Surface Surface = BRep_Tool::Surface(aFace);
+// 
+//             gp_Pnt vertex((*vertices)[i].XYZ());
+// //     gp_Pnt vertex((*vertices)[i][0], (*vertices)[i][1], (*vertices)[i][2]);
+//             GeomAPI_ProjectPointOnSurf ProPntSrf(vertex, Surface);
+//             Standard_Real fU, fV;
+//             ProPntSrf.Parameters(1, fU, fV);
+// 
+//             GeomLProp_SLProps clPropOfFace(Surface, fU, fV, 2, gp::Resolution());
+// 
+//             clNormal = clPropOfFace.Normal();
+//             gp_Vec temp = clNormal;
+//             if ( temp * (*vertexnormals)[i] < 0 )
+//                 temp = -temp;
+//             (*vertexnormals)[i] = temp;
+// 
+//         }
+//         catch (...) {
+//         }
 
         (*vertexnormals)[i].Normalize();
     }

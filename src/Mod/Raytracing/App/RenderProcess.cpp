@@ -79,7 +79,7 @@ bool RenderProcess::getOutput(QImage &img)
     return false; // empty file
 
   // Emit a signal
-  Base::Console().Log("Render Output Update:");
+  Base::Console().Log("Render Output Update\n");
   Q_EMIT updateOutput();
 
   return true;
