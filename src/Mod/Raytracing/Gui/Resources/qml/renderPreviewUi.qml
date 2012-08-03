@@ -3,13 +3,18 @@ Item {
 
     id: previewWidget
     function updatePreview() {
-        previewLoading = false;
         // Bit of a hack to reload the image
         if(previewImage.source = "image://previewImage/reload/picture"){
              previewImage.source = "image://previewImage/picture"
         } else {
               previewImage.source = "image://previewImage/reload/picture"
         }
+        if(!previewLoaded)
+        {
+            loadingAnim.start()
+        }
+
+        previewLoaded = true;
     }
 
     signal stopRender()
@@ -17,7 +22,7 @@ Item {
 
     width: 1600
     height: 1000
-    property bool previewLoading: true
+    property bool previewLoaded: false
 
     Rectangle {
         id: rectangle1
@@ -30,15 +35,12 @@ Item {
       Loading {
           id: imageLoading
            anchors.centerIn:  rectangle1
-
-           transitions: Transition {
-               ColorAnimation { duration: 200 }
-           }
         }
 
         PreviewImage {
             id: previewImage
             anchors.centerIn: parent;
+            opacity: 0
         }
 
        Row {
@@ -67,9 +69,15 @@ Item {
        }
     }
     states: [
-        State {name:"enabled"; when: !previewLoading;
+        State {name:"enabled"; when: previewLoaded;
             PropertyChanges { target: saveButton; enabled: true}
-            PropertyChanges { target: imageLoading; visible: false}
     }]
+
+    SequentialAnimation {
+        id: loadingAnim
+             running: false
+             NumberAnimation  { target: imageLoading; property: "opacity"; to: 0; duration: 500 }
+             NumberAnimation { target: previewImage; property: "opacity"; to: 1; duration: 500 }
+         }
 
 }

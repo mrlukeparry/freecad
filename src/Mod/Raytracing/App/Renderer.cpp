@@ -361,7 +361,6 @@ void Renderer::transferToArray(const TopoDS_Face& aFace,gp_Vec** vertices,gp_Vec
         cons          = 0l;
         return;
     }
-
     // geting the transformation of the shape/face
     gp_Trsf myTransf;
     bool identity = true;
@@ -446,32 +445,38 @@ void Renderer::transferToArray(const TopoDS_Face& aFace,gp_Vec** vertices,gp_Vec
         (*cons)[3*j+2] = N3;
     }
 
+
     // normalize all vertex normals
     for (i=0; i < nbNodesInFace; i++) {
 
-//         gp_Dir clNormal;
-// 
-//         try {
-//             Handle_Geom_Surface Surface = BRep_Tool::Surface(aFace);
-// 
-//             gp_Pnt vertex((*vertices)[i].XYZ());
-// //     gp_Pnt vertex((*vertices)[i][0], (*vertices)[i][1], (*vertices)[i][2]);
-//             GeomAPI_ProjectPointOnSurf ProPntSrf(vertex, Surface);
-//             Standard_Real fU, fV;
-//             ProPntSrf.Parameters(1, fU, fV);
-// 
-//             GeomLProp_SLProps clPropOfFace(Surface, fU, fV, 2, gp::Resolution());
-// 
-//             clNormal = clPropOfFace.Normal();
-//             gp_Vec temp = clNormal;
-//             if ( temp * (*vertexnormals)[i] < 0 )
-//                 temp = -temp;
-//             (*vertexnormals)[i] = temp;
-// 
-//         }
-//         catch (...) {
-//         }
+        gp_Dir clNormal;
+
+        // The Majority of time, the vertex normal is correct, otherwise recalculate
+        if ((*vertexnormals)[i].Magnitude()  < gp::Resolution())
+        {
+            // Invalid Vertex Normal Attempt to recalculate
+            try {
+                Handle_Geom_Surface Surface = BRep_Tool::Surface(aFace);
+
+                gp_Pnt vertex((*vertices)[i].XYZ());
+                GeomAPI_ProjectPointOnSurf ProPntSrf(vertex, Surface);
+                Standard_Real fU, fV;
+                ProPntSrf.Parameters(1, fU, fV);
+
+                GeomLProp_SLProps clPropOfFace(Surface, fU, fV, 2, gp::Resolution());
+
+                clNormal = clPropOfFace.Normal();
+                gp_Vec temp = clNormal;
+                if ( temp * (*vertexnormals)[i] < 0 )
+                    temp = -temp;
+                (*vertexnormals)[i] = temp;
+            }
+            catch (...) {
+            }
+        }
 
         (*vertexnormals)[i].Normalize();
     }
+
+
 }
