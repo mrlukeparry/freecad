@@ -318,8 +318,11 @@ QString LuxRender::genObject(RenderPart *obj)
 
     out << "\nObjectBegin \"" << name << "\"" << endl;
 
-    // Generate the material
-    out << genMaterial(obj->getMaterial());
+    // Generate the material if there is one.
+    RenderMaterial *mat = obj->getMaterial();
+    if(mat) {
+        out << genMaterial(mat);
+    }
 
     //Generate each face
     for (ex.Init(Shape, TopAbs_FACE); ex.More(); ex.Next(),l++) { 

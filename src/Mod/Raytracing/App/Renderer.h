@@ -171,7 +171,7 @@ class RenderPart
 {
 public:
     RenderPart(const char *partName, const TopoDS_Shape &shape, float meshDev)
-               : PartName(partName),Shape(shape), meshDeviation(meshDev) {}
+               : PartName(partName),Shape(shape), meshDeviation(meshDev) { material = 0;}
     ~RenderPart()
     {
       delete material;

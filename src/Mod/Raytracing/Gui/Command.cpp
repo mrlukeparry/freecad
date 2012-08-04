@@ -392,19 +392,19 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
 //             RenderMaterial *defaultMat = new RenderMaterial(gold);
 //             part->setMaterial(defaultMat);
 
-            const LibraryMaterial *matte = Appearances().getMaterialById("lux_default_matte");
-            RenderMaterial *defaultMatte = new RenderMaterial(matte);
-
-            MaterialFloatProperty *sigmaValue = new MaterialFloatProperty(0.5);
-            MaterialColorProperty *colorValue = new MaterialColorProperty(col.r * 255, col.g * 255, col.b * 255);
-
-            defaultMatte->properties.insert(QString::fromAscii("Kd"), colorValue);
-            defaultMatte->properties.insert(QString::fromAscii("sigma"), sigmaValue);
-            part->setMaterial(defaultMatte);
+//             const LibraryMaterial *matte = Appearances().getMaterialById("lux_default_matte");
+//             RenderMaterial *defaultMatte = new RenderMaterial(matte);
+// 
+//             MaterialFloatProperty *sigmaValue = new MaterialFloatProperty(0.5);
+//             MaterialColorProperty *colorValue = new MaterialColorProperty(col.r * 255, col.g * 255, col.b * 255);
+// 
+//             defaultMatte->properties.insert(QString::fromAscii("Kd"), colorValue);
+//             defaultMatte->properties.insert(QString::fromAscii("sigma"), sigmaValue);
+//             part->setMaterial(defaultMatte);
             renderer->addObject(part);
         }
     }
-    renderer->setRenderPreset("metropolisUnbiased");
+     renderer->setRenderPreset("metropolisUnbiased");
     renderer->setRenderSize(800, 600);
     renderer->preview();
 
