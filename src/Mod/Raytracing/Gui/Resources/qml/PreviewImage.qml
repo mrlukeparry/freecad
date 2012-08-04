@@ -16,7 +16,6 @@ Item {
         if(zoomScale < 0.2) {
             zoomScale = 0.2;
         }
-        console.log(mouseX)
         previewImage.zoom = zoomScale
     }
 
@@ -34,14 +33,15 @@ Item {
 
     }
 
-     Rectangle {
-         anchors.centerIn: previewImage
-         width: myWidth * previewImage.zoom
-         height: myHeight * previewImage.zoom
-         border.color: "white"
-         border.width: 2
-         radius: 3
-         color: "transparent"
-     }
+    Rectangle {
+        anchors.centerIn: previewImage
+        width: myWidth * previewImage.zoom
+        height: myHeight * previewImage.zoom
+        border.color: "white"
+        border.width: 2
+        radius: 3
+        color: "transparent"
+    }
+
 
 }

@@ -56,20 +56,19 @@ Item {
 
         PreviewImage {
             id: previewImage
-
             opacity: 0
             anchors.centerIn : parent
-            MouseArea {
 
-             id: dragMouseArea
-             drag.target: parent
-              anchors.fill: parent
-              onPressed:  parent.anchors.centerIn = undefined
-            drag.axis: Drag.XandYAxis
-            drag.minimumX: -parent.width * parent.zoom / 2
-            drag.maximumX: previewWidget.width -parent.width * parent.zoom / 2
-            drag.minimumY: -parent.height * parent.zoom / 2
-            drag.maximumY: previewWidget.height -parent.height * parent.zoom / 2
+            MouseArea {
+                id: dragMouseArea
+                drag.target: parent
+                anchors.fill: previewImage.children[1]
+                onPressed:  parent.anchors.centerIn = undefined
+                drag.axis: Drag.XandYAxis
+                drag.minimumX: -parent.width / 2
+                drag.maximumX: previewWidget.width -parent.width / 2
+                drag.minimumY: -parent.height /2
+                drag.maximumY: previewWidget.height -parent.height / 2
             }
         }
 
