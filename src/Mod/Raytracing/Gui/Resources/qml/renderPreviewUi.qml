@@ -1,4 +1,5 @@
 import QtQuick 1.1
+import FreeCAD 1.0
 Item {
 
     id: previewWidget
@@ -24,13 +25,29 @@ Item {
     height: 1000
     property bool previewLoaded: false
 
+
+
     Rectangle {
         id: rectangle1
         anchors.fill: parent
-       gradient: Gradient {
+        gradient: Gradient {
            GradientStop { position: 0.0; color: "#333"}
                    GradientStop { position: 1.0; color: "#555" }
                }
+
+        WheelArea {
+            id: mouseWheelArea
+            anchors.fill: parent
+            onVerticalWheel: function(){ if(!previewLoaded){return;}  previewImage.mouseWheelCallback(delta,mouseArea.mouseX, mouseArea.mouseY ); }()
+        }
+
+
+
+        MouseArea {
+                hoverEnabled : true
+                id: mouseArea
+                anchors.fill: parent
+        }
 
       Loading {
           id: imageLoading
@@ -39,8 +56,21 @@ Item {
 
         PreviewImage {
             id: previewImage
-            anchors.centerIn: parent;
+
             opacity: 0
+            anchors.centerIn : parent
+            MouseArea {
+
+             id: dragMouseArea
+             drag.target: parent
+              anchors.fill: parent
+              onPressed:  parent.anchors.centerIn = undefined
+            drag.axis: Drag.XandYAxis
+            drag.minimumX: -parent.width * parent.zoom / 2
+            drag.maximumX: previewWidget.width -parent.width * parent.zoom / 2
+            drag.minimumY: -parent.height * parent.zoom / 2
+            drag.maximumY: previewWidget.height -parent.height * parent.zoom / 2
+            }
         }
 
        Row {

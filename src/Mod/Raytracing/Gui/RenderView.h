@@ -27,10 +27,43 @@
 #include <QDeclarativeView>
 #include <Mod/Raytracing/App/Renderer.h>
 
+#include <QDeclarativeItem>
+#include <QGraphicsSceneWheelEvent>
+
 class ImageProvider;
 using namespace Raytracing;
 namespace RaytracingGui
 {
+
+/// QML Mouse wheel is not support so create custom type see http://qt-project.org/doc/qt-4.8/qml-mousearea.html
+class WheelArea : public QDeclarativeItem
+{
+    Q_OBJECT
+
+public:
+    explicit WheelArea(QDeclarativeItem *parent = 0) : QDeclarativeItem(parent) {}
+
+protected:
+    void wheelEvent(QGraphicsSceneWheelEvent *event) {
+        switch(event->orientation())
+        {
+            case Qt::Horizontal:
+                Q_EMIT horizontalWheel(event->delta());
+                break;
+            case Qt::Vertical:
+                Q_EMIT verticalWheel(event->delta());
+                break;
+            default:
+                event->ignore();
+                break;
+        }
+    }
+
+Q_SIGNALS:
+    void verticalWheel(int delta);
+    void horizontalWheel(int delta);
+};
+
 
 class RenderView : public Gui::MDIView
 {

@@ -43,7 +43,6 @@ using namespace RaytracingGui;
 
 class ImageProvider : public QDeclarativeImageProvider
 {
-
 public:
     ImageProvider(): QDeclarativeImageProvider(QDeclarativeImageProvider::Image){}
     QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize)
@@ -64,11 +63,12 @@ private:
   QImage image;
 };
 
-
-
 RenderView::RenderView(Gui::Document* doc, QWidget* parent)
   : Gui::MDIView(doc, parent)
 {
+
+    qmlRegisterType<WheelArea>("FreeCAD", 1, 0, "WheelArea");
+      
     view = new QDeclarativeView (this);
 
     view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
