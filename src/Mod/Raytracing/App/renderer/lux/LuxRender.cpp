@@ -98,16 +98,16 @@ void LuxRender::generateScene()
       return;
 
     out << "#Global Information:" << endl
-        << genRenderProps().c_str()
-        << genCamera(camera).c_str()
+        << genRenderProps()
+        << genCamera(camera)
         << "#Scene Specific Information:" << endl
         << "WorldBegin" << endl;
 
     for (std::vector<RenderLight *>::iterator it = lights.begin(); it != lights.end(); ++it) {
-        out << genLight(*it).c_str();
+        out << genLight(*it);
     }
     for (std::vector<RenderPart *>::iterator it = parts.begin(); it != parts.end(); ++it) {
-        out << genObject(*it).c_str();
+        out << genObject(*it);
     }
 
     out << "\nWorldEnd";
@@ -131,35 +131,40 @@ void LuxRender::generateScene()
 // 
 // PixelFilter "mitchell"
 //         "bool supersample" ["true"]
-        
-std::string LuxRender::genRenderProps()
+
+QString LuxRender::genRenderProps()
 {
-  
-    std::stringstream out;
+
+    QString outStr;
+    QTextStream out(&outStr);
+
     if(!preset)
-      return out.str(); // Throw exception?
+      return outStr; // Throw exception?
 
     out << "# Scene render Properties:" << endl;
 
     //Open the filename and append
     QFile file(preset->getFilename());
     if(!file.open(QFile::ReadOnly))
-        return std::string("");
+        return outStr;
 
+    // Read the external material file
     QTextStream textStr(&file);
     while(!textStr.atEnd())
     {
-      out << textStr.readLine().toStdString() << endl;
+        out << textStr.readAll();
     }
 
     out << "\nFilm \"fleximage\" \"integer xresolution\" [" << this->xRes << "] \"integer yresolution\" [" << yRes << "]" << endl;
     out << "\n\t\"integer writeinterval\" 3" << endl;
-    return out.str();
+    return outStr;
 }
 
-std::string LuxRender::genLight(RenderLight *light) const
+QString LuxRender::genLight(RenderLight *light) const
 {
-    std::stringstream out;
+    QString outStr;
+    QTextStream out(&outStr);
+
     out <<  "\nAttributeBegin " << endl
         <<  "\tLightGroup \"default\"" << endl;
 
@@ -199,24 +204,26 @@ std::string LuxRender::genLight(RenderLight *light) const
     }
     out <<  "AttributeEnd" << endl;
 
-    return out.str();
+    return outStr;
 }
-std::string LuxRender::genCamera(RenderCamera *camera) const
+QString LuxRender::genCamera(RenderCamera *camera) const
 {
-    if(!camera)
-        return std::string();
+    QString outStr;
+    QTextStream out(&outStr);
 
-    std::string camType;
+    if(!camera)
+        return  outStr;
+
+    QString camType;
     // Switch the camera type
     switch(camera->Type) {
       case RenderCamera::ORTHOGRAPHIC:
-        camType = "orthographic"; break;
+        camType = QString::fromAscii("orthographic"); break;
       default:
       case RenderCamera::PERSPECTIVE:
-        camType = "perspective"; break;
+        camType = QString::fromAscii("perspective"); break;
     }
 
-    std::stringstream out;
     out << "\nLookAt " << camera->CamPos.x << " " << camera->CamPos.y << " " << camera->CamPos.z << " "
                      << camera->LookAt.x << " " << camera->LookAt.y << " " << camera->LookAt.z << " "
                      << camera->Up.x     << " " << camera->Up.y     << " " << camera->Up.z     << "\n " << endl;
@@ -236,10 +243,10 @@ std::string LuxRender::genCamera(RenderCamera *camera) const
         y2 = (float) previewCoords[3] / yRes * 2 - 1;
         out << "\t\"float screenwindow\" [" << x1 << " " << y1 << " " << x2 << " " << y2 << "]";
     }
-    return out.str();
+    return outStr;
 }
 
-std::string LuxRender::genMaterial(RenderMaterial *mat)
+QString LuxRender::genMaterial(RenderMaterial *mat)
 {
     // Texture "checks" "color" "checkerboard"
     //         "float uscale" [4] "float vscale" [4]
@@ -249,10 +256,11 @@ std::string LuxRender::genMaterial(RenderMaterial *mat)
     //         "texture Kd" "checks"
     // Texture "SolidColor" "color" "constant" "color value" [1.000 0.910 0.518]
 
-    std::stringstream out;
+    QString outStr;
+    QTextStream out(&outStr);
 
     if(mat->getMaterial()->source == LibraryMaterial::BUILTIN) {
-        out << "Material \"" << mat->getMaterial()->compat.toStdString() << "\"" << endl;
+        out << "Material \"" << mat->getMaterial()->compat << "\"" << endl;
         QMap<QString, MaterialProperty *>::const_iterator it = mat->properties.constBegin();
         while (it != mat->properties.constEnd()) {
           if(!it.value())
@@ -262,13 +270,13 @@ std::string LuxRender::genMaterial(RenderMaterial *mat)
             case MaterialParameter::BOOL: break;
             case MaterialParameter::FLOAT: {
               MaterialFloatProperty *prop = static_cast<MaterialFloatProperty *>(it.value());
-              out << "\"float " << it.key().toStdString() << "\" [" << prop->getValue() <<  "]"; } break;
+              out << "\"float " << it.key() << "\" [" << prop->getValue() <<  "]"; } break;
             case MaterialParameter::COLOR: {
               MaterialColorProperty *prop = static_cast<MaterialColorProperty *>(it.value());
               const float *color = prop->getValue();
               if(!color)
                 continue;
-              out << "\"color " << it.key().toStdString() << "\" [" << color[0] << " " << color[1] << " " << color[2] <<  "]" << endl;
+              out << "\"color " << it.key() << "\" [" << color[0] << " " << color[1] << " " << color[2] <<  "]" << endl;
             } break;
             default: break;
           }
@@ -278,21 +286,21 @@ std::string LuxRender::genMaterial(RenderMaterial *mat)
         //Open the filename and append
         QFile file(mat->getMaterial()->filename);
         if(!file.open(QFile::ReadOnly))
-            return std::string("");
+            return QString();
 
         QTextStream textStr(&file);
         while(!textStr.atEnd())
         {
-          out << textStr.readLine().toStdString() << endl;
+          out << textStr.readLine() << endl;
         }
 
-        out << "\nNamedMaterial \"" << mat->getMaterial()->compat.toStdString() << "\"" << endl;
+        out << "\nNamedMaterial \"" << mat->getMaterial()->compat << "\"" << endl;
     }
 
-    return out.str();
+    return outStr;
 }
 
-std::string LuxRender::genObject(RenderPart *obj)
+QString LuxRender::genObject(RenderPart *obj)
 {
     //fMeshDeviation is a class variable
     Base::Console().Log("Meshing with Deviation: %f\n", obj->getMeshDeviation());
@@ -304,7 +312,10 @@ std::string LuxRender::genObject(RenderPart *obj)
     const char * name = obj->getName();
     // counting faces and start sequencer
     int l = 1;
-    std::stringstream out;
+
+    QString outStr;
+    QTextStream out(&outStr);
+
     out << "\nObjectBegin \"" << name << "\"" << endl;
 
     // Generate the material
@@ -317,11 +328,14 @@ std::string LuxRender::genObject(RenderPart *obj)
     }
     out << "ObjectEnd" << endl
         << "ObjectInstance \"" << name << "\"" << endl;
-    return out.str();
+    return outStr;
 }
 
-std::string LuxRender::genFace(const TopoDS_Face& aFace, int index )
+QString LuxRender::genFace(const TopoDS_Face& aFace, int index )
 {
+    QString outStr;
+    QTextStream out(&outStr);
+
     // this block mesh the face and transfers it in a C array of vertices and face indexes
     Standard_Integer nbNodesInFace,nbTriInFace;
     gp_Vec* verts=0;
@@ -331,9 +345,7 @@ std::string LuxRender::genFace(const TopoDS_Face& aFace, int index )
     transferToArray(aFace,&verts,&vertNorms,&cons,nbNodesInFace,nbTriInFace);
 
     if (!verts)
-      return std::string();
-
-    std::stringstream out;
+      return outStr;
 
     out << "#Face Number: " << index << endl
         << "AttributeBegin" << endl
@@ -370,7 +382,7 @@ std::string LuxRender::genFace(const TopoDS_Face& aFace, int index )
     delete [] verts;
     delete [] cons;
 
-    return out.str();
+    return outStr;
 }
 
 void LuxRender::initRender(RenderMode renderMode)

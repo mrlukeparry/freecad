@@ -24,9 +24,9 @@
 #ifndef _LuxRender_h_
 #define _LuxRender_h_
 
-#include "../../Renderer.h"
+#include <Mod/Raytracing/App/Renderer.h>
 #include <vector>
-#include <string>
+#include <QString>
 
 namespace Raytracing
 {
@@ -39,13 +39,13 @@ public:
   void generateScene();
   void initRender(RenderMode renderMode);
 
-private:
-    std::string genCamera(RenderCamera *camera) const;
-    std::string genFace(const TopoDS_Face& aFace, int index);
-    std::string genLight(RenderLight *light) const;
-    std::string genMaterial(RenderMaterial *mat);
-    std::string genObject(RenderPart *object);
-    std::string genRenderProps();
+protected:
+    QString genCamera(RenderCamera *camera) const;
+    QString genFace(const TopoDS_Face& aFace, int index);
+    QString genLight(RenderLight *light) const;
+    QString genMaterial(RenderMaterial *mat);
+    QString genObject(RenderPart *object);
+    QString genRenderProps();
 };
 
 } // namespace Raytracing

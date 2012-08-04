@@ -234,12 +234,12 @@ public:
 protected:
     virtual void initRender(RenderMode mode);
     /// All these methods must be defined by the Render plugin subclass because they generate the scene file used for rendering
-    virtual std::string genCamera(RenderCamera *light) const = 0;
-    virtual std::string genFace(const TopoDS_Face& aFace, int index ) = 0;
-    virtual std::string genLight(RenderLight *light) const = 0;
-    virtual std::string genObject(RenderPart *part) = 0;
-    virtual std::string genMaterial(RenderMaterial *mat) = 0;
-    virtual std::string genRenderProps() = 0;
+    virtual QString genCamera(RenderCamera *light) const = 0;
+    virtual QString genFace(const TopoDS_Face& aFace, int index ) = 0;
+    virtual QString genLight(RenderLight *light) const = 0;
+    virtual QString genObject(RenderPart *part) = 0;
+    virtual QString genMaterial(RenderMaterial *mat) = 0;
+    virtual QString genRenderProps() = 0;
     virtual void generateScene() = 0;
 
     bool getOutputStream(QTextStream &ts);
