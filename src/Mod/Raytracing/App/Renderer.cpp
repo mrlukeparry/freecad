@@ -188,6 +188,14 @@ void Renderer::setRenderPreset(const char *presetId)
     preset = fndPreset;
 }
 
+void Renderer::setRenderPreset(RenderPreset *renderPreset)
+{
+    if(!getRenderPreset(renderPreset->getId().toAscii()))
+        return; // throw an exception
+
+    preset = renderPreset;
+}
+
 void Renderer::scanPresets(void)
 {
   // Clear the materials - since the user may want to refresh the libraries
@@ -236,6 +244,8 @@ RenderPreset * Renderer::getRenderPreset(const char *id) const
         if((*it)->getId() == QString::fromAscii(id))
             return *it;
     }
+
+    return 0;
 }
 
 std::vector<RenderPreset *> Renderer::getRenderPresets(void) const

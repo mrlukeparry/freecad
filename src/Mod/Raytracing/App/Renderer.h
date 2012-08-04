@@ -205,6 +205,7 @@ public:
     void addObject(const char *PartName, const TopoDS_Shape &Shape, float meshDeviation);
     void addObject(RenderPart *part);
     void setRenderPreset(const char *presetId);
+    void setRenderPreset(RenderPreset *preset);
     void attachRenderProcess(RenderProcess *process);
     RenderProcess * getRenderProcess() { return process; }
 
