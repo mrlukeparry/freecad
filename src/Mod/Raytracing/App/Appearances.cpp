@@ -106,7 +106,7 @@ MaterialParameter * AppearancesInst::readMaterialParamXML()
    if(id.isEmpty() || label.isEmpty())
       return 0;
 
-   MaterialParameter *prop;
+   MaterialParameter *prop = 0;
     if(paramType == QString::fromAscii("float")) {
       MaterialParameterFloat *propFloat = new MaterialParameterFloat(id, MaterialParameter::FLOAT, label, description);
       prop = propFloat;
@@ -156,8 +156,12 @@ LibraryMaterial * AppearancesInst::readMaterialXML()
           material->previewFilename = xml.readElementText();
       else if (xml.name() == "parameter") {
           MaterialParameter *prop = readMaterialParamXML();
-          if(prop)
-              material->parameters.insert(prop->getId(), prop);
+          if(!prop)
+              continue; // throw a warning?
+
+          QString key = prop->getId();
+          material->parameters.insert(key, prop);
+
       }
     } while(xml.readNextStartElement());
     xml.skipCurrentElement();
