@@ -33,6 +33,8 @@
 # include <gp_Vec.hxx>
 #include <vector>
 
+#include "RenderMaterial.h"
+#include "RenderCamera.h"
 #include "RenderLights.h"
 #include "RenderPreset.h"
 #include "RenderProcess.h"
@@ -45,127 +47,6 @@ class TopoDS_Face;
 
 namespace Raytracing
 { 
-
-// These are for storing actual material properties within a hash and are designed to be lightweight
-class MaterialProperty
-{
-public:
-  MaterialProperty(MaterialParameter::Type propType): type(propType) {};
-  ~MaterialProperty() {};
-  MaterialParameter::Type getType() { return type;}
-private:
-  MaterialParameter::Type type;
-};
-
-// Template class used for storing material types
-// Property Type must be either FLOAT, COLOR, BOOL, TEXTURE, STRING
-class MaterialBoolProperty : public MaterialProperty
-{
-public:
-  MaterialBoolProperty (bool val)
-  : MaterialProperty(MaterialParameter::BOOL), value(val) {}
-  ~MaterialBoolProperty (){}
-
-  void setValue(bool val) { val = value;}
-  bool getValue(void) { return value; }
-private:
-  bool value;
-};
-
-class MaterialFloatProperty : public MaterialProperty
-{
-public:
-  MaterialFloatProperty(float val)
-  : MaterialProperty(MaterialParameter::FLOAT), value(val) {}
-  ~MaterialFloatProperty(){}
-
-  void setValue(float val) { val = value;}
-  float getValue(void) { return value; }
-private:
-  float value;
-};
-
-class MaterialColorProperty : public MaterialProperty
-{
-public:
-  MaterialColorProperty(int r, int b, int g)
-  : MaterialProperty(MaterialParameter::COLOR) { setValue(r,g,b); }
-  ~MaterialColorProperty(){}
-
-  void setValue(int r, int b, int g)
-  {
-    color[0] = (float) r / 255;
-    color[1] = (float) g / 255;
-    color[2] = (float) b / 255;
-  }
-  const float * getValue(void) { return color; }
-private:
-  float color[3];
-};
-
-class RenderMaterial
-{
-public:
-  RenderMaterial(const LibraryMaterial *mat) : material(mat) {}
-  ~RenderMaterial()
-  {
-    
-        // Delete all the parameters stored under the material
-    QMap<QString, MaterialProperty *>::iterator it = properties.begin();
-    while (it != properties.end()) {
-        switch(it.value()->getType()) {
-          case MaterialParameter::COLOR: {
-            MaterialColorProperty *prop = static_cast<MaterialColorProperty*>(it.value());
-            delete prop;
-          } break;
-          case MaterialParameter::BOOL: {
-            MaterialBoolProperty *prop = static_cast<MaterialBoolProperty*>(it.value());
-            delete prop;
-          } break;
-          case MaterialParameter::FLOAT: {
-            MaterialFloatProperty *prop = static_cast<MaterialFloatProperty*>(it.value());
-            delete prop;
-          } break;
-        }
-
-        it.value() = 0;
-        ++it;
-    }
-    properties.clear();
-  }
-
-  QMap<QString, MaterialProperty *> properties;
-  const LibraryMaterial * getMaterial() const { return material; }
-private:
-  const LibraryMaterial *material;
-};
-
-class RenderCamera
-{
-public:
-    enum CamType {
-    PERSPECTIVE,
-    ORTHOGRAPHIC,
-    ENVIRONMENT,
-    REALISTIC };
-
-    RenderCamera(const Base::Vector3d& cCamPos,const Base::Vector3d& cCamDir,const Base::Vector3d& cLookAt, const Base::Vector3d& cUp, const CamType& cType = PERSPECTIVE)
-                 : CamPos(cCamPos),
-                   CamDir(cCamDir),
-                   LookAt(cLookAt),
-                   Up(cUp),
-                   Type(cType)
-    {autofocus = false;}
-
-    CamType Type;
-    Base::Vector3d  CamPos;
-    Base::Vector3d  CamDir;
-    Base::Vector3d  LookAt;
-    Base::Vector3d  Up;
-    float fov;
-    float focaldistance;
-    bool autofocus;
-};
 
 class RenderPart
 {
@@ -215,15 +96,19 @@ public:
     void clearPresets(void);
     RenderPreset * getRenderPreset(const char *id) const;
     std::vector<RenderPreset *> getRenderPresets(void) const;
+
+    bool hasCamera(void) { return (!camera) ? true : false; }
     const char * getOutputPath() const { return outputPath.c_str(); }
 
     ///Render Actions
+    virtual void finish();
     virtual void preview();
     virtual void preview(int x1, int y1, int x2, int y2);
     virtual void render();
+    virtual void reset();
 
-    virtual void finish();
-
+    /// Get methods
+    RenderCamera * getCamera() { return camera; }
     ///Setter methods
     void setCamera(const Base::Vector3d &camPos, const Base::Vector3d &CamDir, const Base::Vector3d &lookAt, const Base::Vector3d &Up);
     void setOutputPath(const char *loc) { outputPath = loc; }
@@ -246,7 +131,6 @@ protected:
     bool getOutputStream(QTextStream &ts);
 
     void clear();
-    void reset();
 
     /// Useful helpful function for calculating the mesh for individual face
     void transferToArray(const TopoDS_Face& aFace,gp_Vec** vertices,gp_Vec** vertexnormals, long** cons,int &nbNodesInFace,int &nbTriInFace );

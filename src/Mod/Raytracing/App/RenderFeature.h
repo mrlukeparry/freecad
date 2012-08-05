@@ -47,6 +47,8 @@ public:
 
     /// Properties
     App::PropertyEnumeration    RendererType;
+    App::PropertyInteger        OutputX;
+    App::PropertyInteger        OutputY;
     
 //     Part    ::PropertyGeometryList   Geometry;
 //     Sketcher::PropertyConstraintList Constraints;
@@ -62,10 +64,24 @@ public:
     }
     //@}
 
+
+    /// Render getters and setters
     void removeRenderer(void);
     void setRenderer(const char *);
-
     Renderer * getRenderer(void) const { return renderer; }
+
+    bool isRendererReady(void);
+
+    void attachRenderCamera(RenderCamera *cam);
+
+    void finish();
+    void preview();
+    void preview(int x1, int y1, int x2, int y2);
+    void render();
+    void reset();
+    void setCamera(const Base::Vector3d &v1, const Base::Vector3d &v2, const Base::Vector3d &v3, const Base::Vector3d &v4, const char *camType);
+    void setRenderSize(int x, int y);
+    void setOutputPath(const char * outputPath);
 
     // from base class
     virtual PyObject *getPyObject(void);

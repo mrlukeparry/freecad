@@ -24,13 +24,17 @@
 #ifndef _PreComp_
 #endif
 
+#include <Base/VectorPy.h>
+
 #include "Mod/Raytracing/App/RenderFeature.h"
+#include "Mod/Raytracing/App/Renderer.h"
 #include <App/DocumentObject.h>
 
 // inclusion of the generated files (generated out of SketchObjectSFPy.xml)
 #include "RenderFeaturePy.h"
 #include "RenderFeaturePy.cpp"
 
+#include "RenderCameraPy.h"
 
 using namespace Raytracing;
 
@@ -38,6 +42,99 @@ using namespace Raytracing;
 std::string RenderFeaturePy::representation(void) const
 {
     return "<Raytracing::RenderFeature>";
+}
+
+PyObject* RenderFeaturePy::preview(PyObject *args)
+{
+    int x1, y1, x2, y2;
+    if (PyArg_ParseTuple(args, "iiii", &x1, &y1, &x2, &y2))
+        this->getRenderFeaturePtr()->preview(x1,y1,x2,y2);
+    else
+        this->getRenderFeaturePtr()->preview();
+    Py_Return;
+}
+
+PyObject* RenderFeaturePy::render(PyObject *args)
+{
+    this->getRenderFeaturePtr()->render();
+    Py_Return;
+}
+
+PyObject* RenderFeaturePy::finish(PyObject *args)
+{
+    this->getRenderFeaturePtr()->finish();
+    Py_Return;
+}
+
+PyObject* RenderFeaturePy::attachRenderCamera(PyObject *args)
+{
+    PyObject *pcObj;
+    if (!PyArg_ParseTuple(args, "O", &pcObj))
+        return 0;
+
+    if (PyObject_TypeCheck(pcObj, &(Raytracing::RenderCameraPy::Type))) {
+        Raytracing::RenderCamera *cam = static_cast<Raytracing::RenderCameraPy*>(pcObj)->getRenderCameraPtr();
+        this->getRenderFeaturePtr()->attachRenderCamera(cam);
+    }
+    Py_Return;
+}
+
+
+PyObject* RenderFeaturePy::setRenderSize(PyObject *args)
+{
+    int x,y;
+    if (!PyArg_ParseTuple(args, "ii", &x, &y))
+        return 0;
+
+    this->getRenderFeaturePtr()->setRenderSize(x,y);
+    Py_Return;
+}
+
+
+PyObject* RenderFeaturePy::setRenderer(PyObject *args)
+{
+    char *renderer;
+    if (!PyArg_ParseTuple(args, "s", &renderer))
+        return 0;
+
+    if(!renderer)
+      return 0;
+    this->getRenderFeaturePtr()->setRenderer(renderer);
+    Py_Return;
+}
+
+PyObject* RenderFeaturePy::setOutputPath(PyObject *args)
+{
+    char *outputPath;
+    if (!PyArg_ParseTuple(args, "s", &outputPath))
+        return 0;
+
+    this->getRenderFeaturePtr()->setOutputPath(outputPath);
+    Py_Return;
+}
+
+PyObject* RenderFeaturePy::setCamera(PyObject *args)
+{
+    PyObject *pcObj1, *pcObj2, *pcObj3, *pcObj4;
+    char * camType;
+     // Two Lines, radius
+    if (PyArg_ParseTuple(args, "O!O!O!O!s", &(Base::VectorPy::Type), &pcObj1, &(Base::VectorPy::Type), &pcObj2,
+                                           &(Base::VectorPy::Type), &pcObj3, &(Base::VectorPy::Type), &pcObj4, &camType )) {
+
+        Base::Vector3d v1 = static_cast<Base::VectorPy*>(pcObj1)->value();
+        Base::Vector3d v2 = static_cast<Base::VectorPy*>(pcObj2)->value();
+        Base::Vector3d v3 = static_cast<Base::VectorPy*>(pcObj3)->value();
+        Base::Vector3d v4 = static_cast<Base::VectorPy*>(pcObj4)->value();
+
+        this->getRenderFeaturePtr()->setCamera(v1, v2, v3, v4, camType);
+        Py_Return;
+    }
+}
+
+PyObject* RenderFeaturePy::clear(PyObject *args)
+{
+    this->getRenderFeaturePtr()->finish();
+    Py_Return;
 }
 
 PyObject *RenderFeaturePy::getCustomAttributes(const char* /*attr*/) const

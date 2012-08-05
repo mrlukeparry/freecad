@@ -22,7 +22,7 @@ set(Raytracing_LIBS
     FreeCADApp
 )
 
-generate_from_xml(RendererPy)
+generate_from_xml(RenderCameraPy)
 generate_from_xml(RenderFeaturePy)
 
 macro(generate_from_py2 BASE_NAME OUTPUT_FILE)
@@ -103,6 +103,8 @@ SET(RenderModule_SRCS
     LibraryMaterial.h
     PreCompiled.cpp
     PreCompiled.h
+    RenderCamera.cpp
+    RenderCamera.h
     RenderLights.h
     RenderProcess.cpp
     RenderProcess.h
@@ -114,8 +116,8 @@ SET(RenderModule_SRCS
 SOURCE_GROUP("RenderModule" FILES ${RenderModule_SRCS})
 
 SET(Python_SRCS
-    RendererPy.xml
-    RendererPyImp.cpp
+    RenderCameraPy.xml
+    RenderCameraPyImp.cpp
     RenderFeaturePy.xml
     RenderFeaturePyImp.cpp
 )

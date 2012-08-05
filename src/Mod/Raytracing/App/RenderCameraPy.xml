@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<GenerateModel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="generateMetaModel_Module.xsd">
+  <PythonExport 
+    Father="PersistencePy"  
+    Name="RenderCameraPy"
+    Twin="RenderCamera" 
+    TwinPointer="RenderCamera" 
+    Include="Mod/Raytracing/App/RenderCamera.h"
+    Namespace="Raytracing" 
+    FatherInclude="Base/PersistencePy.h" 
+    FatherNamespace="Base"
+    Constructor="true">
+
+    <Documentation>
+      <Author Licence="LGPL" Name="Luke Parry" EMail="l.parry@warwick.ac.uk" />
+      <UserDocu>A Render Camera provides additional features to control the render camera</UserDocu>
+    </Documentation>
+    <Attribute Name="Focaldistance" ReadOnly="false">
+      <Documentation>
+        <UserDocu>Controls the cameras focal distance</UserDocu>
+      </Documentation>
+      <Parameter Name="FocalDistance" Type="Float"/>
+    </Attribute>
+    <Attribute Name="Autofocus" ReadOnly="false">
+      <Documentation>
+        <UserDocu>Controls the cameras focal distance</UserDocu>
+      </Documentation>
+      <Parameter Name="AutoFocus" Type="Boolean"/>
+    </Attribute>
+  </PythonExport>
+</GenerateModel>

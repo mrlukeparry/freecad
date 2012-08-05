@@ -13,11 +13,50 @@
       <Author Licence="LGPL" Name="Luke Parry" EMail="l.parry@warwick.ac.uk" />
       <UserDocu>With this objects you can handle render feature</UserDocu>
     </Documentation>
-    <Attribute Name="Renderer">
+    <Methode Name="preview">
       <Documentation>
-        <UserDocu>Returns the renderer object</UserDocu>
+        <UserDocu>Start a Render Preview</UserDocu>
       </Documentation>
-      <Parameter Name="Renderer" Type="Object"/>
-    </Attribute>    
+    </Methode>
+    <Methode Name="render">
+      <Documentation>
+        <UserDocu>Start a Render</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="finish">
+      <Documentation>
+        <UserDocu>Stop the Render</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="setRenderer">
+      <Documentation>
+        <UserDocu>Set the Render plugin to use</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="setRenderSize">
+      <Documentation>
+        <UserDocu>Set the output size for the render</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="setOutputPath">
+      <Documentation>
+        <UserDocu>Set the output path for the render</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="attachRenderCamera">
+      <Documentation>
+        <UserDocu>Attach a render camera to the Renderer</UserDocu>
+      </Documentation>
+    </Methode>
+     <Methode Name="setCamera">
+      <Documentation>
+        <UserDocu>Set the properties for the current render camera</UserDocu>
+      </Documentation>
+    </Methode>
+    <Methode Name="clear">
+      <Documentation>
+        <UserDocu>Clear the camera, process, lights</UserDocu>
+      </Documentation>
+    </Methode>
   </PythonExport>
 </GenerateModel>

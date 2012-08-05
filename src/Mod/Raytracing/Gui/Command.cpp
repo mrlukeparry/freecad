@@ -376,25 +376,50 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
     SbVec3f pos = Cam->position.getValue();
     float Dist = Cam->focalDistance.getValue();
 
-    LuxRender *renderer = new LuxRender();
+    RenderCamera::CamType camType;
 
-    // Calculate Camera Properties
+    char *camTypeStr;
+    switch(CamType) {
+      case SbViewVolume::ORTHOGRAPHIC:
+        camTypeStr = "Orthographic";
+        camType = RenderCamera::ORTHOGRAPHIC; break;
+      case SbViewVolume::PERSPECTIVE:
+        camType = RenderCamera::PERSPECTIVE;
+        camTypeStr = "Perspective";
+        break;
+    }
+
+        // Calculate Camera Properties
     Base::Vector3d camPos(pos[0], pos[1], pos[2]);
     Base::Vector3d camDir(lookat[0],lookat[1], lookat[2]);
     Base::Vector3d camUp(upvec[0],upvec[1], upvec[2]);
     Base::Vector3d camLookAt = camDir * Dist + camPos;
-    RenderCamera::CamType camType;
 
-    switch(CamType) {
-      case SbViewVolume::ORTHOGRAPHIC:
-        camType = RenderCamera::ORTHOGRAPHIC; break;
-      case SbViewVolume::PERSPECTIVE:
-        camType = RenderCamera::PERSPECTIVE;
-        break;
-    }
-    RenderCamera *camera = new RenderCamera(camPos, camDir, camLookAt, camUp, camType);
-    camera->autofocus = true;
-    camera->focaldistance = Dist;
+    std::string FeatName = getUniqueObjectName("RenderFeature");
+
+    openCommand("Raytracing create render feature");
+    doCommand(Doc,"import Raytracing,RaytracingGui");
+    doCommand(Doc,"App.activeDocument().addObject('Raytracing::RenderFeature','%s')",FeatName.c_str());
+
+    doCommand(Doc,"App.activeDocument().%s.setRenderer('Lux')",FeatName.c_str());
+
+    int x = 1024, y = 768;
+    doCommand(Doc,"App.ActiveDocument.%s.setRenderSize(%i, %i)",FeatName.c_str(), x, y);
+    doCommand(Doc,"App.ActiveDocument.%s.attachRenderCamera(Raytracing.RenderCamera())", FeatName.c_str());
+
+    // Set the camera to current view's camera
+    doCommand(Doc,"App.activeDocument().%s.setCamera(App.Vector(%f,%f,%f), App.Vector(%f,%f,%f), App.Vector(%f,%f,%f), App.Vector(%f,%f,%f), %s)",
+                   FeatName.c_str(), camPos.x, camPos.y, camPos.z,
+                                     camDir.x, camDir.y, camDir.z,
+                                     camUp.x, camUp.y, camUp.z,
+                                     camLookAt.x, camLookAt.y, camLookAt.z, camTypeStr);
+    doCommand(Gui,"Gui.activeDocument().setEdit('%s')",FeatName.c_str());
+    commitCommand();
+
+    LuxRender *renderer = new LuxRender();
+//     RenderCamera *camera = new RenderCamera(camPos, camDir, camLookAt, camUp, camType);
+//     camera->Autofocus = true;
+//     camera->Focaldistance = Dist;
 
     // Add Camera
 
@@ -407,7 +432,7 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
     Base::Vector3d lightPos = Base::Vector3d(-50., -50., 200);
     light->setPlacement(lightPos, lightRot);
 
-    renderer->addCamera(camera);
+//     renderer->addCamera(camera);
     renderer->addLight(light);
 
     // Get a list of Materials

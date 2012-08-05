@@ -37,6 +37,7 @@
 # include <TopoDS_Face.hxx>
 #endif
 
+ 
 #include <Base/Console.h>
 #include <Base/Exception.h>
 #include <Base/Sequencer.h>
@@ -308,10 +309,11 @@ void Renderer::render()
     this->initRender(RENDER);
 }
 
-void Renderer::reset()
+void Renderer::reset(void)
 {
     //Clear up any previously stored data associated with a render process or preview
      // Clear the previous contents and regenerate
+    clear();
     previewCoords[0] = -1;
     previewCoords[1] = -1;
     previewCoords[2] = -1;
@@ -487,6 +489,4 @@ void Renderer::transferToArray(const TopoDS_Face& aFace,gp_Vec** vertices,gp_Vec
 
         (*vertexnormals)[i].Normalize();
     }
-
-
 }

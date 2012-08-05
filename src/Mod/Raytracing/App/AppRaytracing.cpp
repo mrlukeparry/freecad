@@ -29,6 +29,8 @@
 #include <Base/Console.h>
 #include <Base/Interpreter.h>
 
+#include "RenderCameraPy.h"
+
 #include "RenderFeature.h"
 #include "RayFeature.h"
 #include "RayProject.h"
@@ -52,14 +54,18 @@ void RaytracingExport initRaytracing()
         PyErr_SetString(PyExc_ImportError, e.what());
         return;
     }
-     PyObject* sketcherModule = Py_InitModule3("Raytracing", Raytracing_methods, module_Raytracing_doc);   /* mod name, table ptr */
+     PyObject* raytracingModule = Py_InitModule3("Raytracing", Raytracing_methods, module_Raytracing_doc);   /* mod name, table ptr */
 
-        Raytracing::RenderFeature       ::init();
-        Raytracing::RenderFeaturePython ::init();
-        Raytracing::LuxRender           ::init();
-	Raytracing::RaySegment          ::init();
-	Raytracing::RayFeature          ::init();
-	Raytracing::RayProject          ::init();
+      // Add Types to module
+      Base::Interpreter().addType(&Raytracing::RenderCameraPy::Type,raytracingModule,"RenderCamera");
+      
+      Raytracing::RenderCamera        ::init();
+      Raytracing::RenderFeature       ::init();
+      Raytracing::RenderFeaturePython ::init();
+      Raytracing::LuxRender           ::init();
+      Raytracing::RaySegment          ::init();
+      Raytracing::RayFeature          ::init();
+      Raytracing::RayProject          ::init();
 
    
     Base::Console().Log("Loading Raytracing module... done\n");
