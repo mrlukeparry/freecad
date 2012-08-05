@@ -23,6 +23,7 @@
         <file>translations/Raytracing_se.qm</file>
         <file>translations/Raytracing_uk.qm</file>
         <file>translations/Raytracing_zh.qm</file>
+        <file>qml/appearancesUi.qml</file>
         <file>qml/renderPreviewUi.qml</file>
         <file>qml/PreviewImage.qml</file>
         <file>qml/Button.qml</file>

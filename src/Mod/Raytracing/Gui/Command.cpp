@@ -294,6 +294,45 @@ bool CmdRaytracingWriteView::isActive(void)
     return false;
 }
 
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//===========================================================================
+// Raytracing_NewRenderFeature
+//===========================================================================
+
+DEF_STD_CMD_A(CmdRaytracingNewRenderFeature);
+
+CmdRaytracingNewRenderFeature::CmdRaytracingNewRenderFeature()
+  : Command("Raytracing_NewRenderFeature")
+{
+    sAppModule      = "Raytracing";
+    sGroup          = QT_TR_NOOP("Raytracing");
+    sMenuText       = QT_TR_NOOP("New Render Feature");
+    sToolTipText    = QT_TR_NOOP("Insert new Render Feature into the DOC");
+    sWhatsThis      = "Raytracing_NewPovrayProject";
+    sStatusTip      = sToolTipText;
+    sPixmap         = "Raytrace_New";
+}
+
+void CmdRaytracingNewRenderFeature::activated(int iMsg)
+{
+
+    std::string FeatName = getUniqueObjectName("RenderFeature");
+
+    openCommand("Raytracing create render feature");
+    doCommand(Doc,"import Raytracing,RaytracingGui");
+    doCommand(Doc,"App.activeDocument().addObject('Raytracing::RenderFeature','%s')",FeatName.c_str());
+    commitCommand();
+}
+
+bool CmdRaytracingNewRenderFeature::isActive(void)
+{
+    if (getActiveGuiDocument())
+        return true;
+    else
+        return false;
+}
+
 //===========================================================================
 // CmdRaytracingWriteViewLux
 //===========================================================================
@@ -627,6 +666,7 @@ void CreateRaytracingCommands(void)
     rcCmdMgr.addCommand(new CmdRaytracingWriteCamera());
     rcCmdMgr.addCommand(new CmdRaytracingWritePart());
     rcCmdMgr.addCommand(new CmdRaytracingWriteView());
+    rcCmdMgr.addCommand(new CmdRaytracingNewRenderFeature());
     rcCmdMgr.addCommand(new CmdRaytracingWriteViewLux());
     rcCmdMgr.addCommand(new CmdRaytracingNewPovrayProject());
     rcCmdMgr.addCommand(new CmdRaytracingExportProject());

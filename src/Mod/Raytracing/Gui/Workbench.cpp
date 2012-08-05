@@ -28,6 +28,9 @@
 #endif
 
 #include "Workbench.h"
+
+#include "TaskDlgAppearances.h"
+#include <Gui/Control.h>
 #include <Gui/ToolBarManager.h>
 #include <Gui/MenuManager.h>
 
@@ -42,6 +45,8 @@ TYPESYSTEM_SOURCE(RaytracingGui::Workbench, Gui::StdWorkbench)
 
 Workbench::Workbench()
 {
+
+    Gui::Control().showDialog(new TaskDlgAppearances());
 }
 
 Workbench::~Workbench()
@@ -58,7 +63,8 @@ Gui::MenuItem* Workbench::setupMenuBar() const
     ray->setCommand("&Raytracing");
     *ray
         << "Raytracing_WriteView"
-        << "Raytracing_WriteViewLux" 
+        << "Raytracing_WriteViewLux"
+        << "Raytracing_NewRenderFeature"
         << "Raytracing_WriteCamera" 
         << "Raytracing_WritePart" 
         << "Separator"
@@ -76,7 +82,8 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
     ray->setCommand("Raytracing tools");
     *ray
         << "Raytracing_WriteView"
-        << "Raytracing_WriteViewLux" 
+        << "Raytracing_WriteViewLux"
+        << "Raytracing_NewRenderFeature"
         << "Raytracing_WriteCamera" 
         << "Raytracing_WritePart" 
         << "Separator"

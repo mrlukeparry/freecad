@@ -23,6 +23,7 @@ set(Raytracing_LIBS
 )
 
 generate_from_xml(RendererPy)
+generate_from_xml(RenderFeaturePy)
 
 macro(generate_from_py2 BASE_NAME OUTPUT_FILE)
     file(TO_NATIVE_PATH ${CMAKE_SOURCE_DIR}/src/Tools/PythonToCPP.py TOOL_PATH)
@@ -54,6 +55,15 @@ SET(LuxMaterials
     Materials/Lux/materials.xml
     Materials/Lux/Gold/Gold.xml
     Materials/Lux/Gold/gold.lxm
+    Materials/Lux/OrangeSkin/orangeSkin.lbm
+    Materials/Lux/OrangeSkin/orangeSkin.jpg
+    Materials/Lux/OrangeSkin/orangeSkin.xml
+    Materials/Lux/HammeredCopper/hammeredCopper.xml
+    Materials/Lux/HammeredCopper/hammeredCopper.jpg
+    Materials/Lux/HammeredCopper/hammeredCopper.lbm
+    Materials/Lux/DullBrass/dullBrass.xml
+    Materials/Lux/DullBrass/dullBrass.jpg
+    Materials/Lux/DullBrass/dullBrass.lbm
 )
 
 SET(LuxRender_SRCS
@@ -96,6 +106,8 @@ SET(RenderModule_SRCS
     RenderLights.h
     RenderProcess.cpp
     RenderProcess.h
+    RenderFeature.cpp
+    RenderFeature.h
     Renderer.cpp
     Renderer.h
 )
@@ -104,6 +116,8 @@ SOURCE_GROUP("RenderModule" FILES ${RenderModule_SRCS})
 SET(Python_SRCS
     RendererPy.xml
     RendererPyImp.cpp
+    RenderFeaturePy.xml
+    RenderFeaturePyImp.cpp
 )
 SOURCE_GROUP("Python" FILES ${Python_SRCS})
 

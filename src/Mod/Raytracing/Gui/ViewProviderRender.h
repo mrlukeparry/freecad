@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (c) Juergen Riegel         <juergen.riegel@web.de>          *
+ *   Copyright (c) Luke Parry          (l.parry@warwick.ac.uk)    2012     *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -20,50 +20,44 @@
  *                                                                         *
  ***************************************************************************/
 
+#ifndef RAYTRACINGGUI_VIEWPROVIDERRENDER_H
+#define RAYTRACINGGUI_VIEWPROVIDERRENDER_H
 
-#include "PreCompiled.h"
-#ifndef _PreComp_
-# include <Python.h>
-#endif
+#include <Gui/ViewProviderFeature.h>
+#include <Mod/Raytracing/App/RenderFeature.h>
+#include <Gui/ViewProviderDocumentObjectGroup.h>
 
-#include <Base/Console.h>
-#include <Base/Interpreter.h>
+namespace RaytracingGui {
 
-#include "RenderFeature.h"
-#include "RayFeature.h"
-#include "RayProject.h"
-#include "RaySegment.h"
-#include "renderer/lux/LuxRender.h"
-#include "Appearances.h"
-
-extern struct PyMethodDef Raytracing_methods[];
-
-PyDoc_STRVAR(module_Raytracing_doc,
-"This module is the Raytracing module.");
-
-extern "C" {
-void RaytracingExport initRaytracing()
+class RaytracingGuiExport ViewProviderRender : public Gui::ViewProviderDocumentObject
 {
-    // load dependent module
-    try {
-        Base::Interpreter().loadModule("Part");
-    }
-    catch(const Base::Exception& e) {
-        PyErr_SetString(PyExc_ImportError, e.what());
-        return;
-    }
-     PyObject* sketcherModule = Py_InitModule3("Raytracing", Raytracing_methods, module_Raytracing_doc);   /* mod name, table ptr */
+    PROPERTY_HEADER(RaytracingGui::ViewProviderRender);
 
-        Raytracing::RenderFeature       ::init();
-        Raytracing::RenderFeaturePython ::init();
-        Raytracing::LuxRender           ::init();
-	Raytracing::RaySegment          ::init();
-	Raytracing::RayFeature          ::init();
-	Raytracing::RayProject          ::init();
+public:
+    /// constructor
+    ViewProviderRender();
+    /// destructor
+    virtual ~ViewProviderRender();
 
-   
-    Base::Console().Log("Loading Raytracing module... done\n");
+    virtual void attach(App::DocumentObject *);
+    virtual void setDisplayMode(const char* ModeName);
 
-}
+    virtual Raytracing::RenderFeature * getRenderFeature(void) const;
 
-} // extern "C" {
+    /// returns a list of all possible modes
+    virtual std::vector<std::string> getDisplayModes(void) const;
+
+    /// Is called by the tree if the user double click on the object
+    virtual bool doubleClicked(void);
+    void setupContextMenu(QMenu*, QObject*, const char*);
+    virtual void updateData(const App::Property*);
+
+protected:
+    bool setEdit(int ModNum);
+
+};
+
+} // namespace RaytracingGui
+
+#endif // RAYTRACINGGUI_VIEWPROVIDERRENDER_H
+

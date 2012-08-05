@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (c) Juergen Riegel         <juergen.riegel@web.de>          *
+ *   Copyright (c) Luke Parry          (l.parry@warwick.ac.uk)    2012     *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -21,49 +21,48 @@
  ***************************************************************************/
 
 
-#include "PreCompiled.h"
-#ifndef _PreComp_
-# include <Python.h>
-#endif
+#ifndef RAYTRACINGGUI_TaskDlgAppearances_H
+#define RAYTRACINGGUI_TaskDlgAppearances_H
 
-#include <Base/Console.h>
-#include <Base/Interpreter.h>
+#include <Gui/TaskView/TaskDialog.h>
 
-#include "RenderFeature.h"
-#include "RayFeature.h"
-#include "RayProject.h"
-#include "RaySegment.h"
-#include "renderer/lux/LuxRender.h"
-#include "Appearances.h"
+namespace RaytracingGui {
 
-extern struct PyMethodDef Raytracing_methods[];
-
-PyDoc_STRVAR(module_Raytracing_doc,
-"This module is the Raytracing module.");
-
-extern "C" {
-void RaytracingExport initRaytracing()
+/// simulation dialog for the TaskView
+class RaytracingGuiExport TaskDlgAppearances : public Gui::TaskView::TaskDialog
 {
-    // load dependent module
-    try {
-        Base::Interpreter().loadModule("Part");
-    }
-    catch(const Base::Exception& e) {
-        PyErr_SetString(PyExc_ImportError, e.what());
-        return;
-    }
-     PyObject* sketcherModule = Py_InitModule3("Raytracing", Raytracing_methods, module_Raytracing_doc);   /* mod name, table ptr */
+    Q_OBJECT
 
-        Raytracing::RenderFeature       ::init();
-        Raytracing::RenderFeaturePython ::init();
-        Raytracing::LuxRender           ::init();
-	Raytracing::RaySegment          ::init();
-	Raytracing::RayFeature          ::init();
-	Raytracing::RayProject          ::init();
+public:
+    TaskDlgAppearances();
+    ~TaskDlgAppearances();
 
-   
-    Base::Console().Log("Loading Raytracing module... done\n");
+public Q_SLOTS:
+  void dragInit(QString id);
+public:
+    /// is called the TaskView when the dialog is opened
+    virtual void open();
+    /// is called by the framework if an button is clicked which has no accept or reject role
+    virtual void clicked(int);
+    /// is called by the framework if the dialog is accepted (Ok)
+    virtual bool accept();
+    /// is called by the framework if the dialog is rejected (Cancel)
+    virtual bool reject();
+    /// is called by the framework if the user presses the help button 
+    virtual void helpRequested();
+    virtual bool isAllowedAlterDocument(void) const
+    { return false; }
 
-}
+    /// returns for Close and Help button 
+//     virtual QDialogButtonBox::StandardButtons getStandardButtons(void) const
+//     { return 0; }
 
-} // extern "C" {
+protected:
+
+};
+
+
+
+} //namespace RaytracingGui
+
+#endif

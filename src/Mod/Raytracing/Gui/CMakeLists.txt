@@ -39,6 +39,8 @@ generate_from_py2(FreeCADpov FreeCADpov.h)
 set(RaytracingGui_MOC_HDRS
     DlgSettingsRayImp.h
     RenderView.h
+    AppearancesModel.h
+    TaskDlgAppearances.h
 )
 fc_wrap_cpp(RaytracingGui_MOC_SRCS ${RaytracingGui_MOC_HDRS})
 SOURCE_GROUP("Moc" FILES ${RaytracingGui_MOC_SRCS})
@@ -59,6 +61,8 @@ SET(RaytracingGui_SRCS
     ${RaytracingGui_UIC_HDRS}
     AppRaytracingGui.cpp
     AppRaytracingGuiPy.cpp
+    AppearancesModel.cpp
+    AppearancesModel.h
     Command.cpp
     DlgSettingsRay.ui
     DlgSettingsRayImp.cpp
@@ -70,8 +74,12 @@ SET(RaytracingGui_SRCS
     PreCompiled.h
     RenderView.cpp
     RenderView.h
+    TaskDlgAppearances.cpp
+    TaskDlgAppearances.h
     Workbench.cpp
     Workbench.h
+    ViewProviderRender.cpp
+    ViewProviderRender.h
 )
 
 add_library(RaytracingGui SHARED ${RaytracingGui_SRCS})

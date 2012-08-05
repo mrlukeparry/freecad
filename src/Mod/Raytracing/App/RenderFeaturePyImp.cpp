@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (c) Jürgen Riegel          (juergen.riegel@web.de) 2002     *
+ *   Copyright (c) Luke Parry          (l.parry@warwick.ac.uk)    2012     *
  *                                                                         *
  *   This file is part of the FreeCAD CAx development system.              *
  *                                                                         *
@@ -20,69 +20,48 @@
  *                                                                         *
  ***************************************************************************/
 
-
 #include "PreCompiled.h"
 #ifndef _PreComp_
-# include <Python.h>
 #endif
 
-#include <Base/Console.h>
-#include <Base/Interpreter.h>
-#include <Gui/Application.h>
-#include <Gui/WidgetFactory.h>
-#include <Gui/Language/Translator.h>
+#include "Mod/Raytracing/App/RenderFeature.h"
+#include <App/DocumentObject.h>
 
-#include "ViewProviderRender.h"
-#include "DlgSettingsRayImp.h"
-#include "Workbench.h"
-#include "qrc_Raytracing.cpp"
+// inclusion of the generated files (generated out of SketchObjectSFPy.xml)
+#include "RenderFeaturePy.h"
+#include "RenderFeaturePy.cpp"
 
 
-using namespace RaytracingGui;
+using namespace Raytracing;
 
-// Create the commands
-void CreateRaytracingCommands(void);
-
-void loadRaytracingResource()
+// returns a string which represents the object e.g. when printed in python
+std::string RenderFeaturePy::representation(void) const
 {
-    // add resources and reloads the translators
-    Q_INIT_RESOURCE(Raytracing);
-    Gui::Translator::instance()->refresh();
+    return "<Raytracing::RenderFeature>";
 }
 
-extern struct PyMethodDef RaytracingGui_methods[];
-
-
-extern "C" {
-void RaytracingGuiExport initRaytracingGui()
+PyObject *RenderFeaturePy::getCustomAttributes(const char* /*attr*/) const
 {
-    if (!Gui::Application::Instance) {
-        PyErr_SetString(PyExc_ImportError, "Cannot load Gui module in console application.");
-        return;
-    }
-
-    try {
-        Base::Interpreter().runString("import Raytracing");
-    }
-    catch(const Base::Exception& e) {
-        PyErr_SetString(PyExc_ImportError, e.what());
-        return;
-    }
-    (void) Py_InitModule("RaytracingGui", RaytracingGui_methods);   /* mod name, table ptr */
-    Base::Console().Log("Loading GUI of Raytracing module... done\n");
-
-    // instantiating the commands
-    CreateRaytracingCommands();
-
-    RaytracingGui::ViewProviderRender     ::init();
-        
-    RaytracingGui::Workbench::init();
-
-    // register preferences pages
-    new Gui::PrefPageProducer<DlgSettingsRayImp> ("Raytracing");
-
-    // add resources and reloads the translators
-    loadRaytracingResource();
+    return 0;
 }
 
-} // extern "C" {
+int RenderFeaturePy::setCustomAttributes(const char* attr, PyObject* obj)
+{
+    // search in PropertyList
+    App::Property *prop = this->getRenderFeaturePtr()->getPropertyByName(attr);
+    if (prop) {
+        // Read-only attributes must not be set over its Python interface
+        short Type =  this->getRenderFeaturePtr()->getPropertyType(prop);
+        if (Type & App::Prop_ReadOnly) {
+            std::stringstream s;
+            s << "Object attribute '" << attr << "' is read-only";
+            throw Py::AttributeError(s.str());
+        }
+
+        prop->setPyObject(obj);
+
+        return 1;
+    }
+
+    return 0;
+}

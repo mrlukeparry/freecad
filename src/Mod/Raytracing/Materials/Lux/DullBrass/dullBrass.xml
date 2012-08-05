@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+ FreeCAD Materials LUX Render, see http://free-cad.sourceforge.net for more information...
+-->
+<Document SchemaVersion="1">
+  <Materials>
+    <Material id="lux_extra_dullBrass" type="external" render="lux" version="0.8">
+      <label>Dull Brass</label>
+      <description>Gold</description>
+      <filename>dullBrass.lbm</filename>
+      <previewFilename>dullBrass.jpg</previewFilename>
+      <compat>dullBrass</compat>
+    </Material>
+  </Materials>
+</Document> 
