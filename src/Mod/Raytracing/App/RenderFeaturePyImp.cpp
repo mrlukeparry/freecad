@@ -103,6 +103,16 @@ PyObject* RenderFeaturePy::setRenderer(PyObject *args)
     Py_Return;
 }
 
+PyObject* RenderFeaturePy::setRenderPreset(PyObject *args)
+{
+    char *presetName;
+    if (!PyArg_ParseTuple(args, "s", &presetName))
+        return 0;
+
+    this->getRenderFeaturePtr()->setRenderPreset(presetName);
+    Py_Return;
+}
+
 PyObject* RenderFeaturePy::setOutputPath(PyObject *args)
 {
     char *outputPath;
@@ -121,10 +131,10 @@ PyObject* RenderFeaturePy::setCamera(PyObject *args)
     if (PyArg_ParseTuple(args, "O!O!O!O!s", &(Base::VectorPy::Type), &pcObj1, &(Base::VectorPy::Type), &pcObj2,
                                            &(Base::VectorPy::Type), &pcObj3, &(Base::VectorPy::Type), &pcObj4, &camType )) {
 
-        Base::Vector3d v1 = static_cast<Base::VectorPy*>(pcObj1)->value();
-        Base::Vector3d v2 = static_cast<Base::VectorPy*>(pcObj2)->value();
-        Base::Vector3d v3 = static_cast<Base::VectorPy*>(pcObj3)->value();
-        Base::Vector3d v4 = static_cast<Base::VectorPy*>(pcObj4)->value();
+        Base::Vector3d v1 = static_cast<Base::VectorPy*>(pcObj1)->value(); // CamPos
+        Base::Vector3d v2 = static_cast<Base::VectorPy*>(pcObj2)->value(); // CamDir
+        Base::Vector3d v3 = static_cast<Base::VectorPy*>(pcObj3)->value(); // Up
+        Base::Vector3d v4 = static_cast<Base::VectorPy*>(pcObj4)->value(); // LookAt
 
         this->getRenderFeaturePtr()->setCamera(v1, v2, v3, v4, camType);
         Py_Return;

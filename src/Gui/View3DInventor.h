@@ -104,7 +104,10 @@ public:
     void removeOverlayWidget();
 
     View3DInventorViewer *getViewer(void) const {return _viewer;}
-  
+
+Q_SIGNALS:
+    void inventorDropEvent(QDropEvent *e);
+
 public Q_SLOTS:
     /// override the cursor in this view
     void setCursor(const QCursor&);
@@ -122,6 +125,7 @@ protected:
     void windowStateChanged(MDIView* );
     void dropEvent        (QDropEvent      * e);
     void dragEnterEvent   (QDragEnterEvent * e);
+    void dragMoveEvent    (QDragMoveEvent  * e);
     void keyPressEvent    (QKeyEvent       * e);
     void keyReleaseEvent  (QKeyEvent       * e);
     void focusInEvent     (QFocusEvent     * e);

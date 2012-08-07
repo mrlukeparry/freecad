@@ -42,6 +42,9 @@
 #include <Base/Exception.h>
 #include <Base/Sequencer.h>
 #include <App/ComplexGeoData.h>
+#include <App/Document.h>
+#include <App/DocumentObject.h>
+#include <App/Application.h>
 
 #include <Base/Writer.h>
 #include <Base/Reader.h>
@@ -78,6 +81,7 @@ void Renderer::clear()
       delete *it;
     }
     clearPresets();
+    materials.empty(); // We don't delete these because they are only list of RenderMaterial references
     lights.clear();
     parts.clear();
 }
@@ -90,6 +94,10 @@ void Renderer::addLight(RenderLight *light) {
   this->lights.push_back(light);
 }
 
+void Renderer::attachRenderMaterials(const std::vector<RenderMaterial *> &mats)
+{
+    this->materials = mats;
+}
 
 void Renderer::addObject( RenderPart *part) {
   this->parts.push_back(part);
@@ -254,6 +262,18 @@ std::vector<RenderPreset *> Renderer::getRenderPresets(void) const
   return libraryPresets;
 }
 
+std::vector<RenderMaterial *> Renderer::getRenderPartMaterials(RenderPart *part) const
+{
+    std::vector<RenderMaterial *> mats;
+    for(std::vector<RenderMaterial *>::const_iterator it = materials.begin(); it != materials.end(); ++it) {
+        // TODO I think this needs changing really. 
+        App::DocumentObject *obj = (*it)->Link.getValue();
+        App::DocumentObject *docObj = App::GetApplication().getActiveDocument()->getObject(part->getName());
+        if(obj == docObj)
+            mats.push_back(*it);
+    }
+    return mats;
+}
 void Renderer::finish()
 {
   if(!process || !process->isActive())
@@ -264,8 +284,6 @@ void Renderer::finish()
 
 void Renderer::preview(int x1, int y1, int x2, int y2)
 {
-  reset();
-
   previewCoords[0] = x1;
   previewCoords[1] = y1;
   previewCoords[2] = x2;
@@ -287,7 +305,6 @@ void Renderer::preview(int x1, int y1, int x2, int y2)
 
 void Renderer::preview()
 {
-    reset();
     // Create a temporary file to store the render preview
     QTemporaryFile tempFile;
     tempFile.open();
@@ -305,7 +322,6 @@ void Renderer::preview()
 
 void Renderer::render()
 {
-    reset();
     this->initRender(RENDER);
 }
 
@@ -348,7 +364,7 @@ void Renderer::initRender(RenderMode renderMode)
     process->begin();
 }
 
-void Renderer::setCamera(const Base::Vector3d &camPos, const Base::Vector3d &camDir, const Base::Vector3d &lookAt, const Base::Vector3d &up) {
+void Renderer::setCamera(const Base::Vector3d &camPos, const Base::Vector3d &camDir, const Base::Vector3d &up, const Base::Vector3d &lookAt) {
   if(!camera)
     return;
 

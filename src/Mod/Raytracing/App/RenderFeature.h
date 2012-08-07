@@ -30,6 +30,7 @@
 #include <Base/Axis.h>
 
 #include "Renderer.h"
+#include "PropertyRenderMaterialList.h"
 // #include <Mod/Part/App/Part2DObject.h>
 // #include <Mod/Part/App/PropertyGeometryList.h>
 // #include <Mod/Sketcher/App/PropertyConstraintList.h>
@@ -46,9 +47,11 @@ public:
     ~RenderFeature();
 
     /// Properties
-    App::PropertyEnumeration    RendererType;
-    App::PropertyInteger        OutputX;
-    App::PropertyInteger        OutputY;
+    App::PropertyEnumeration                   RendererType;
+    App::PropertyInteger                       OutputX;
+    App::PropertyString                        Preset;
+    App::PropertyInteger                       OutputY;
+    Raytracing::PropertyRenderMaterialList     MaterialsList;
     
 //     Part    ::PropertyGeometryList   Geometry;
 //     Sketcher::PropertyConstraintList Constraints;
@@ -73,6 +76,7 @@ public:
     bool isRendererReady(void);
 
     void attachRenderCamera(RenderCamera *cam);
+    int  addRenderMaterial(const RenderMaterial *material);
 
     void finish();
     void preview();
@@ -80,6 +84,7 @@ public:
     void render();
     void reset();
     void setCamera(const Base::Vector3d &v1, const Base::Vector3d &v2, const Base::Vector3d &v3, const Base::Vector3d &v4, const char *camType);
+    void setRenderPreset(const char * presetName);
     void setRenderSize(int x, int y);
     void setOutputPath(const char * outputPath);
 

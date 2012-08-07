@@ -1,4 +1,4 @@
-// import QtQuick 1.0 // to target S60 5th Edition or Maemo 5
+
 import QtQuick 1.1
 Item {
     signal materialDrag(string  matId)
@@ -61,13 +61,18 @@ Item {
 
     ListView {
         anchors.fill: parent
-        snapMode: ListView.SnapOneItem;
-        flickDeceleration: 500
+        snapMode: ListView.SnapToItem
+        highlightRangeMode: ListView.StrictlyEnforceRange
+
+        flickDeceleration: 7000
+        focus: true
         height: 800
         model: appearancesModel
-        preferredHighlightBegin: 0; preferredHighlightEnd: 0  //this line means that the currently highlighted item will be central in the view
-                highlightRangeMode: ListView.StrictlyEnforceRange  //this means that the currentlyHighlightedItem will not be allowed to leave the view
-                highlightFollowsCurrentItem: true  //updates the current index property to match the currently highlighted item
         delegate: libMatDelegate
+
+        ScrollBar {
+            flickable: parent
+            vertical: true
+        }
     }
 }

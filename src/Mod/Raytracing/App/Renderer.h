@@ -48,26 +48,21 @@ class TopoDS_Face;
 namespace Raytracing
 { 
 
+ /// Just a helper class
 class RenderPart
 {
 public:
     RenderPart(const char *partName, const TopoDS_Shape &shape, float meshDev)
-               : PartName(partName),Shape(shape), meshDeviation(meshDev) { material = 0;}
-    ~RenderPart()
-    {
-      delete material;
-      material = 0;
-    }
+               : PartName(partName),Shape(shape), meshDeviation(meshDev) {}
+    ~RenderPart(){}
     const TopoDS_Shape getShape() {return Shape;}
     const char * getName() { return PartName;}
     const float getMeshDeviation() { return meshDeviation;}
-    void setMaterial(RenderMaterial *mat) { material = mat; }
-    RenderMaterial * getMaterial(void) { return material;}
+
 private:
     const char *PartName;
     TopoDS_Shape Shape;
     float meshDeviation;
-    RenderMaterial *material;
 };
 
 class RaytracingExport Renderer : public Base::BaseClass
@@ -85,6 +80,8 @@ public:
     void addLight(RenderLight *light);
     void addObject(const char *PartName, const TopoDS_Shape &Shape, float meshDeviation);
     void addObject(RenderPart *part);
+
+    void attachRenderMaterials(const std::vector<RenderMaterial *> &mats);
     void setRenderPreset(const char *presetId);
     void setRenderPreset(RenderPreset *preset);
     void attachRenderProcess(RenderProcess *process);
@@ -96,8 +93,8 @@ public:
     void clearPresets(void);
     RenderPreset * getRenderPreset(const char *id) const;
     std::vector<RenderPreset *> getRenderPresets(void) const;
-
-    bool hasCamera(void) { return (!camera) ? true : false; }
+    std::vector<RenderMaterial *>getRenderPartMaterials(RenderPart *part) const;
+    bool hasCamera(void) { return (camera == 0) ? false: true; }
     const char * getOutputPath() const { return outputPath.c_str(); }
 
     ///Render Actions
@@ -110,7 +107,7 @@ public:
     /// Get methods
     RenderCamera * getCamera() { return camera; }
     ///Setter methods
-    void setCamera(const Base::Vector3d &camPos, const Base::Vector3d &CamDir, const Base::Vector3d &lookAt, const Base::Vector3d &Up);
+    void setCamera(const Base::Vector3d &camPos, const Base::Vector3d &CamDir, const Base::Vector3d &Up, const Base::Vector3d &lookAt);
     void setOutputPath(const char *loc) { outputPath = loc; }
     void setRenderSize(int x, int y) { xRes = x; yRes = y;}
 
@@ -140,6 +137,7 @@ protected:
     RenderProcess *process;
     RenderPreset *preset;
     std::vector<RenderLight *> lights;
+    std::vector<RenderMaterial *> materials;
     std::vector<RenderPart *> parts;
     std::vector<RenderPreset *> libraryPresets;
 

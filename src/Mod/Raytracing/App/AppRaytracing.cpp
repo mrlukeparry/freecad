@@ -35,6 +35,7 @@
 #include "RayFeature.h"
 #include "RayProject.h"
 #include "RaySegment.h"
+
 #include "renderer/lux/LuxRender.h"
 #include "Appearances.h"
 
@@ -63,6 +64,9 @@ void RaytracingExport initRaytracing()
       Raytracing::RenderFeature       ::init();
       Raytracing::RenderFeaturePython ::init();
       Raytracing::LuxRender           ::init();
+
+      Raytracing::PropertyRenderMaterialList::init();
+      Raytracing::RenderMaterial::init();
       Raytracing::RaySegment          ::init();
       Raytracing::RayFeature          ::init();
       Raytracing::RayProject          ::init();

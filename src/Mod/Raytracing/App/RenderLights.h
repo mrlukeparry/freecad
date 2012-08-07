@@ -33,10 +33,11 @@
 namespace Raytracing
 {
 
+
 class RenderLight
 {
 public:
-    enum LightType {
+    enum LightingType {
     AREA,
     DISTANT,
     MESH,
@@ -46,71 +47,62 @@ public:
 
     RenderLight()
     {
-      color[0] = 1.f;
-      color[1] = 1.f;
-      color[2] = 1.f;
+      Color[0] = 1.f;
+      Color[1] = 1.f;
+      Color[2] = 1.f;
 
-      power = 100.;
+      Power = 100.;
     }
     ~RenderLight(){}
 
-
-    const float * getColor(void) const { return color;}
-    float getPower(void) const { return power;}
-    LightType getType(void) { return lightType; }
-    void setPower(float pow) { power = pow;}
     void setPlacement(const Base::Vector3d &pos, const Base::Rotation &rot) {
-      placement = Base::Placement(pos, rot);
+        Placement = Base::Placement(pos, rot);
     }
     void setColor(int r, int g, int b)
     {
-      color[0] = (float) r / 255;
-      color[1] = (float) g / 255;
-      color[2] = (float) b / 255;
+      Color[0] = (float) r / 255;
+      Color[1] = (float) g / 255;
+      Color[2] = (float) b / 255;
     }
-    const Base::Placement & getPlacement() { return placement; }
-    Base::Vector3d  Pos;
 
-protected:
-  LightType lightType;
-  Base::Placement placement;
-  float power;
-  float color[3];
+    Base::Vector3d  Pos;
+    LightingType LightType;
+    Base::Placement Placement;
+    float Power;
+    float Color[3];
+
 };
+
 
 // An area light is a rectangular or square planar light source
 class RenderAreaLight : public RenderLight
 {
 public:
-    RenderAreaLight()
+    RenderAreaLight(){ LightType = AREA; }
+    RenderAreaLight(int x, int y) : Width(x), Height(y)
     {
-      lightType = AREA;
-      width  = 1;
-      height = 1;
+        LightType = AREA;
     }
+
     ~RenderAreaLight(){}
-    void setHeight(float size) { height = size; }
-    void setWidth(float size)  { width = size; }
-    float getHeight() const { return height; }
-    float getWdith() const { return width; }
+
+    float Width;
+    float Height;
+    std::string Name;
 
     void generateGeometry(Base::Vector3d *pnts)
     {
         //Generate Transformed Plane
-        placement.getRotation().multVec(Base::Vector3d(-width/2,  height/2, 0), pnts[0]);
-        placement.getRotation().multVec(Base::Vector3d(-width/2, -height/2, 0), pnts[1]);
-        placement.getRotation().multVec(Base::Vector3d( width/2,  height/2, 0), pnts[2]);
-        placement.getRotation().multVec(Base::Vector3d( width/2, -height/2, 0), pnts[3]);
-        Base::Vector3d offset =  placement.getPosition();
+        Placement.getRotation().multVec(Base::Vector3d(-Width/2,  Height/2, 0), pnts[0]);
+        Placement.getRotation().multVec(Base::Vector3d(-Width/2, -Height/2, 0), pnts[1]);
+        Placement.getRotation().multVec(Base::Vector3d( Width/2,  Height/2, 0), pnts[2]);
+        Placement.getRotation().multVec(Base::Vector3d( Width/2, -Height/2, 0), pnts[3]);
+        Base::Vector3d offset =  Placement.getPosition();
         pnts[0] += offset;
         pnts[1] += offset;
         pnts[2] += offset;
         pnts[3] += offset;
     }
-private:
-  float width;
-  float height;
 };
-
 }
 #endif //_RendererLights_h_

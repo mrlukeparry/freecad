@@ -39,7 +39,9 @@ public:
 
 public Q_SLOTS:
   void dragInit(QString id);
+
 public:
+    virtual bool eventFilter(QObject *obj, QEvent *event);
     /// is called the TaskView when the dialog is opened
     virtual void open();
     /// is called by the framework if an button is clicked which has no accept or reject role
@@ -58,7 +60,8 @@ public:
 //     { return 0; }
 
 protected:
-
+    void materialDragEvent(QDragMoveEvent *);
+    void materialDropEvent(QDropEvent *);
 };
 
 

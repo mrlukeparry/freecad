@@ -30,6 +30,7 @@
 # include <QKeyEvent>
 # include <QEvent>
 # include <QDropEvent>
+# include <QDragMoveEvent>
 # include <QDragEnterEvent>
 # include <QFileDialog>
 # include <QGLFormat>
@@ -856,7 +857,7 @@ void View3DInventor::dropEvent (QDropEvent * e)
     }
 }
 
-void View3DInventor::dragEnterEvent (QDragEnterEvent * e)
+void View3DInventor::dragMoveEvent (QDragMoveEvent * e)
 {
     // Here we must allow uri drafs and check them in dropEvent
     const QMimeData* data = e->mimeData();
@@ -864,6 +865,17 @@ void View3DInventor::dragEnterEvent (QDragEnterEvent * e)
         e->accept();
     else
         e->ignore();
+}
+
+void View3DInventor::dragEnterEvent (QDragEnterEvent * e)
+{
+    // Here we must allow uri drafs and check them in dropEvent
+    const QMimeData* data = e->mimeData();
+    e->acceptProposedAction();
+//     if (data->hasUrls())
+//         e->accept();
+//     else
+//         e->ignore();
 }
 
 void View3DInventor::setCurrentViewMode(ViewMode newmode)

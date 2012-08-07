@@ -25,16 +25,27 @@
 #ifndef _PreComp_
 #endif
 
+#include <Inventor/events/SoLocation2Event.h>
 #include <Base/Console.h>
 #include <Gui/Application.h>
 #include <Gui/Document.h>
 #include <Gui/MDIView.h>
+#include <Gui/Selection.h>
+
 #include <QDeclarativeContext>
 #include <QDeclarativeView>
 #include <QGraphicsObject>
 #include <QGLWidget>
+#include <QDragMoveEvent>
+#include <Gui/MainWindow.h>
 #include <Gui/Command.h>
+#include <Gui/View3DInventor.h>
+#include <Gui/View3DInventorViewer.h>
+
+#include <Mod/Part/App/PartFeature.h>
 #include <Mod/Raytracing/App/Appearances.h>
+#include <Mod/Raytracing/App/RenderMaterial.h>
+#include <Mod/Raytracing/App/RenderFeature.h>
 
 #include "TaskDlgAppearances.h"
 #include "AppearancesModel.h"
@@ -73,23 +84,13 @@ TaskDlgAppearances::TaskDlgAppearances()
      // Connect an Update Signal when an image is available
     QObject *rootObject = view->rootObject();
     QObject::connect(rootObject, SIGNAL(materialDrag(QString)), this , SLOT(dragInit(QString)));
-    
-    this->Content.push_back(view);
 
-    // Enable Drag and Drops on the 3D Inventor Window
-//     Gui::MDIView *mdi = Gui::Application::Instance->activeDocument()->getActiveView();
-//     if(mdi) {
-//         mdi->setAcceptDrops(true);
-//     }
+    this->Content.push_back(view);
 
 }
 void TaskDlgAppearances::dragInit(QString str)
 {
-    Base::Console().Log(str.toAscii());
     const LibraryMaterial *dragMaterial = Appearances().getMaterialById(str.toAscii());
-
-    // ASSERT
-
 
     QDrag *drag = new QDrag(this->Content.back());
     QMimeData *mimeData = new QMimeData;
@@ -100,8 +101,87 @@ void TaskDlgAppearances::dragInit(QString str)
     drag->setPixmap(pixmap);
     drag->setHotSpot(QPoint(drag->pixmap().width()/2,
                             drag->pixmap().height()));
+
+    Gui::MDIView *mdi = Gui::Application::Instance->activeDocument()->getActiveView();
+
+    // Catch all the drag events occuring
+    mdi->installEventFilter(this);
     Qt::DropAction dropAction = drag->exec();
 }
+
+bool TaskDlgAppearances::eventFilter(QObject *obj, QEvent *event)
+{
+    if(event->type() == QEvent::DragMove) {
+        materialDragEvent(static_cast<QDragMoveEvent *> (event));
+    } else if(event->type() == QEvent::Drop) {
+        materialDropEvent(static_cast<QDropEvent *> (event));
+    }
+}
+
+void TaskDlgAppearances::materialDropEvent(QDropEvent *ev)
+{
+    // First remove the event filter
+    Gui::MDIView *mdi = Gui::Application::Instance->activeDocument()->getActiveView();
+    mdi->installEventFilter(this);
+
+    // Grab the associated material
+    QString materialId = ev->mimeData()->text();
+    const LibraryMaterial *libMat = Appearances().getMaterialById(materialId.toAscii());
+
+    if(!libMat) {
+        Base::Console().Error("Material with ID could not be found");
+        return;
+    }
+
+    // Detect the Preselection
+    const Gui::SelectionChanges selection = Gui::Selection().getPreselection();
+
+    // Selection must be derived from a part feature
+
+    RenderMaterial myMaterial(libMat);
+    QString objectName = QString::fromAscii(selection.pObjectName);
+
+    App::DocumentObject *docObj = App::GetApplication().getActiveDocument()->getObject(selection.pObjectName);
+
+    if(!docObj->getTypeId().isDerivedFrom(Part::Feature::getClassTypeId())) {
+        Base::Console().Error("A correct part must be chosen derived from Part::Feature");
+        return;
+    }
+
+    std::vector<std::string> sub;
+    //sub.push_back(selection.pSubName); //TODO
+
+    myMaterial.Link.setValue(docObj, sub);
+
+    // Find the RenderFeature object. It must be currently active to add the RenderMaterial
+    App::DocumentObject *activeObj =  App::GetApplication().getActiveDocument()->getActiveObject();
+    if(activeObj->getTypeId() == RenderFeature::getClassTypeId()) {
+        RenderFeature *feat = static_cast<RenderFeature *>(activeObj);
+        feat->addRenderMaterial(&myMaterial);
+    }
+}
+
+void TaskDlgAppearances::materialDragEvent(QDragMoveEvent *ev)
+{
+
+    if(!ev)
+      return;
+
+    Gui::MDIView *mdi = Gui::Application::Instance->activeDocument()->getActiveView();
+
+    int height = static_cast<Gui::View3DInventor *>(mdi)->height();
+
+    // Simulate a mouse position event
+    SoLocation2Event *locEv = new SoLocation2Event();
+    SbVec2s pos(ev->pos().x(), height - ev->pos().y()); // We must reverse the y coordinates
+    locEv->setPosition(pos);
+
+    //Send the Mouse Position to the viewer
+    char buf[255];
+    static_cast<Gui::View3DInventor *>(mdi)->getViewer()->sendSoEvent(locEv);
+}
+
+
 
 TaskDlgAppearances::~TaskDlgAppearances()
 {

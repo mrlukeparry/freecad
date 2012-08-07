@@ -38,7 +38,6 @@
 #include <Base/Exception.h>
 #include <Base/Sequencer.h>
 
-
 #include "LuxRender.h"
 #include "LuxRenderProcess.h"
 
@@ -169,15 +168,15 @@ QString LuxRender::genLight(RenderLight *light) const
         <<  "\tLightGroup \"default\"" << endl;
 
     // Switch the camera type
-    switch(light->getType()) {
+    switch(light->LightType) {
       case RenderLight::AREA: {
 
-        const float * color = light->getColor();
+        const float * color = light->Color;
         out << "\n\tMaterial \"matte\" \"color Kd\" [" << color[0] << " " << color[1] << " " << color[2] << "]" << endl;
 
         // Actual area light
         out << "\n\tAreaLightSource \"area\"" << endl
-            << "\t\t\"float power\" [" << light->getPower() << "]" << endl
+            << "\t\t\"float power\" [" << light->Power << "]" << endl
             << "\t\t\"color L\" [" << color[0] << " " << color[1] << " " << color[2] << "]" << endl;
 
         // Create the area light
@@ -261,8 +260,8 @@ QString LuxRender::genMaterial(RenderMaterial *mat)
 
     if(mat->getMaterial()->source == LibraryMaterial::BUILTIN) {
         out << "Material \"" << mat->getMaterial()->compat << "\"" << endl;
-        QMap<QString, MaterialProperty *>::const_iterator it = mat->properties.constBegin();
-        while (it != mat->properties.constEnd()) {
+        QMap<QString, MaterialProperty *>::const_iterator it = mat->Properties.constBegin();
+        while (it != mat->Properties.constEnd()) {
           if(!it.value())
             continue; //No key perhaps throw error
 
@@ -282,6 +281,7 @@ QString LuxRender::genMaterial(RenderMaterial *mat)
           }
           ++it;
         }
+        out << endl;
     } else {
         //Open the filename and append
         QFile file(mat->getMaterial()->filename);
@@ -319,9 +319,17 @@ QString LuxRender::genObject(RenderPart *obj)
     out << "\nObjectBegin \"" << name << "\"" << endl;
 
     // Generate the material if there is one.
-    RenderMaterial *mat = obj->getMaterial();
-    if(mat) {
-        out << genMaterial(mat);
+    std::vector<RenderMaterial *> partMaterials = this->getRenderPartMaterials(obj);
+
+    // Look for any whole feature materials
+    
+    if(partMaterials.size() > 0) {
+        for(std::vector<RenderMaterial *>::const_iterator it = partMaterials.begin(); it != partMaterials.end(); ++it) {
+            std::vector<std::string> subs = (*it)->Link.getSubValues();
+            if(subs.size() == 0) {
+                out << genMaterial(*it);
+            }
+        }
     }
 
     //Generate each face

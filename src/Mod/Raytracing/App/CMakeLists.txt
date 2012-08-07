@@ -103,9 +103,13 @@ SET(RenderModule_SRCS
     LibraryMaterial.h
     PreCompiled.cpp
     PreCompiled.h
+    PropertyRenderMaterialList.cpp
+    PropertyRenderMaterialList.h
     RenderCamera.cpp
     RenderCamera.h
     RenderLights.h
+    RenderMaterial.cpp
+    RenderMaterial.h
     RenderProcess.cpp
     RenderProcess.h
     RenderFeature.cpp

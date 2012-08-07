@@ -77,9 +77,10 @@ public:
   void setOutputPath(const QString &str);
 
 public Q_SLOTS:
-    void processError();
+    void processError(void);
+    void setStatusAsRunning(void) { status = RUNNING; }
     void begin(void);
-    void stop();
+    void stop(void);
 
 Q_SIGNALS:
     void updateOutput();

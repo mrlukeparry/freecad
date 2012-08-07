@@ -29,6 +29,7 @@
 
 #include "RenderCamera.h"
 #include "RenderCameraPy.h"
+#include <qtextstream.h>
 
 using namespace Raytracing;
 using namespace Base;
@@ -83,15 +84,33 @@ void RenderCamera::Save (Writer &writer) const
     << "Type=\""          <<  (int)Type       << "\" "
     << "Fov =\""          <<  Fov             << "\" "
     << "FocalDistance=\"" <<  Focaldistance   << "\" "
-    << "AutoFocus=\""     <<  Autofocus<< "\" />"
-    << std::endl;
+    << "AutoFocus=\""     <<  Autofocus<< "\">"
+    << "<CamPos valueX=\"" <<  CamPos.x << "\" valueY=\"" <<  CamPos.y << "\" valueZ=\"" <<  CamPos.z << "\"/>" << endl
+    << "<CamDir valueX=\"" <<  CamDir.x << "\" valueY=\"" <<  CamDir.y << "\" valueZ=\"" <<  CamDir.z << "\"/>" << endl
+    << "<LookAt valueX=\"" <<  LookAt.x << "\" valueY=\"" <<  LookAt.y << "\" valueZ=\"" <<  LookAt.z << "\"/>" << endl
+    << "<Up valueX=\""     <<  Up.x     << "\" valueY=\"" <<  Up.y     << "\" valueZ=\"" <<  Up.z     << "\"/>" << endl
+    << "</RenderCamera>" << endl
+    << endl;
 }
 
 void RenderCamera::Restore(XMLReader &reader)
 {
+
     reader.readElement("RenderCamera");
     Name           = reader.getAttribute("Name");
     Focaldistance  = reader.getAttributeAsFloat("FocalDistance");
     Fov            = reader.getAttributeAsFloat("Fov");
     Autofocus      = (bool) reader.getAttributeAsInteger("AutoFocus");
+
+    reader.readElement("CamPos");
+    CamPos = Base::Vector3d (reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"));
+
+    reader.readElement("CamDir");
+    CamDir = Base::Vector3d (reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"));
+
+    reader.readElement("LookAt");
+    LookAt = Base::Vector3d (reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"));
+
+    reader.readElement("Up");
+    Up = Base::Vector3d (reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"));
 }

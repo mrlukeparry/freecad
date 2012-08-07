@@ -47,6 +47,8 @@
 #include <Gui/Application.h>
 #include <Gui/Document.h>
 #include <Gui/Command.h>
+#include <Gui/Control.h>
+
 #include <Gui/FileDialog.h>
 #include <Gui/View.h>
 #include <Gui/ViewProvider.h>
@@ -61,11 +63,13 @@
 #include <Mod/Raytracing/App/RaySegment.h>
 #include <Mod/Raytracing/App/RayProject.h>
 #include <Mod/Part/App/PartFeature.h>
-  
-#include "FreeCADpov.h"
-#include "RenderView.h"
+
 #include <Mod/Raytracing/App/renderer/lux/LuxRender.h>
 #include <Mod/Raytracing/App/Appearances.h>
+
+#include "FreeCADpov.h"
+#include "RenderView.h"
+#include "TaskDlgAppearances.h"
 
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -297,6 +301,40 @@ bool CmdRaytracingWriteView::isActive(void)
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //===========================================================================
+// Raytracing_AddAppearances
+//===========================================================================
+
+DEF_STD_CMD_A(CmdRaytracingAddAppearances);
+
+CmdRaytracingAddAppearances::CmdRaytracingAddAppearances()
+  : Command("Raytracing_AddAppearances")
+{
+    sAppModule      = "Raytracing";
+    sGroup          = QT_TR_NOOP("Raytracing");
+    sMenuText       = QT_TR_NOOP("Add Appearances");
+    sToolTipText    = QT_TR_NOOP("Add appearances");
+    sWhatsThis      = "Raytracing_Add Appearancest";
+    sStatusTip      = sToolTipText;
+    sPixmap         = "Raytrace_New";
+}
+
+void CmdRaytracingAddAppearances::activated(int iMsg)
+{
+
+      Gui::Control().showDialog(new TaskDlgAppearances());
+}
+
+bool CmdRaytracingAddAppearances::isActive(void)
+{
+    if (getActiveGuiDocument())
+        return true;
+    else
+        return false;
+}
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//===========================================================================
 // Raytracing_NewRenderFeature
 //===========================================================================
 
@@ -408,11 +446,13 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
     doCommand(Doc,"App.ActiveDocument.%s.attachRenderCamera(Raytracing.RenderCamera())", FeatName.c_str());
 
     // Set the camera to current view's camera
-    doCommand(Doc,"App.activeDocument().%s.setCamera(App.Vector(%f,%f,%f), App.Vector(%f,%f,%f), App.Vector(%f,%f,%f), App.Vector(%f,%f,%f), %s)",
+    doCommand(Doc,"App.activeDocument().%s.setCamera(App.Vector(%f,%f,%f), App.Vector(%f,%f,%f), App.Vector(%f,%f,%f), App.Vector(%f,%f,%f), '%s')",
                    FeatName.c_str(), camPos.x, camPos.y, camPos.z,
                                      camDir.x, camDir.y, camDir.z,
                                      camUp.x, camUp.y, camUp.z,
                                      camLookAt.x, camLookAt.y, camLookAt.z, camTypeStr);
+
+    doCommand(Doc,"App.ActiveDocument.%s.setRenderPreset('metropolisUnbiased')", FeatName.c_str());
     doCommand(Gui,"Gui.activeDocument().setEdit('%s')",FeatName.c_str());
     commitCommand();
 
@@ -425,8 +465,8 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
 
     RenderAreaLight *light = new RenderAreaLight();
     light->setColor(255, 255, 255);
-    light->setHeight(100);
-    light->setWidth(100);
+    light->Height = 100;
+    light->Width = 100;
 
     Base::Rotation lightRot = Base::Rotation(Base::Vector3d(0, 1, 0), 0.);
     Base::Vector3d lightPos = Base::Vector3d(-50., -50., 200);
@@ -467,33 +507,33 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
               MaterialFloatProperty *sigmaValue = new MaterialFloatProperty(0.5);
               MaterialColorProperty *colorValue = new MaterialColorProperty(col.r * 255, col.g * 255, col.b * 255);
 
-              defaultMatte->properties.insert(QString::fromAscii("Kd"), colorValue);
-              defaultMatte->properties.insert(QString::fromAscii("sigma"), sigmaValue);
-              part->setMaterial(defaultMatte);
+              defaultMatte->Properties.insert(QString::fromAscii("Kd"), colorValue);
+              defaultMatte->Properties.insert(QString::fromAscii("sigma"), sigmaValue);
+//               part->setMaterial(defaultMatte);
             }
             renderer->addObject(part);
         }
     }
-     RenderPreset *preset = renderer->getRenderPreset("metropolisUnbiased");
+//      RenderPreset *preset = renderer->getRenderPreset("metropolisUnbiased");
+// 
+//      if(!preset) {
+//         Base::Console().Log("Couldn't find Render Preset\n");
+//      } else {
+//         renderer->setRenderPreset(preset);
+//      }
+//     renderer->setRenderSize(800, 600);
+//     renderer->preview();
 
-     if(!preset) {
-        Base::Console().Log("Couldn't find Render Preset\n");
-     } else {
-        renderer->setRenderPreset(preset);
-     }
-    renderer->setRenderSize(800, 600);
-    renderer->preview();
-
-    if(renderer->getRenderProcess() && renderer->getRenderProcess())
-    {
-        Gui::Document * doc = getActiveGuiDocument();
-        RenderView *view = new RenderView(doc, Gui::getMainWindow());
-
-        view->attachRender(renderer);
-
-        view->setWindowTitle(QObject::tr("Render viewer") + QString::fromAscii("[*]"));
-        Gui::getMainWindow()->addWindow(view);
-    }
+//     if(renderer->getRenderProcess() && renderer->getRenderProcess())
+//     {
+//         Gui::Document * doc = getActiveGuiDocument();
+//         RenderView *view = new RenderView(doc, Gui::getMainWindow());
+// 
+//         view->attachRender(renderer);
+// 
+//         view->setWindowTitle(QObject::tr("Render viewer") + QString::fromAscii("[*]"));
+//         Gui::getMainWindow()->addWindow(view);
+//     }
 
 }
 
@@ -689,6 +729,7 @@ void CreateRaytracingCommands(void)
 {
     Gui::CommandManager &rcCmdMgr = Gui::Application::Instance->commandManager();
     rcCmdMgr.addCommand(new CmdRaytracingWriteCamera());
+    rcCmdMgr.addCommand(new CmdRaytracingAddAppearances());
     rcCmdMgr.addCommand(new CmdRaytracingWritePart());
     rcCmdMgr.addCommand(new CmdRaytracingWriteView());
     rcCmdMgr.addCommand(new CmdRaytracingNewRenderFeature());

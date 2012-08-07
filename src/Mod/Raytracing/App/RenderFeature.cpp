@@ -41,6 +41,20 @@
 
 #include "Appearances.h"
 
+// Exists for testing purposes
+#include <App/Application.h>
+#include <App/Document.h>
+#include <App/DocumentObject.h>
+#include <App/Material.h>
+#include <Gui/Application.h>
+#include <Gui/Document.h>
+#include <Gui/Command.h>
+#include <Gui/Control.h>
+#include <Gui/View.h>
+#include <Gui/ViewProvider.h>
+
+#include <Mod/Part/App/PartFeature.h>
+
 using namespace Raytracing;
 using namespace Base;
 
@@ -51,6 +65,7 @@ PROPERTY_SOURCE(Raytracing::RenderFeature, App::DocumentObject)
 RenderFeature::RenderFeature()
 {
     ADD_PROPERTY(RendererType,((long)0));
+    ADD_PROPERTY(Preset,(""));
     ADD_PROPERTY(OutputX,(800));
     ADD_PROPERTY(OutputY,(800));
     RendererType.setEnums(TypeEnums);
@@ -69,9 +84,11 @@ RenderFeature::~RenderFeature()
 
 void RenderFeature::attachRenderCamera(RenderCamera *cam)
 {
-  if(!cam && !renderer)
+  if(!renderer)
     return;
 
+  if(renderer->hasCamera())
+      Base::Console().Error("A camera is already set\n");
   renderer->addCamera(cam);
 }
 
@@ -84,7 +101,7 @@ void RenderFeature::setRenderer(const char *rendererType)
         LuxRender *render = new LuxRender();
         this->renderer = render;
     } else if(strcmp("Povray", rendererType) == 0) {
-        Base::Console().Log("Currently not implemented");
+        Base::Console().Log("Currently not implemented\n");
     }
 
     // Reload the materials
@@ -105,14 +122,33 @@ void RenderFeature::removeRenderer(void)
     this->renderer = 0; // Make it a null pointer
 }
 
+int RenderFeature::addRenderMaterial(const RenderMaterial *material)
+{
+    const std::vector< RenderMaterial * > &vals = this->MaterialsList.getValues();
+
+    std::vector< RenderMaterial * > newVals(vals);
+    RenderMaterial *matNew = material->clone();
+    newVals.push_back(matNew);
+    this->MaterialsList.setValues(newVals);
+
+    std::stringstream stream;
+    stream << "Attached Material " << material->getMaterial()->label.toStdString()
+           << " on object "        << material->Link.getValue()->getNameInDocument() << "\n";
+
+    Base::Console().Log(stream.str().c_str());
+    delete matNew;
+    return this->MaterialsList.getSize()-1;
+}
+
+
 /// Methods
 void RenderFeature::setCamera(const Base::Vector3d &v1, const Base::Vector3d &v2, const Base::Vector3d &v3, const Base::Vector3d &v4, const char *camType)
 {
     if(!renderer)
-        Base::Console().Error("Renderer is not available");
+        Base::Console().Error("Renderer is not available\n");
 
     if(!renderer->hasCamera())
-        Base::Console().Error("Renderer doesn't have a camera set");
+        Base::Console().Error("Renderer doesn't have a camera setzn");
 
     renderer->getCamera()->setType(camType);
     renderer->setCamera(v1, v2, v3, v4);
@@ -125,6 +161,8 @@ void RenderFeature::preview(int x1, int y1, int x2, int y2)
         return;
 
     // Argument Variables are temporary
+    renderer->attachRenderMaterials(MaterialsList.getValues());
+    renderer->setRenderPreset(Preset.getValue());
     renderer->setRenderSize(OutputX.getValue(), OutputY.getValue());
     renderer->preview(x1, y1, x2, y2);
 }
@@ -134,18 +172,61 @@ void RenderFeature::preview()
     if(!isRendererReady())
       return;
 
+    // Adding stuff for testing
+    RenderAreaLight *light = new RenderAreaLight();
+    light->setColor(255, 255, 255);
+    light->Height = 100;
+    light->Width = 100;
+
+    Base::Rotation lightRot = Base::Rotation(Base::Vector3d(0, 1, 0), 0.);
+    Base::Vector3d lightPos = Base::Vector3d(-50., -50., 200);
+    light->setPlacement(lightPos, lightRot);
+
+        // get all objects of the active document
+    std::vector<Part::Feature*> DocObjects = App::GetApplication().getActiveDocument()->getObjectsOfType<Part::Feature>();
+       for (std::vector<Part::Feature*>::const_iterator it=DocObjects.begin();it!=DocObjects.end();++it) {
+        Gui::ViewProvider* vp = Gui::Application::Instance->activeDocument()->getViewProvider(*it);
+        if (vp && vp->isVisible()) {
+          float meshDev = 0.1;
+          // See if we can obtain the user set mesh deviation // otherwise resort to a default
+//           if(vp->getTypeId() == PartGui::ViewProviderPartExt::getClassTypeId()) {
+//               meshDev = static_cast<PartGui::ViewProviderPartExt *>(vp)->Deviation.getValue();
+//           }
+            App::PropertyColor *pcColor = dynamic_cast<App::PropertyColor *>(vp->getPropertyByName("ShapeColor"));
+            App::Color col = pcColor->getValue();
+
+            RenderPart *part = new RenderPart((*it)->getNameInDocument(), (*it)->Shape.getValue(), meshDev);
+            renderer->addObject(part);
+        }
+    }
+    
+    renderer->addLight(light);
+
+    renderer->attachRenderMaterials(MaterialsList.getValues());
+    renderer->setRenderPreset(Preset.getValue());
     renderer->setRenderSize(OutputX.getValue(), OutputY.getValue());
     renderer->preview();
+}
+
+void RenderFeature::render()
+{
+    if(!isRendererReady())
+        return;
+
+    renderer->attachRenderMaterials(MaterialsList.getValues());
+    renderer->setRenderPreset(Preset.getValue());
+    renderer->setRenderSize(OutputX.getValue(), OutputY.getValue());
+    renderer->render();
 }
 
 void RenderFeature::finish()
 {
     if(!renderer)
-        Base::Console().Error("Renderer is not available");
+        Base::Console().Error("Renderer is not available\n);
 
     RenderProcess *process = renderer->getRenderProcess();
     if(!process || !process->isActive())
-        Base::Console().Error("Renderer process doesn't exist or isn't active");
+        Base::Console().Error("Renderer process doesn't exist or isn't active\n");
 
     renderer->finish();
 }
@@ -153,45 +234,55 @@ void RenderFeature::finish()
 void RenderFeature::reset()
 {
     if(!renderer)
-      Base::Console().Error("Renderer is not available");
+      Base::Console().Error("Renderer is not available\n");
 
     renderer->reset();
 }
 
 bool RenderFeature::isRendererReady()
 {
-    bool status = false;
+
     if(!this->renderer) {
-        Base::Console().Error("Renderer is not available");
-        return status;
+        Base::Console().Error("Renderer is not available\n");
+        return false;
     }
 
-    if(!this->renderer->hasCamera())
-        Base::Console().Error("Camera has not been set for the render");
-}
+    if(!this->renderer->hasCamera()) {
+        Base::Console().Error("Camera has not been set for the render\n");
+        return false;
+    }
 
-void RenderFeature::render()
-{
-    if(!isRendererReady())
-        return;
-    
-    renderer->setRenderSize(OutputX.getValue(), OutputY.getValue());
-    renderer->render();
+    return true;
 }
 
 void RenderFeature::setRenderSize(int x, int y)
 {
     if(x < 0 || y < 0)
-          Base::Console().Error("Render size values are incorrect");
+          Base::Console().Error("Render size values are incorrect\n");
 
     OutputX.setValue(x);
     OutputY.setValue(y);
 }
 
+void RenderFeature::setRenderPreset(const char * presetName)
+{
+    if(!renderer)
+       Base::Console().Error("Renderer is not available\n");
+
+    // Check if the Render Preset exists for the given render backend
+    RenderPreset *fndPreset = renderer->getRenderPreset(presetName);
+    if(!fndPreset)
+        Base::Console().Error("The Render Preset couldn't be found\n");
+
+    // Finally Set the Render Preset
+    Preset.setValue(presetName);
+}
+
+
 void RenderFeature::setOutputPath(const char * outputPath)
 {
     if(!renderer)
-       Base::Console().Error("Renderer is not available");
+       Base::Console().Error("Renderer is not available\n");
 
     renderer->setOutputPath(outputPath);
 }

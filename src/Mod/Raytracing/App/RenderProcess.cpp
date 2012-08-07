@@ -34,16 +34,21 @@
 
 using namespace Raytracing;
 
+// TODO implement QFileSystemWatcher
+
 RenderProcess::RenderProcess() : status(INVALID)
 {
-    updateInterval = 3000;
+    updateInterval = 3000; // Default Polling Time
 
     // Connect the signals to update status
     QObject::connect(
         this, SIGNAL(error(QProcess::ProcessError)),
         this, SLOT  (processError())
        );
-  
+    QObject::connect(
+        this, SIGNAL(started()),
+        this, SLOT  (setStatusAsRunning())
+       );
 }
 RenderProcess::~RenderProcess() {}
 
@@ -114,6 +119,7 @@ void RenderProcess::begin()
     {
         this->status = VALID;
         this->start(execPath, args);
+        this->status = STARTED;
         this->timer.start(this->updateInterval, this);
         std::string inputFilestr = this->inputPath.toStdString();
         bool test = true;
