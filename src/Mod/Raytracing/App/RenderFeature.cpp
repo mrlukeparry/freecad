@@ -154,7 +154,7 @@ int RenderFeature::removeRenderMaterialFromPart(const char *partName)
             idx = i;
     }
 
-    if(i >= 0) {
+    if(idx >= 0) {
         //Material Found
         std::vector< RenderMaterial * > newVals(vals);
         newVals.erase(newVals.begin() + idx);
@@ -168,7 +168,7 @@ const RenderMaterial * RenderFeature::getRenderMaterial(const char *partName) co
 {
     const std::vector< RenderMaterial * > &vals = this->MaterialsList.getValues();
 
-    int i = 0, idx = -1;
+    int i = 0;
     //TODO make this for individual faces
     for (std::vector<RenderMaterial*>::const_iterator it=vals.begin();it!=vals.end();++it, i++) {
         if(strcmp((*it)->Link.getValue()->getNameInDocument(), partName) == 0)
