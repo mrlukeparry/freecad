@@ -113,6 +113,15 @@ PyObject* RenderFeaturePy::setRenderPreset(PyObject *args)
     Py_Return;
 }
 
+PyObject* RenderFeaturePy::removeRenderMaterialFromPart(PyObject *args)
+{
+    char *partName;
+    if (!PyArg_ParseTuple(args, "s", &partName))
+        return 0;
+
+    this->getRenderFeaturePtr()->removeRenderMaterialFromPart(partName);
+    Py_Return;
+}
 PyObject* RenderFeaturePy::setOutputPath(PyObject *args)
 {
     char *outputPath;

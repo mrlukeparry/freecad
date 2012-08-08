@@ -34,7 +34,7 @@ Item {
     }
 
     Rectangle {
-        anchors.centerIn: previewImage
+        anchors.centerIn: pictureSrc
         width: myWidth * previewImage.zoom
         height: myHeight * previewImage.zoom
         border.color: "white"

@@ -119,7 +119,7 @@ public:
   const LibraryMaterial * getMaterial() const { return LibMaterial; }
   std::string Name;
 private:
-  const LibraryMaterial *LibMaterial;
+  const LibraryMaterial *LibMaterial; //TODO convert this to an ID and do a lookup to get LibMaterial   
 };
 
 }

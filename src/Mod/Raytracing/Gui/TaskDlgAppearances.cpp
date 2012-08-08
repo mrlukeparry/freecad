@@ -27,20 +27,21 @@
 
 #include <Inventor/events/SoLocation2Event.h>
 #include <Base/Console.h>
+
 #include <Gui/Application.h>
+#include <Gui/Command.h>
 #include <Gui/Document.h>
+#include <Gui/MainWindow.h>
 #include <Gui/MDIView.h>
 #include <Gui/Selection.h>
+#include <Gui/View3DInventor.h>
+#include <Gui/View3DInventorViewer.h>
 
 #include <QDeclarativeContext>
 #include <QDeclarativeView>
 #include <QGraphicsObject>
 #include <QGLWidget>
 #include <QDragMoveEvent>
-#include <Gui/MainWindow.h>
-#include <Gui/Command.h>
-#include <Gui/View3DInventor.h>
-#include <Gui/View3DInventorViewer.h>
 
 #include <Mod/Part/App/PartFeature.h>
 #include <Mod/Raytracing/App/Appearances.h>
@@ -157,6 +158,16 @@ void TaskDlgAppearances::materialDropEvent(QDropEvent *ev)
     App::DocumentObject *activeObj =  App::GetApplication().getActiveDocument()->getActiveObject();
     if(activeObj->getTypeId() == RenderFeature::getClassTypeId()) {
         RenderFeature *feat = static_cast<RenderFeature *>(activeObj);
+
+        // Remove the previous RenderMaterial if one exists
+        const RenderMaterial *mat = feat->getRenderMaterial(selection.pObjectName);
+
+        if(mat)
+        {
+            Gui::Command::openCommand("Removing Material");
+            Gui::Command::doCommand(Gui::Command::Doc,"App.ActiveDocument.ActiveObject.removeRenderMaterialFromPart('%s')", selection.pObjectName);
+            Gui::Command::commitCommand();
+        }
         feat->addRenderMaterial(&myMaterial);
     }
 }

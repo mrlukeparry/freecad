@@ -68,6 +68,10 @@ public:
     //@}
 
 
+    /// Render MaterialsListconst
+    const RenderMaterial * getRenderMaterial(const char *partName) const;
+    int removeRenderMaterialFromPart(const char *partName);
+
     /// Render getters and setters
     void removeRenderer(void);
     void setRenderer(const char *);

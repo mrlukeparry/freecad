@@ -41,18 +41,20 @@
 
 #include "Appearances.h"
 
+#include <Mod/Raytracing/Gui/RenderView.h>
+
 // Exists for testing purposes
 #include <App/Application.h>
 #include <App/Document.h>
 #include <App/DocumentObject.h>
 #include <App/Material.h>
 #include <Gui/Application.h>
+#include <Gui/MainWindow.h>
 #include <Gui/Document.h>
 #include <Gui/Command.h>
 #include <Gui/Control.h>
 #include <Gui/View.h>
 #include <Gui/ViewProvider.h>
-
 #include <Mod/Part/App/PartFeature.h>
 
 using namespace Raytracing;
@@ -101,7 +103,7 @@ void RenderFeature::setRenderer(const char *rendererType)
         LuxRender *render = new LuxRender();
         this->renderer = render;
     } else if(strcmp("Povray", rendererType) == 0) {
-        Base::Console().Log("Currently not implemented\n");
+            Base::Console().Log("Currently not implemented\n");
     }
 
     // Reload the materials
@@ -140,6 +142,39 @@ int RenderFeature::addRenderMaterial(const RenderMaterial *material)
     return this->MaterialsList.getSize()-1;
 }
 
+// TODO Later need to give it a subvalues
+int RenderFeature::removeRenderMaterialFromPart(const char *partName)
+{
+    const std::vector< RenderMaterial * > &vals = this->MaterialsList.getValues();
+
+    int i = 0, idx = -1;
+    //TODO make this for individual faces
+    for (std::vector<RenderMaterial*>::const_iterator it=vals.begin();it!=vals.end();++it, i++) {
+        if(strcmp((*it)->Link.getValue()->getNameInDocument(), partName) == 0)
+            idx = i;
+    }
+
+    if(i >= 0) {
+        //Material Found
+        std::vector< RenderMaterial * > newVals(vals);
+        newVals.erase(newVals.begin() + idx);
+        this->MaterialsList.setValues(newVals);
+    }
+    return 0;
+}
+
+// TODO Later need to give it a subvalues
+const RenderMaterial * RenderFeature::getRenderMaterial(const char *partName) const
+{
+    const std::vector< RenderMaterial * > &vals = this->MaterialsList.getValues();
+
+    int i = 0, idx = -1;
+    //TODO make this for individual faces
+    for (std::vector<RenderMaterial*>::const_iterator it=vals.begin();it!=vals.end();++it, i++) {
+        if(strcmp((*it)->Link.getValue()->getNameInDocument(), partName) == 0)
+            return (*it);
+    }
+}
 
 /// Methods
 void RenderFeature::setCamera(const Base::Vector3d &v1, const Base::Vector3d &v2, const Base::Vector3d &v3, const Base::Vector3d &v4, const char *camType)
@@ -182,10 +217,12 @@ void RenderFeature::preview()
     Base::Vector3d lightPos = Base::Vector3d(-50., -50., 200);
     light->setPlacement(lightPos, lightRot);
 
+    Gui::Document * doc = Gui::Application::Instance->activeDocument();
+    
         // get all objects of the active document
     std::vector<Part::Feature*> DocObjects = App::GetApplication().getActiveDocument()->getObjectsOfType<Part::Feature>();
        for (std::vector<Part::Feature*>::const_iterator it=DocObjects.begin();it!=DocObjects.end();++it) {
-        Gui::ViewProvider* vp = Gui::Application::Instance->activeDocument()->getViewProvider(*it);
+        Gui::ViewProvider* vp = doc->getViewProvider(*it);
         if (vp && vp->isVisible()) {
           float meshDev = 0.1;
           // See if we can obtain the user set mesh deviation // otherwise resort to a default
@@ -206,6 +243,15 @@ void RenderFeature::preview()
     renderer->setRenderPreset(Preset.getValue());
     renderer->setRenderSize(OutputX.getValue(), OutputY.getValue());
     renderer->preview();
+
+    // Create the Render Preview Window //TODO will be moved
+
+    RaytracingGui::RenderView *view = new RaytracingGui::RenderView(doc, Gui::getMainWindow());
+
+    view->attachRender(renderer);
+
+    view->setWindowTitle(QObject::tr("Render viewer") + QString::fromAscii("[*]"));
+    Gui::getMainWindow()->addWindow(view);
 }
 
 void RenderFeature::render()
@@ -222,7 +268,7 @@ void RenderFeature::render()
 void RenderFeature::finish()
 {
     if(!renderer)
-        Base::Console().Error("Renderer is not available\n);
+        Base::Console().Error("Renderer is not available\n");
 
     RenderProcess *process = renderer->getRenderProcess();
     if(!process || !process->isActive())
