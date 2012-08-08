@@ -47,11 +47,11 @@ public:
     ~RenderFeature();
 
     /// Properties
-    App::PropertyEnumeration                   RendererType;
-    App::PropertyInteger                       OutputX;
-    App::PropertyString                        Preset;
-    App::PropertyInteger                       OutputY;
     Raytracing::PropertyRenderMaterialList     MaterialsList;
+    App::PropertyInteger                       OutputX;
+    App::PropertyInteger                       OutputY;
+    App::PropertyString                        Preset;
+    App::PropertyEnumeration                   RendererType;
     
 //     Part    ::PropertyGeometryList   Geometry;
 //     Sketcher::PropertyConstraintList Constraints;
@@ -82,6 +82,7 @@ public:
     void attachRenderCamera(RenderCamera *cam);
     int  addRenderMaterial(const RenderMaterial *material);
 
+    RenderProcess * getActiveRenderProcess(void) const; // Should this be a const method?
     void finish();
     void preview();
     void preview(int x1, int y1, int x2, int y2);

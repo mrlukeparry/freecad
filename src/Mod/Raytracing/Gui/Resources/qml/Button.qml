@@ -5,8 +5,8 @@ Item {
 
     property alias text: buttonText.text
     property bool enabled: true
-    width: 120
-    height: 30
+    width: buttonText.width + 20
+    height: buttonText.height + 10
 
     id: button
     opacity: 1.0
@@ -27,7 +27,7 @@ Item {
         acceptedButtons: Qt.LeftButton
         hoverEnabled: true
         anchors.fill : parent
-        onClicked: function() { if(button.enabled) { button.clicked();} }()
+        onClicked: function() { button.focus = true; if(button.enabled) { button.clicked();} }()
     }
     Text {
         id: buttonText

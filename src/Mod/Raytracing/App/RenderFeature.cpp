@@ -176,6 +176,20 @@ const RenderMaterial * RenderFeature::getRenderMaterial(const char *partName) co
     }
 }
 
+RenderProcess * RenderFeature::getActiveRenderProcess() const
+{
+    if(!renderer) {
+        Base::Console().Error("Renderer is not available\n");
+        return 0;
+    }
+    
+    if(!renderer->getRenderProcess() || !renderer->getRenderProcess()->isActive())  {
+        Base::Console().Error("Render Process is not available\n");
+        return 0;
+    }
+    return renderer->getRenderProcess();
+}
+
 /// Methods
 void RenderFeature::setCamera(const Base::Vector3d &v1, const Base::Vector3d &v2, const Base::Vector3d &v3, const Base::Vector3d &v4, const char *camType)
 {
@@ -183,7 +197,7 @@ void RenderFeature::setCamera(const Base::Vector3d &v1, const Base::Vector3d &v2
         Base::Console().Error("Renderer is not available\n");
 
     if(!renderer->hasCamera())
-        Base::Console().Error("Renderer doesn't have a camera setzn");
+        Base::Console().Error("Renderer doesn't have a camera set\n");
 
     renderer->getCamera()->setType(camType);
     renderer->setCamera(v1, v2, v3, v4);
@@ -243,15 +257,6 @@ void RenderFeature::preview()
     renderer->setRenderPreset(Preset.getValue());
     renderer->setRenderSize(OutputX.getValue(), OutputY.getValue());
     renderer->preview();
-
-    // Create the Render Preview Window //TODO will be moved
-
-    RaytracingGui::RenderView *view = new RaytracingGui::RenderView(doc, Gui::getMainWindow());
-
-    view->attachRender(renderer);
-
-    view->setWindowTitle(QObject::tr("Render viewer") + QString::fromAscii("[*]"));
-    Gui::getMainWindow()->addWindow(view);
 }
 
 void RenderFeature::render()

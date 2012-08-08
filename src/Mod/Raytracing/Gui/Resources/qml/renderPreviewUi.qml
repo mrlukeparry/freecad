@@ -45,8 +45,8 @@ Item {
         id: rectangle1
         anchors.fill: parent
         gradient: Gradient {
-           GradientStop { position: 0.0; color: "#333"}
-                   GradientStop { position: 1.0; color: "#555" }
+                    GradientStop { position: 0.0; color: "#333"}
+                    GradientStop { position: 1.0; color: "#555" }
                }
 
         WheelArea {
@@ -61,7 +61,7 @@ Item {
                 anchors.fill: parent
         }
 
-      Loading {
+        Loading {
           id: imageLoading
            anchors.centerIn:  rectangle1
         }

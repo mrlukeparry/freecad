@@ -22,8 +22,8 @@ Item {
     zoom: 1.0
     zoomX: width /2
     zoomY: height/2
-    width: 800
-    height: 600
+    width: myWidth
+    height: myHeight
 
     Image {
         cache: false

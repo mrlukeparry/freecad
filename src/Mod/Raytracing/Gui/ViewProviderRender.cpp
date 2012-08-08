@@ -34,6 +34,7 @@
 #include <App/Document.h>
 #include <App/DocumentObject.h>
 #include <Gui/Application.h>
+#include <Gui/Control.h>
 #include <Gui/Document.h>
 #include <Gui/SoFCSelection.h>
 #include <Gui/Selection.h>
@@ -46,6 +47,7 @@
 #include <Gui/ViewProviderDocumentObjectGroup.h>
 
 #include "ViewProviderRender.h"
+#include "TaskDlgRender.h"
 
 using namespace RaytracingGui;
 
@@ -110,33 +112,31 @@ bool ViewProviderRender::setEdit(int ModNum)
    // When double-clicking on the item for this sketch the
     // object unsets and sets its edit mode without closing
     // the task panel
-//     Gui::TaskView::TaskDialog *dlg = Gui::Control().activeDialog();
-//     TaskDlgAppearances *sketchDlg = qobject_cast<TaskDlgEditSketch *>(dlg);
+    Gui::TaskView::TaskDialog *dlg = Gui::Control().activeDialog();
+    TaskDlgRender *taskDlgRender = qobject_cast<TaskDlgRender *>(dlg);
 //     if (sketchDlg && sketchDlg->getSketchView() != this)
 //         sketchDlg = 0; // another sketch left open its task panel
-//     if (dlg && !sketchDlg) {
-//         QMessageBox msgBox;
-//         msgBox.setText(QObject::tr("A dialog is already open in the task panel"));
-//         msgBox.setInformativeText(QObject::tr("Do you want to close this dialog?"));
-//         msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
-//         msgBox.setDefaultButton(QMessageBox::Yes);
-//         int ret = msgBox.exec();
-//         if (ret == QMessageBox::Yes)
-//             Gui::Control().closeDialog();
-//         else
-//             return false;
-//     }
-
-    // clear the selection (convenience)
+    if (dlg && !taskDlgRender) {
+        QMessageBox msgBox;
+        msgBox.setText(QObject::tr("A dialog is already open in the task panel"));
+        msgBox.setInformativeText(QObject::tr("Do you want to close this dialog?"));
+        msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        msgBox.setDefaultButton(QMessageBox::Yes);
+        int ret = msgBox.exec();
+        if (ret == QMessageBox::Yes)
+            Gui::Control().closeDialog();
+        else
+            return false;
+    }
     Gui::Selection().clearSelection();
 
 
-    // start the edit dialog
-//     if (sketchDlg)
-//         Gui::Control().showDialog(sketchDlg);
-//     else
-//         Gui::Control().showDialog(new TaskDlgEditSketch(this));
-// 
+    //start the edit dialog
+    if (taskDlgRender)
+        Gui::Control().showDialog(taskDlgRender);
+    else
+        Gui::Control().showDialog(new TaskDlgRender(this));
+
 
     return true;
 }

@@ -41,6 +41,7 @@ set(RaytracingGui_MOC_HDRS
     RenderView.h
     AppearancesModel.h
     TaskDlgAppearances.h
+    TaskDlgRender.h
 )
 fc_wrap_cpp(RaytracingGui_MOC_SRCS ${RaytracingGui_MOC_HDRS})
 SOURCE_GROUP("Moc" FILES ${RaytracingGui_MOC_SRCS})
@@ -76,6 +77,8 @@ SET(RaytracingGui_SRCS
     RenderView.h
     TaskDlgAppearances.cpp
     TaskDlgAppearances.h
+    TaskDlgRender.cpp
+    TaskDlgRender.h
     Workbench.cpp
     Workbench.h
     ViewProviderRender.cpp
