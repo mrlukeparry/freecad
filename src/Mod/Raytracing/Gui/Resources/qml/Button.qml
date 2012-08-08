@@ -9,6 +9,7 @@ Item {
     height: 30
 
     id: button
+    opacity: 1.0
     Rectangle {
         id: rectangle
         radius: 5
@@ -26,7 +27,7 @@ Item {
         acceptedButtons: Qt.LeftButton
         hoverEnabled: true
         anchors.fill : parent
-        onClicked: button.clicked()
+        onClicked: function() { if(button.enabled) { button.clicked();} }()
     }
     Text {
         id: buttonText

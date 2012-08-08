@@ -30,8 +30,11 @@
 #include <Base/Console.h>
 #include <QFileDialog>
 #include <Base/PyObjectBase.h>
+
+#include <Gui/Command.h>
 #include <Gui/FileDialog.h>
 #include <Gui/WaitCursor.h>
+
 #include <QGraphicsObject>
 #include <QGLWidget>
 #include <QDeclarativeImageProvider>
@@ -95,7 +98,7 @@ RenderView::RenderView(Gui::Document* doc, QWidget* parent)
 
     // Connect an Update Signal when an image is available
     QObject *rootObject = view->rootObject();
-    QObject::connect(this, SIGNAL(updatePreview()), rootObject , SLOT(updatePreview()));
+    QObject::connect(this, SIGNAL(updatePreview()), rootObject , SLOT(updatePreview())); 
 
     // Set the QML View to MDI window
     setCentralWidget(view);
@@ -120,6 +123,10 @@ void RenderView::attachRender(Renderer *attachedRender)
     QObject *item = view->rootObject();
     QObject::connect(item , SIGNAL(stopRender()), this , SLOT(stopRender()) );
     QObject::connect(item , SIGNAL(saveOutput()), this , SLOT(saveRender()) );
+    QObject::connect(renderProcQObj , SIGNAL(finished()), item , SLOT(renderStopped())); // Connect Render Process Signal when stopped by user
+    QObject::connect(renderProcQObj , SIGNAL(started()), item , SLOT(renderActive())); // Connect Render Process (QProcess) start signal when active
+    // TODO create a connection when error
+
 }
 
 void RenderView::saveRender()
@@ -141,7 +148,8 @@ void RenderView::saveRender()
 }
 void RenderView::stopRender()
 {
-    Base::Console().Log("Stopping Render");
+    // Only one render process is assigned per Render Feature, so it should be safe to call this.
+    Gui::Command::doCommand(Gui::Command::Doc,"App.ActiveDocument.ActiveObject.finish()");
     render->getRenderProcess()->stop();
 }
 

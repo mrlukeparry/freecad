@@ -84,6 +84,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void updateOutput();
+    void finished();
 
 protected:
   QImage imageOutput;

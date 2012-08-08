@@ -3,6 +3,7 @@ import FreeCAD 1.0
 Item {
 
     id: previewWidget
+    // Slots
     function updatePreview() {
         // Bit of a hack to reload the image
         if(previewImage.source = "image://previewImage/reload/picture"){
@@ -15,17 +16,30 @@ Item {
             loadingAnim.start()
         }
 
+        renderActive = true;
         previewLoaded = true;
     }
 
+    function renderActive() {
+        console.log("Render Active")
+        renderActive = true;
+    }
+
+    function renderStopped() {
+                console.log("Render Stopped")
+        renderActive = false;
+    }
+
+    // Signals
     signal stopRender()
     signal saveOutput()
 
-    width: 1600
-    height: 1000
+    // Properties
     property bool previewLoaded: false
+    property bool renderActive: false
 
-
+    width: 800
+    height: 600
 
     Rectangle {
         id: rectangle1
@@ -40,8 +54,6 @@ Item {
             anchors.fill: parent
             onVerticalWheel: function(){ if(!previewLoaded){return;}  previewImage.mouseWheelCallback(delta,mouseArea.mouseX, mouseArea.mouseY ); }()
         }
-
-
 
         MouseArea {
                 hoverEnabled : true
@@ -93,14 +105,17 @@ Item {
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: 0
                 text: qsTr("Stop Render")
+                enabled: previewWidget.renderActive
                 onClicked: previewWidget.stopRender()
             }
        }
     }
     states: [
-        State {name:"enabled"; when: previewLoaded;
+        State {
+            name:"enabled";
+            when: previewWidget.previewLoaded
             PropertyChanges { target: saveButton; enabled: true}
-    }]
+        }]
 
     SequentialAnimation {
         id: loadingAnim

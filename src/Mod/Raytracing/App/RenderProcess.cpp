@@ -141,6 +141,7 @@ void RenderProcess::stop()
   this->status = FINISHED;
   this->terminate();
   this->timer.stop();
+  Q_EMIT finished();
 }
 
 void RenderProcess::setUpdateInterval(float time)
