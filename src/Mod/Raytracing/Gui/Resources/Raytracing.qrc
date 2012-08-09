@@ -31,5 +31,6 @@
         <file>qml/Loading.qml</file>
         <file>qml/NumberInput.qml</file>
         <file>qml/ScrollBar.qml</file>
+        <file>qml/ComboBox.qml</file>
     </qresource>
 </RCC> 

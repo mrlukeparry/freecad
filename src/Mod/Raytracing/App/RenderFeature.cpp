@@ -179,12 +179,12 @@ const RenderMaterial * RenderFeature::getRenderMaterial(const char *partName) co
 RenderProcess * RenderFeature::getActiveRenderProcess() const
 {
     if(!renderer) {
-        Base::Console().Error("Renderer is not available\n");
+//         Base::Console().Error("Renderer is not available\n");
         return 0;
     }
     
     if(!renderer->getRenderProcess() || !renderer->getRenderProcess()->isActive())  {
-        Base::Console().Error("Render Process is not available\n");
+//         Base::Console().Error("Render Process is not available\n");
         return 0;
     }
     return renderer->getRenderProcess();
@@ -193,16 +193,27 @@ RenderProcess * RenderFeature::getActiveRenderProcess() const
 /// Methods
 void RenderFeature::setCamera(const Base::Vector3d &v1, const Base::Vector3d &v2, const Base::Vector3d &v3, const Base::Vector3d &v4, const char *camType)
 {
-    if(!renderer)
+    if(!renderer) {
         Base::Console().Error("Renderer is not available\n");
+        return;
+    }
 
-    if(!renderer->hasCamera())
+    if(!renderer->hasCamera()) {
         Base::Console().Error("Renderer doesn't have a camera set\n");
+        return;
+    }
 
     renderer->getCamera()->setType(camType);
     renderer->setCamera(v1, v2, v3, v4);
 }
 
+RenderCamera * RenderFeature::getCamera(void)
+{
+  if(!renderer)
+        Base::Console().Error("Renderer is not available\n");
+
+  return renderer->getCamera();
+}
 
 void RenderFeature::preview(int x1, int y1, int x2, int y2)
 {

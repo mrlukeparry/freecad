@@ -9,17 +9,8 @@ Item {
     signal render()
 
     // Slots
-    function renderRunning()
-    {
-        renderActive = true
-    }
-
-
-    // Slots
-    function renderStopped()
-    {
-        renderActive = false
-    }
+    function renderRunning() { renderActive = true }
+    function renderStopped() { renderActive = false }
 
     // Properties
     property bool renderActive: false
@@ -82,6 +73,7 @@ Item {
                 Column {
                     spacing: 10
                     Text {
+                        color: "#f9f9f9"
                         text: qsTr("Render Properties:")
                         font.pointSize: 12
                     }
@@ -108,6 +100,18 @@ Item {
                         }
 
                      } // Row End
+                     Row {
+                         width: parent.width
+
+                         ComboBox {
+                             id: renderPreset
+                             model: ["directLighting", "metropolisUnbiased"]
+                             selectedItem: renderFeature.getRenderPreset()
+                             width: parent.width
+                             height: 20
+                             onComboClicked: renderFeature.setRenderPreset(renderPreset.selectedItem)
+                         }
+                     }
 
                 } // Column End
             }

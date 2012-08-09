@@ -89,6 +89,7 @@ public:
     void render();
     void reset();
     void setCamera(const Base::Vector3d &v1, const Base::Vector3d &v2, const Base::Vector3d &v3, const Base::Vector3d &v4, const char *camType);
+    RenderCamera * getCamera(void);
     void setRenderPreset(const char * presetName);
     void setRenderSize(int x, int y);
     void setOutputPath(const char * outputPath);
