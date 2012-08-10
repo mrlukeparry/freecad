@@ -41,20 +41,11 @@
 
 #include "Appearances.h"
 
-#include <Mod/Raytracing/Gui/RenderView.h>
-
 // Exists for testing purposes
 #include <App/Application.h>
 #include <App/Document.h>
 #include <App/DocumentObject.h>
 #include <App/Material.h>
-#include <Gui/Application.h>
-#include <Gui/MainWindow.h>
-#include <Gui/Document.h>
-#include <Gui/Command.h>
-#include <Gui/Control.h>
-#include <Gui/View.h>
-#include <Gui/ViewProvider.h>
 #include <Mod/Part/App/PartFeature.h>
 
 using namespace Raytracing;
@@ -242,26 +233,6 @@ void RenderFeature::preview()
     Base::Vector3d lightPos = Base::Vector3d(-50., -50., 200);
     light->setPlacement(lightPos, lightRot);
 
-    Gui::Document * doc = Gui::Application::Instance->activeDocument();
-    
-        // get all objects of the active document
-    std::vector<Part::Feature*> DocObjects = App::GetApplication().getActiveDocument()->getObjectsOfType<Part::Feature>();
-       for (std::vector<Part::Feature*>::const_iterator it=DocObjects.begin();it!=DocObjects.end();++it) {
-        Gui::ViewProvider* vp = doc->getViewProvider(*it);
-        if (vp && vp->isVisible()) {
-          float meshDev = 0.1;
-          // See if we can obtain the user set mesh deviation // otherwise resort to a default
-//           if(vp->getTypeId() == PartGui::ViewProviderPartExt::getClassTypeId()) {
-//               meshDev = static_cast<PartGui::ViewProviderPartExt *>(vp)->Deviation.getValue();
-//           }
-            App::PropertyColor *pcColor = dynamic_cast<App::PropertyColor *>(vp->getPropertyByName("ShapeColor"));
-            App::Color col = pcColor->getValue();
-
-            RenderPart *part = new RenderPart((*it)->getNameInDocument(), (*it)->Shape.getValue(), meshDev);
-            renderer->addObject(part);
-        }
-    }
-    
     renderer->addLight(light);
 
     renderer->attachRenderMaterials(MaterialsList.getValues());

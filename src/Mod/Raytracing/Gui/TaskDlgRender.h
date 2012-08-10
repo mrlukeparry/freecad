@@ -1,0 +1,103 @@
+/***************************************************************************
+ *   Copyright (c) Luke Parry          (l.parry@warwick.ac.uk)    2012     *
+ *                                                                         *
+ *   This file is part of the FreeCAD CAx development system.              *
+ *                                                                         *
+ *   This library is free software; you can redistribute it and/or         *
+ *   modify it under the terms of the GNU Library General Public           *
+ *   License as published by the Free Software Foundation; either          *
+ *   version 2 of the License, or (at your option) any later version.      *
+ *                                                                         *
+ *   This library  is distributed in the hope that it will be useful,      *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU Library General Public License for more details.                  *
+ *                                                                         *
+ *   You should have received a copy of the GNU Library General Public     *
+ *   License along with this library; see the file COPYING.LIB. If not,    *
+ *   write to the Free Software Foundation, Inc., 59 Temple Place,         *
+ *   Suite 330, Boston, MA  02111-1307, USA                                *
+ *                                                                         *
+ ***************************************************************************/
+
+
+#ifndef RAYTRACINGGUI_TaskDlgRender_H
+#define RAYTRACINGGUI_TaskDlgRender_H
+
+#include <QDeclarativeView>
+
+#include <Mod/Raytracing/App/RenderFeature.h>
+#include <Gui/TaskView/TaskDialog.h>
+#include "ViewProviderRender.h"
+
+class SbBox3f;
+
+namespace RaytracingGui {
+
+class RaytracingGuiExport RenderFeatureData : public QObject
+{
+    Q_OBJECT
+public:
+
+    RenderFeatureData(Raytracing::RenderFeature *feat) : feature(feat) {}
+    ~RenderFeatureData(){}
+    // Getters
+    Q_INVOKABLE int getOutputX() const { return (int) feature->OutputX.getValue(); }
+    Q_INVOKABLE int getOutputY() const { return (int) feature->OutputY.getValue(); }
+    Q_INVOKABLE QString getRenderPreset() const { return QString::fromAscii(feature->Preset.getValue()); }
+
+    // Setters
+    Q_INVOKABLE void setOutputX( int x) { feature->OutputX.setValue(x); }
+    Q_INVOKABLE void setOutputY( int y) { feature->OutputY.setValue(y); }
+    Q_INVOKABLE void setRenderPreset(QString val) {feature->Preset.setValue(val.toAscii()); }
+
+private:
+    Raytracing::RenderFeature *feature;
+};
+
+/// simulation dialog for the TaskView
+class RaytracingGuiExport TaskDlgRender : public Gui::TaskView::TaskDialog
+{
+    Q_OBJECT
+
+public:
+    TaskDlgRender(ViewProviderRender *renderView);
+    ViewProviderRender* getRenderView() const { return renderView; }
+    ~TaskDlgRender();
+
+    void getRenderBBox(SbBox3f &box);
+
+public Q_SLOTS:
+  void preview();
+  void previewWindow();
+  void render();
+public:
+
+    /// is called the TaskView when the dialog is opened
+    virtual void open();
+    /// is called by the framework if an button is clicked which has no accept or reject role
+    virtual void clicked(int);
+    /// is called by the framework if the dialog is accepted (Ok)
+    virtual bool accept();
+    /// is called by the framework if the dialog is rejected (Cancel)
+    virtual bool reject();
+    /// is called by the framework if the user presses the help button 
+    virtual void helpRequested();
+    virtual bool isAllowedAlterDocument(void) const
+    { return false; }
+
+    /// returns for Close and Help button 
+//     virtual QDialogButtonBox::StandardButtons getStandardButtons(void) const
+//     { return 0; }
+
+protected:
+  bool isRenderActive();
+  ViewProviderRender *renderView;
+  QDeclarativeView *view ;
+};
+
+
+
+} //namespace RaytracingGui
+
+#endif
