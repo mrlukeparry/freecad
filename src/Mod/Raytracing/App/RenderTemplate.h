@@ -21,84 +21,46 @@
  ***************************************************************************/
 
 
-#ifndef _RenderProcess_h_
-#define _RenderProcess_h_
+#ifndef _RenderTemplate_h_
+#define _RenderTemplate_h_
 
-#include "PreCompiled.h"
-#include <QProcess>
-#include <QImage>
-#include <QBasicTimer>
-#include <QTimerEvent>
 #include <QString>
-#include <QFileSystemWatcher>
-
-# include <TopoDS.hxx>
-# include <gp_Vec.hxx>
-# include <TopoDS_Face.hxx>
-#include <vector>
-
 namespace Raytracing
 {
 
-class RenderProcess : public QProcess
+class RenderTemplate
 {
-  Q_OBJECT
-
 public:
-  enum State {
-    INVALID,
-    VALID,
-    STARTED,
-    RUNNING,
-    FINISHED,
-    TERMINATED,
-    ERROR,
-  };
+    enum TemplateSource {
+    BUILTIN,
+    EXTERNAL};
 
-  RenderProcess(void);
-  ~RenderProcess(void);
+  RenderTemplate(QString id, QString label, QString filename, QString description, QString provider, TemplateSource tempType)
+             : id(id),
+               label(label),
+               filename(filename),
+               description(description),
+               provider(provider),
+               source(tempType)
+               {}
+  ~RenderTemplate(){}
 
-  void addArguments(const QString &arg);
-
-  bool isActive();
-  State getState() { return status; };
-
-  bool isExecPathValid(void);
-//   virtual QImage getOutput() = 0;
-//   virtual QImage getPreview() = 0;
-
-  virtual bool isInputAvailable();
-
-  virtual void initialiseSettings() = 0; // This sets the argument list for the process and is renderer dependant
-  void setArguments(const QStringList &args);
-  void setExecPath(const QString &str);
-  void setInputPath(const QString &str);
-  void setOutputPath(const QString &str);
-
-public Q_SLOTS:
-    void processError(void);
-    void getOutput();
-    void setStatusAsRunning(void) { status = RUNNING; }
-    void begin(void);
-    void stop(void);
-
-Q_SIGNALS:
-    void updateOutput();
-    void finished();
-
-protected:
-  QImage imageOutput;
-  QStringList args;
-  QString execPath;
-  QString inputPath;
-  QString tmpPath;
-  QString outputPath;
-  State status;
+  QString getId() const { return id;}
+  QString getFilename() const { return filename;}
+  QString getLabel() const { return label;}
+  QString getDescription() const { return description;}
+  QString getProvider() const { return provider;}
+  TemplateSource getSource() const { return source;}
 
 private:
-  QFileSystemWatcher watcher;
+  QString id;
+  QString filename;
+  QString label;
+  QString description;
+  QString provider;
+  TemplateSource source;
 };
 
 }
 
-#endif //_RenderProcess_h_
+#endif //_RenderTemplate_h_

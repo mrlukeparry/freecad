@@ -36,10 +36,8 @@ using namespace Raytracing;
 
 // TODO implement QFileSystemWatcher
 
-RenderProcess::RenderProcess() : status(INVALID)
+RenderProcess::RenderProcess() : status(INVALID), watcher(this)
 {
-    updateInterval = 5000; // Default Polling Time
-
     // Connect the signals to update status
     QObject::connect(
         this, SIGNAL(error(QProcess::ProcessError)),
@@ -82,18 +80,19 @@ bool RenderProcess::isActive()
     return (this->status == STARTED || this->status == RUNNING); 
 }
 
-bool RenderProcess::getOutput(QImage &img)
+// Slot
+void RenderProcess::getOutput()
 {
-  QFile file(outputPath);
+    QFile file(outputPath);
 
-  if(!file.open(QIODevice::ReadOnly) || file.size() == 0)
-    return false; // empty file
+    if(!file.open(QIODevice::ReadOnly) || file.size() == 0)
+      return; // empty file
 
-  // Emit a signal
-  Base::Console().Log("Render Output Update\n");
-  Q_EMIT updateOutput();
+    // Emit a signal
+    Base::Console().Log("Render Output Update\n");
+    Q_EMIT updateOutput();
 
-  return true;
+    return;
 }
 bool RenderProcess::isInputAvailable()
 {
@@ -107,15 +106,15 @@ bool RenderProcess::isInputAvailable()
 
 void RenderProcess::addArguments(const QString &arg)
 {
-  this->args.push_back(arg);
+    this->args.push_back(arg);
 }
 
 void RenderProcess::setArguments(const QStringList &Args) {
-  this->args = Args;
+    this->args = Args;
 }
 
 void RenderProcess::setInputPath(const QString &input) {
-  this->inputPath = input;
+    this->inputPath = input;
 }
 
 void RenderProcess::begin()
@@ -126,44 +125,27 @@ void RenderProcess::begin()
         this->status = VALID;
         this->start(execPath, args);
         this->status = STARTED;
-        this->timer.start(this->updateInterval, this);
+
+        // Monitor when there is a change to the output file
+        watcher.addPath(outputPath);
+
+        // Connect the file signal change to get the output
+        QObject::connect(&watcher, SIGNAL(fileChanged(QString)),
+                         this,     SLOT  (getOutput()));
+
         std::string inputFilestr = this->inputPath.toStdString();
-        bool test = true;
         std::string str = this->errorString().toStdString();
-        test = false;
     }
 }
 
 void RenderProcess::processError(void)
 {
-  if(this->timer.isActive()) {
-      this->timer.stop();
-  }
-  this->status = ERROR;
+    this->status = ERROR;
 }
 
 void RenderProcess::stop()
 {
-  this->status = FINISHED;
-  this->terminate();
-  this->timer.stop();
-  Q_EMIT finished();
+    this->status = FINISHED;
+    this->terminate();
+    Q_EMIT finished();
 }
-
-void RenderProcess::setUpdateInterval(float time)
-{
-  this->updateInterval = time;
-  if(this->timer.isActive()) {
-      this->timer.stop();
-      this->timer.start(this->updateInterval, this);
-  }
-}
-
-void RenderProcess::timerEvent(QTimerEvent *event)
-{
-    if (event->timerId() == timer.timerId()) {
-      getOutput(imageOutput);
-    } else {
-        QProcess::timerEvent(event);
-    }
- }
