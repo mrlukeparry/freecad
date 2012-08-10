@@ -90,6 +90,16 @@ PyObject* RenderFeaturePy::setRenderSize(PyObject *args)
     Py_Return;
 }
 
+PyObject* RenderFeaturePy::setUpdateInterval(PyObject *args)
+{
+    int interval;
+    if (!PyArg_ParseTuple(args, "i", &interval))
+        return 0;
+
+    this->getRenderFeaturePtr()->setUpdateInterval(interval);
+    Py_Return;
+}
+
 
 PyObject* RenderFeaturePy::setRenderer(PyObject *args)
 {

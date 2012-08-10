@@ -53,6 +53,7 @@ public:
     App::PropertyString                        Preset;
     App::PropertyString                        SceneTemplate;
     App::PropertyEnumeration                   RendererType;
+    App::PropertyInteger                       UpdateInterval;
     
 //     Part    ::PropertyGeometryList   Geometry;
 //     Sketcher::PropertyConstraintList Constraints;
@@ -95,7 +96,8 @@ public:
     void setRenderTemplate(const char * templateName);
     void setRenderSize(int x, int y);
     void setOutputPath(const char * outputPath);
-
+    void setUpdateInterval(int interval);
+    
     // from base class
     virtual PyObject *getPyObject(void);
     virtual unsigned int getMemSize(void) const;

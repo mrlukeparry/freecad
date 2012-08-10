@@ -38,7 +38,7 @@ using namespace Raytracing;
 
 RenderProcess::RenderProcess() : status(INVALID)
 {
-    updateInterval = 3000; // Default Polling Time
+    updateInterval = 5000; // Default Polling Time
 
     // Connect the signals to update status
     QObject::connect(

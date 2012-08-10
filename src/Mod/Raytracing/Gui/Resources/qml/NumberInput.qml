@@ -22,39 +22,42 @@ Item {
         border.color: "#ffffff"
         clip: true
         color: "#111111"
+    }
 
+    Text {
+        id: inputLabel
+        anchors.left:  parent.left
+        anchors.leftMargin: 6
+        anchors.verticalCenter: parent.verticalCenter
+        font.pointSize: 10
+        color: textInput.color
+        opacity: 0.8
+    }
 
+    MouseArea {
+        anchors.fill: parent
+        onClicked: textInput.forceActiveFocus()
     }
 
     TextInput {
         id: textInput
-        anchors.fill: parent
-        anchors.margins: 2
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.margins: 5
+        anchors.right: suffixLabel.left
         color: "#ffffff"
         selectByMouse: true
         font.pointSize: 10
-        horizontalAlignment: TextInput.AlignHCenter
+        horizontalAlignment: TextInput.AlignRight
         onFocusChanged: function() {if(textInput.acceptableInput) { numberInput.valueChanged()} }()
-
-        Text {
-            id: inputLabel
-            anchors.left:  parent.left
-            anchors.leftMargin: 3
-            anchors.verticalCenter: parent.verticalCenter
-            font.pointSize: 10
-            color: textInput.color
-            opacity: 0.8
-        }
-
-        Text {
-            id: suffixLabel
-            anchors.right:  parent.right
-            anchors.rightMargin: 3
-            anchors.bottomMargin: 3
-            anchors.bottom: parent.bottom
-            font.pointSize: 7
-            color: parent.color
-        }        
+    }
+    Text {
+        id: suffixLabel
+        anchors.right:  parent.right
+        anchors.rightMargin: 5
+        anchors.bottomMargin: 3
+        anchors.bottom: parent.bottom
+        font.pointSize: 7
+        color: textInput.color
     }
 
 

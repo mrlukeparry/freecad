@@ -75,6 +75,7 @@ public:
   void setExecPath(const QString &str);
   void setInputPath(const QString &str);
   void setOutputPath(const QString &str);
+  void setUpdateInterval(int msecs) { updateInterval = msecs; }
 
 public Q_SLOTS:
     void processError(void);
@@ -96,7 +97,7 @@ protected:
   State status;
 
 private:
-  float updateInterval;
+  int updateInterval;
   QBasicTimer timer;
 };
 

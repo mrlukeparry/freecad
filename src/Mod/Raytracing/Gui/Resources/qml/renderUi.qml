@@ -101,6 +101,20 @@ Item {
 
                      } // Row End
                      Row {
+                        width: parent.width
+                        NumberInput {
+                            id: updateInterval
+                            width: parent.width
+                            numDigits: 4
+                            text: (renderFeature.getUpdateInterval() / 1000).toString() // in seconds
+                            inputMask: "0000"
+                            onValueChanged: renderFeature.setUpdateInterval(parseInt(updateInterval.text) * 1000) // in milliseconds
+                            suffix: "s"
+                            label: "Update Interval:"
+                        }
+
+                     } // Row End
+                     Row {
                          width: parent.width
 
                          ComboBox {
@@ -111,7 +125,7 @@ Item {
                              height: 20
                              onComboClicked: renderFeature.setRenderPreset(renderPreset.selectedItem)
                          }
-                     }
+                     } // Row End
                      Row {
                          width: parent.width
 
@@ -123,7 +137,8 @@ Item {
                              height: 20
                              onComboClicked: renderFeature.setRenderTemplate(renderPreset.selectedItem)
                          }
-                     }
+                     } // Row End
+
 
                 } // Column End
             }

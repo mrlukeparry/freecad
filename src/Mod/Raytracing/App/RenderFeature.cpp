@@ -62,6 +62,7 @@ RenderFeature::RenderFeature()
     ADD_PROPERTY(SceneTemplate,(""));
     ADD_PROPERTY(OutputX,(800));
     ADD_PROPERTY(OutputY,(800));
+    ADD_PROPERTY(UpdateInterval,(3000));
     RendererType.setEnums(TypeEnums);
 
     renderer = 0;
@@ -215,6 +216,7 @@ void RenderFeature::preview(int x1, int y1, int x2, int y2)
     // Argument Variables are temporary
     renderer->setRenderTemplate(SceneTemplate.getValue());
     renderer->attachRenderMaterials(MaterialsList.getValues());
+    renderer->setUpdateInteval(UpdateInterval.getValue());
     renderer->setRenderPreset(Preset.getValue());
     renderer->setRenderSize(OutputX.getValue(), OutputY.getValue());
     renderer->preview(x1, y1, x2, y2);
@@ -240,6 +242,7 @@ void RenderFeature::preview()
     renderer->setRenderTemplate(SceneTemplate.getValue());
     renderer->attachRenderMaterials(MaterialsList.getValues());
     renderer->setRenderPreset(Preset.getValue());
+    renderer->setUpdateInteval(UpdateInterval.getValue());
     renderer->setRenderSize(OutputX.getValue(), OutputY.getValue());
     renderer->preview();
 }
@@ -252,6 +255,7 @@ void RenderFeature::render()
     renderer->attachRenderMaterials(MaterialsList.getValues());
     renderer->setRenderTemplate(SceneTemplate.getValue());
     renderer->setRenderPreset(Preset.getValue());
+    renderer->setUpdateInteval(UpdateInterval.getValue());
     renderer->setRenderSize(OutputX.getValue(), OutputY.getValue());
     renderer->render();
 }
@@ -335,6 +339,11 @@ void RenderFeature::setOutputPath(const char * outputPath)
        Base::Console().Error("Renderer is not available\n");
 
     renderer->setOutputPath(outputPath);
+}
+
+void RenderFeature::setUpdateInterval(int interval)
+{
+  this->UpdateInterval.setValue(interval);
 }
 
 App::DocumentObjectExecReturn *RenderFeature::execute(void)

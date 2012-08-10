@@ -122,6 +122,7 @@ public:
     void setCamera(const Base::Vector3d &camPos, const Base::Vector3d &CamDir, const Base::Vector3d &Up, const Base::Vector3d &lookAt);
     void setOutputPath(const char *loc) { outputPath = loc; }
     void setRenderSize(int x, int y) { xRes = x; yRes = y;}
+    void setUpdateInteval(int msecs) { updateInterval = msecs; }
 
     //virtual void loadSceneDefinition(const char *file);
     //virtual void Restore(Base::XMLReader &/*reader*/);
@@ -168,6 +169,7 @@ protected:
 
     int xRes;
     int yRes;
+    int updateInterval;
     RenderMode mode;
     int previewCoords[4];
 };

@@ -46,12 +46,14 @@ public:
     Q_INVOKABLE int getOutputY() const { return (int) feature->OutputY.getValue(); }
     Q_INVOKABLE QString getRenderPreset() const { return QString::fromAscii(feature->Preset.getValue()); }
     Q_INVOKABLE QString getRenderTemplate() const { return QString::fromAscii(feature->SceneTemplate.getValue()); }
+    Q_INVOKABLE int getUpdateInterval() const { return (int) (feature->UpdateInterval.getValue()); }
 
     // Setters
     Q_INVOKABLE void setOutputX( int x) { feature->OutputX.setValue(x); }
     Q_INVOKABLE void setOutputY( int y) { feature->OutputY.setValue(y); }
     Q_INVOKABLE void setRenderPreset(QString val) {feature->Preset.setValue(val.toAscii()); }
     Q_INVOKABLE void setRenderTemplate(QString val) {feature->SceneTemplate.setValue(val.toAscii()); }
+    Q_INVOKABLE void setUpdateInterval( int msecs) { feature->UpdateInterval.setValue(msecs); }
 
 private:
     Raytracing::RenderFeature *feature;

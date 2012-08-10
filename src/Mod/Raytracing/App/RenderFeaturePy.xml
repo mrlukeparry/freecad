@@ -38,6 +38,11 @@
         <UserDocu>Set the output size for the render</UserDocu>
       </Documentation>
     </Methode>
+    <Methode Name="setUpdateInterval">
+      <Documentation>
+        <UserDocu>Set the update interval for the preview</UserDocu>
+      </Documentation>
+    </Methode>
     <Methode Name="setOutputPath">
       <Documentation>
         <UserDocu>Set the output path for the render</UserDocu>
