@@ -67,7 +67,9 @@ TaskDlgRender::TaskDlgRender(ViewProviderRender *vp)
     : TaskDialog(),
       renderView(vp)
 {
-
+    assert(renderView);
+    documentName = renderView->getObject()->getDocument()->getName();
+    
     view = new QDeclarativeView ();
 
     RenderFeature *feat = this->getRenderView()->getRenderFeature();

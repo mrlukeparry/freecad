@@ -26,6 +26,9 @@
 # endif
 
 /// Here the FreeCAD includes sorted by Base,App,Gui......
+
+#include <Inventor/nodes/SoCamera.h>
+
 #include <Base/Console.h>
 #include <Base/Parameter.h>
 #include <Base/Exception.h>
@@ -46,9 +49,11 @@
 #include <Gui/BitmapFactory.h>
 #include <Gui/ViewProviderDocumentObjectGroup.h>
 
+#include <Mod/Raytracing/App/RenderCamera.h>
 #include "ViewProviderRender.h"
 #include "TaskDlgRender.h"
 
+using namespace Raytracing;
 using namespace RaytracingGui;
 
 PROPERTY_SOURCE(RaytracingGui::ViewProviderRender, Gui::ViewProviderDocumentObject)
@@ -137,7 +142,6 @@ bool ViewProviderRender::setEdit(int ModNum)
     else
         Gui::Control().showDialog(new TaskDlgRender(this));
 
-
     return true;
 }
 
@@ -145,5 +149,28 @@ bool ViewProviderRender::doubleClicked(void)
 {
     Gui::Application::Instance->activeDocument()->setEdit(this);
     return true;
+}
+
+
+void ViewProviderRender::setEditViewer(Gui::View3DInventorViewer* viewer, int ModNum)
+{
+    RenderCamera *cam = getRenderFeature()->getCamera();
+    Base::Vector3d lookAt =  cam->LookAt;
+    Base::Vector3d pos =  cam->CamPos;
+    Base::Vector3d camUp =  cam->Up;
+
+    SoCamera *myCam = viewer->getCamera();
+
+    // Set to render feature's camera
+    myCam->position.setValue(SbVec3f(pos.x, pos.y, pos.z));
+    myCam->pointAt(SbVec3f(lookAt.x, lookAt.y, lookAt.z), SbVec3f(camUp.x, camUp.y, camUp.z));
+    myCam->focalDistance.setValue((lookAt - pos).Length());
+
+    viewer->setEditing(TRUE);
+}
+
+void ViewProviderRender::unsetEditViewer(Gui::View3DInventorViewer* viewer)
+{
+    viewer->setEditing(FALSE);
 }
 

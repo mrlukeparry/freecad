@@ -66,15 +66,28 @@
 
 #include <Mod/Raytracing/App/renderer/lux/LuxRender.h>
 #include <Mod/Raytracing/App/Appearances.h>
+#include <Mod/Raytracing/Gui/ViewProviderRender.h>
 
 #include "FreeCADpov.h"
 #include "RenderView.h"
 #include "TaskDlgAppearances.h"
 
-
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+// Helpers
 using namespace Raytracing;
 using namespace RaytracingGui;
+
+bool isToolActive(Gui::Document *doc)
+{
+    if (doc) {
+        // checks if a Sketch Viewprovider is in Edit and is in no special mode
+        if (doc->getInEdit() && doc->getInEdit()->isDerivedFrom(RaytracingGui::ViewProviderRender::getClassTypeId())) {
+            return true;
+        }
+    }
+    return false;
+}
 //===========================================================================
 // CmdRaytracingWriteCamera
 //===========================================================================
@@ -326,10 +339,7 @@ void CmdRaytracingAddAppearances::activated(int iMsg)
 
 bool CmdRaytracingAddAppearances::isActive(void)
 {
-    if (getActiveGuiDocument())
-        return true;
-    else
-        return false;
+    return isToolActive(getActiveGuiDocument());
 }
 
 

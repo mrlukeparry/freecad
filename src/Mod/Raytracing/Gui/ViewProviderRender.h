@@ -27,6 +27,8 @@
 #include <Mod/Raytracing/App/RenderFeature.h>
 #include <Gui/ViewProviderDocumentObjectGroup.h>
 
+#include <Gui/View3DInventorViewer.h>
+
 namespace RaytracingGui {
 
 class RaytracingGuiExport ViewProviderRender : public Gui::ViewProviderDocumentObject
@@ -55,6 +57,8 @@ public:
     bool mouseMove(const SbVec3f &pos, const SbVec3f &norm, const SoPickedPoint* pp);
 protected:
     bool setEdit(int ModNum);
+    void unsetEditViewer(Gui::View3DInventorViewer* viewer);
+    void setEditViewer(Gui::View3DInventorViewer* viewer, int ModNum);
 
 };
 
