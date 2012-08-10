@@ -47,6 +47,7 @@ Item {
 
 
             ListView {
+
                 id:listView
                 height:150;
                 clip: true
@@ -82,6 +83,14 @@ Item {
                             listView.currentIndex = index;
                         }
                     }
+                }
+
+                ScrollBar {
+                    flickable: parent
+                    vertical: true
+                    color: "#fff"
+                    anchors.right: parent.right
+                    anchors.rightMargin: 5
                 }
             }
         }
