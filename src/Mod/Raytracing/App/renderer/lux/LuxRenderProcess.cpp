@@ -23,6 +23,7 @@
 #ifndef _PreComp_
 #endif
 
+#include <App/Application.h>
 #include <Base/Console.h>
 #include <Base/Exception.h>
 
@@ -37,7 +38,11 @@ void LuxRenderProcess::initialiseSettings()
 {
     // Set the render process properties
     // For current simplicity assume luxrender is in home
-    execPath = QString::fromAscii("/home/mrlukeparry/luxconsole");
+
+    ParameterGrp::handle hGrp = App::GetApplication().GetParameterGroupByPath("User parameter:BaseApp/Preferences/Mod/Raytracing");
+    std::string path = hGrp->GetASCII("luxRenderExecPath");
+
+    execPath = QString::fromStdString(path);
     //outputPath = QString::fromAscii("test.png");
 
     // Add Output

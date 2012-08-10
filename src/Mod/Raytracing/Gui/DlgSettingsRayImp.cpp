@@ -55,6 +55,7 @@ void DlgSettingsRayImp::saveSettings()
     prefFloatSpinBox1->onSave();
     prefCheckBox8->onSave();
     prefCheckBox9->onSave();
+    prefFileChooserLux->onSave();
 }
 
 void DlgSettingsRayImp::loadSettings()
@@ -65,6 +66,7 @@ void DlgSettingsRayImp::loadSettings()
     prefFloatSpinBox1->onRestore();
     prefCheckBox8->onRestore();
     prefCheckBox9->onRestore();
+    prefFileChooserLux->onRestore();
 }
 
 /**

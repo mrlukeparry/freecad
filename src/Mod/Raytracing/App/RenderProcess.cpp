@@ -64,6 +64,12 @@ void RenderProcess::setOutputPath(const QString &str)
 
 bool RenderProcess::isExecPathValid()
 {
+    // Check if the exec path has been set
+    if (this->execPath.isEmpty()) {
+        Base::Console().Error("Please ensure that the exec path is set\n");
+        return false;
+    }
+
     QFile file(this->execPath);
     bool exists = file.exists();
     QFile::Permissions perm = file.permissions();
