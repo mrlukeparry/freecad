@@ -12,6 +12,7 @@ Item {
         height: 30;
         z: 100;
 
+        onFocusChanged: function() { if (!comboBox.focus){ comboBox.state = ""} }()
         Rectangle {
 
             id:chosenItem
@@ -39,7 +40,7 @@ Item {
                 anchors.fill: parent;
                 onClicked: {
                     comboBox.state = comboBox.state=== "dropDown" ? "" : "dropDown"
-                    parent.focus = true;
+                    comboBox.focus = true;
                 }
             }
 
