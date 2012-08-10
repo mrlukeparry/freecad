@@ -143,6 +143,7 @@ bool ViewProviderRender::setEdit(int ModNum)
 
 bool ViewProviderRender::doubleClicked(void)
 {
+    Gui::Application::Instance->activeDocument()->setEdit(this);
     return true;
 }
 
