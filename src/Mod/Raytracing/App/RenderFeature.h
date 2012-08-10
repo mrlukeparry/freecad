@@ -51,6 +51,7 @@ public:
     App::PropertyInteger                       OutputX;
     App::PropertyInteger                       OutputY;
     App::PropertyString                        Preset;
+    App::PropertyString                        SceneTemplate;
     App::PropertyEnumeration                   RendererType;
     
 //     Part    ::PropertyGeometryList   Geometry;
@@ -91,6 +92,7 @@ public:
     void setCamera(const Base::Vector3d &v1, const Base::Vector3d &v2, const Base::Vector3d &v3, const Base::Vector3d &v4, const char *camType);
     RenderCamera * getCamera(void);
     void setRenderPreset(const char * presetName);
+    void setRenderTemplate(const char * templateName);
     void setRenderSize(int x, int y);
     void setOutputPath(const char * outputPath);
 

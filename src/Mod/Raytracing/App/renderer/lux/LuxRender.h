@@ -45,6 +45,7 @@ protected:
     QString genLight(RenderLight *light) const;
     QString genMaterial(RenderMaterial *mat);
     QString genObject(RenderPart *object);
+    QString genRenderTemplate();
     QString genRenderProps();
 };
 

@@ -81,6 +81,7 @@ void Renderer::clear()
       delete *it;
     }
     clearPresets();
+    clearTemplates();
     materials.empty(); // We don't delete these because they are only list of RenderMaterial references
     lights.clear();
     parts.clear();
@@ -123,6 +124,7 @@ bool Renderer::getOutputStream(QTextStream &ts)
     ts.setDevice(&inputFile);
 }
 
+/* ------- Methods for Handling Render Presets ---------- */
 void Renderer::clearPresets(void)
 {
     // For safety reset the render preset to null pointer
@@ -274,6 +276,167 @@ std::vector<RenderMaterial *> Renderer::getRenderPartMaterials(RenderPart *part)
     }
     return mats;
 }
+
+
+// --------- Methods related to Template Management ---------------//
+void Renderer::clearTemplates(void)
+{
+    // For safety reset the render preset to null pointer
+    renderTemplate = 0;
+
+    for (std::vector<RenderTemplate *>::iterator it = libraryTemplates.begin(); it != libraryTemplates.end(); ++it) {
+      delete *it;
+    }
+    libraryTemplates.empty();
+}
+
+std::vector<RenderTemplate *> Renderer::parseTemplateXML(QString filename)
+{
+    std::vector<RenderTemplate *> fndTemplates;
+    // Load the XML File
+    QFile file(filename);
+    if (!file.open(QFile::ReadOnly | QFile::Text))
+      return fndTemplates; // The file couldn't be read
+
+    QFileInfo fileInfo(file);
+    QDir fileDir = fileInfo.absoluteDir();
+
+    QXmlStreamReader xml;
+    // Set the xml stream to use the file
+    xml.setDevice(&file);
+
+    QString provider;
+    while (xml.readNextStartElement()) {
+        if (xml.name() == "Templates") {
+            provider = xml.attributes().value(QString::fromAscii("render")).toString();
+        } else if (xml.name() == "Template") {
+            // Process this Preset Attribute
+            QString id, label, filename, description, source;
+            id = xml.attributes().value(QString::fromAscii("id")).toString(); // possibly should be hased to ensure unique
+            source = xml.attributes().value(QString::fromAscii("source")).toString();
+            do {
+                xml.readNextStartElement();
+                if (xml.name() == "label")
+                    label = xml.readElementText();
+                else if (xml.name() == "description")
+                    description = xml.readElementText();
+                else if (xml.name() == "filename")
+                    filename = xml.readElementText();
+            } while(!xml.atEnd());
+
+            if(id.isEmpty() || source.isEmpty() || label.isEmpty() || filename.isEmpty() ||
+               description.isEmpty() || provider.isEmpty())
+                continue;
+
+            // Make the filename absolute
+            filename = fileDir.absoluteFilePath(filename);
+
+            RenderTemplate::TemplateSource sourceType;
+            if(source == QString::fromAscii("builtin")){
+                sourceType = RenderTemplate::BUILTIN;
+            } else if(source  == QString::fromAscii("external")) {
+                sourceType = RenderTemplate::EXTERNAL;
+            }
+
+            RenderTemplate *myTemplate = new RenderTemplate(id, label, filename, description, provider, sourceType);
+
+            // Append this preset
+            fndTemplates.push_back(myTemplate);
+        }
+    }
+
+    if (xml.hasError()) {
+    //           ... // do error handling
+    }
+    file.close();
+
+    return fndTemplates;
+}
+
+void Renderer::setRenderTemplate(const char *templateId)
+{
+    RenderTemplate *fndTemplate = getRenderTemplate(templateId);
+    if(!fndTemplate)
+      return; // Thrown an exception?
+
+    renderTemplate = fndTemplate;
+}
+
+// TODO Don't actually think this method is needed
+void Renderer::setRenderTemplate(RenderTemplate *temp)
+{
+    if(!getRenderTemplate(temp->getId().toAscii()))
+        return; // throw an exception
+
+     renderTemplate = temp;
+}
+
+void Renderer::scanTemplates(void)
+{
+  // Clear the templates collection
+    clearTemplates();
+
+    // Note this is not recursive, it will only find XML files one level down.
+    // List of all XML files with absolute path name
+    QStringList parseList;
+
+  //Find a list of xml files within the
+    QDir myDir(QString::fromStdString(renderTemplatesPath));
+
+    //Find any subdirectories containing templates but only one level down
+    QStringList dirlist = myDir.entryList(QDir::Dirs | QDir::NoDotDot);
+
+    QStringList fileExt;
+    fileExt.push_back(QString::fromAscii("*.xml"));
+
+    // Iterate through
+    for (QStringList::const_iterator it=dirlist.begin(); it!=dirlist.end(); ++it){
+        QDir dir = myDir;
+        dir.cd(*it);
+        QStringList xmlFiles = dir.entryList(fileExt );
+        for (QStringList::const_iterator file=xmlFiles.begin(); file!=xmlFiles.end(); ++file){
+            parseList.append(dir.absoluteFilePath(*file));
+        }
+    }
+
+    // Need to add parselist from  own library
+    if(parseList.size() == 0)
+      return;
+    // Process all these xml file into Materials
+
+        // Iterate through
+    for (QStringList::const_iterator it=parseList.begin(); it!=parseList.end(); ++it)
+    {
+        //Parse the XML
+        std::vector<RenderTemplate *> fndTemplates = parseTemplateXML(*it);
+        if(fndTemplates.size() > 0)
+        {
+            //If successful store these materials in the collection
+            for ( std::vector<RenderTemplate *>::const_iterator it = fndTemplates.begin(); it != fndTemplates.end(); ++it)
+                libraryTemplates.push_back(*it);
+        } else {
+          // Throw an exception?
+        }
+    }
+}
+
+RenderTemplate * Renderer::getRenderTemplate(const char *id) const
+{
+    for (std::vector<RenderTemplate *>::const_iterator it = libraryTemplates.begin(); it != libraryTemplates.end(); ++it) {
+        if((*it)->getId() == QString::fromAscii(id))
+            return *it;
+    }
+
+    return 0;
+}
+
+std::vector<RenderTemplate *> Renderer::getRenderTemplates(void) const
+{
+  return libraryTemplates;
+}
+
+
+    
 void Renderer::finish()
 {
   if(!process || !process->isActive())

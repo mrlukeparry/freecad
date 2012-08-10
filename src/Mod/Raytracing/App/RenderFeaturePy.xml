@@ -48,6 +48,11 @@
         <UserDocu>Attach a render camera to the Renderer</UserDocu>
       </Documentation>
     </Methode>
+    <Methode Name="setRenderTemplate">
+      <Documentation>
+        <UserDocu>Set the render template to be used</UserDocu>
+      </Documentation>
+    </Methode>
     <Methode Name="setRenderPreset">
       <Documentation>
         <UserDocu>Set the render preset</UserDocu>

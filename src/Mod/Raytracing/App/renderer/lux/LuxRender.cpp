@@ -87,6 +87,9 @@ LuxRender::LuxRender(void)
 {
     renderPresetsPath = App::Application::getResourceDir() + "Mod/Raytracing/Presets/Lux";
     scanPresets();
+
+    renderTemplatesPath = App::Application::getResourceDir() + "Mod/Raytracing/Templates/Lux";
+    scanTemplates();
 }
 LuxRender::~LuxRender(void){}
 
@@ -102,6 +105,9 @@ void LuxRender::generateScene()
         << "#Scene Specific Information:" << endl
         << "WorldBegin" << endl;
 
+    // Add the template
+    out << genRenderTemplate();
+
     for (std::vector<RenderLight *>::iterator it = lights.begin(); it != lights.end(); ++it) {
         out << genLight(*it);
     }
@@ -110,53 +116,6 @@ void LuxRender::generateScene()
     }
 
     out << "\nWorldEnd";
-}
-
-
-// Renderer "sampler"
-// 
-// Sampler "metropolis"
-//         "float largemutationprob" [0.400000005960464]
-//         "bool usevariance" ["false"]
-// 
-// Accelerator "qbvh"
-// 
-// SurfaceIntegrator "bidirectional"
-//         "integer eyedepth" [48]
-//         "integer lightdepth" [48]
-// 
-// VolumeIntegrator "multi"
-//         "float stepsize" [1.000000000000000]
-// 
-// PixelFilter "mitchell"
-//         "bool supersample" ["true"]
-
-QString LuxRender::genRenderProps()
-{
-
-    QString outStr;
-    QTextStream out(&outStr);
-
-    if(!preset)
-      return outStr; // Throw exception?
-
-    out << "# Scene render Properties:" << endl;
-
-    //Open the filename and append
-    QFile file(preset->getFilename());
-    if(!file.open(QFile::ReadOnly))
-        return outStr;
-
-    // Read the external material file
-    QTextStream textStr(&file);
-    while(!textStr.atEnd())
-    {
-        out << textStr.readAll();
-    }
-
-    out << "\nFilm \"fleximage\" \"integer xresolution\" [" << this->xRes << "] \"integer yresolution\" [" << yRes << "]" << endl;
-    out << "\n\t\"integer writeinterval\" 3" << endl;
-    return outStr;
 }
 
 QString LuxRender::genLight(RenderLight *light) const
@@ -242,6 +201,60 @@ QString LuxRender::genCamera(RenderCamera *camera) const
         y2 = (float) previewCoords[3] / yRes * 2 - 1;
         out << "\t\"float screenwindow\" [" << x1 << " " << y1 << " " << x2 << " " << y2 << "]";
     }
+    return outStr;
+}
+
+QString LuxRender::genFace(const TopoDS_Face& aFace, int index )
+{
+    QString outStr;
+    QTextStream out(&outStr);
+
+    // this block mesh the face and transfers it in a C array of vertices and face indexes
+    Standard_Integer nbNodesInFace,nbTriInFace;
+    gp_Vec* verts=0;
+    gp_Vec* vertNorms=0;
+    long* cons=0;
+
+    transferToArray(aFace,&verts,&vertNorms,&cons,nbNodesInFace,nbTriInFace);
+
+    if (!verts)
+      return outStr;
+
+    out << "#Face Number: " << index << endl
+        << "AttributeBegin" << endl
+        << "\tShape \"trianglemesh\" \"string name\" \"Face " << index << "\"" << endl;
+
+    // Write the Vertex Points in order
+    out << "\n\t\"point P\"" << endl
+        << "\t[" << endl;
+    for (int i = 0; i < nbNodesInFace; i++) {
+        out << "\t\t" <<  verts[i].X() << " " << verts[i].Y() << " " << verts[i].Z() << " " << endl;
+    }
+    out << "\t]" << endl; // End Property
+
+    // Write the Normals in order
+    out << "\n\t\"normal N\"" << endl
+        << "\t[" << endl;
+    for (int j = 0; j < nbNodesInFace; j++) {
+        out << "\t\t" <<  vertNorms[j].X() << " " << vertNorms[j].Y() << " " << vertNorms[j].Z() << " " << endl;
+    }
+    out << "\t]" << endl; // End Property
+
+    // Write the Face Indices in order
+    out << "\n\t\"integer indices\"" << endl
+        << "\t[" << endl;
+   for (int k = 0; k < nbTriInFace; k++) {
+        out << "\t\t" <<  cons[3 * k] << " " << cons[3 * k + 2] << " " << cons[3 * k + 1] << endl;
+    }
+    out << "\t]" << endl; // End Property
+
+    // End of Face
+    out << "AttributeEnd\n" << endl;
+
+    delete [] vertNorms;
+    delete [] verts;
+    delete [] cons;
+
     return outStr;
 }
 
@@ -342,56 +355,76 @@ QString LuxRender::genObject(RenderPart *obj)
     return outStr;
 }
 
-QString LuxRender::genFace(const TopoDS_Face& aFace, int index )
+// Renderer "sampler"
+//
+// Sampler "metropolis"
+//         "float largemutationprob" [0.400000005960464]
+//         "bool usevariance" ["false"]
+//
+// Accelerator "qbvh"
+//
+// SurfaceIntegrator "bidirectional"
+//         "integer eyedepth" [48]
+//         "integer lightdepth" [48]
+//
+// VolumeIntegrator "multi"
+//         "float stepsize" [1.000000000000000]
+//
+// PixelFilter "mitchell"
+//         "bool supersample" ["true"]
+
+QString LuxRender::genRenderProps()
+{
+
+    QString outStr;
+    QTextStream out(&outStr);
+
+    if(!preset)
+      return outStr; // Throw exception?
+
+    out << "# Scene render Properties:" << endl;
+
+    //Open the filename and append
+    QFile file(preset->getFilename());
+    if(!file.open(QFile::ReadOnly))
+        return outStr;
+
+    // Read the external preset file
+    QTextStream textStr(&file);
+    while(!textStr.atEnd())
+    {
+        out << textStr.readAll();
+    }
+
+    out << "\nFilm \"fleximage\" \"integer xresolution\" [" << this->xRes << "] \"integer yresolution\" [" << yRes << "]" << endl;
+    out << "\n\t\"integer writeinterval\" 3" << endl;
+    return outStr;
+}
+
+QString LuxRender::genRenderTemplate()
 {
     QString outStr;
     QTextStream out(&outStr);
 
-    // this block mesh the face and transfers it in a C array of vertices and face indexes
-    Standard_Integer nbNodesInFace,nbTriInFace;
-    gp_Vec* verts=0;
-    gp_Vec* vertNorms=0;
-    long* cons=0;
+    if(!renderTemplate)
+      return outStr; // Throw exception?
 
-    transferToArray(aFace,&verts,&vertNorms,&cons,nbNodesInFace,nbTriInFace);
+    out << "# Scene Template" << endl;
 
-    if (!verts)
-      return outStr;
+    if(renderTemplate->getSource() == RenderTemplate::EXTERNAL)
+    {
+        //Open the filename and append
+        QFile file(renderTemplate->getFilename());
+        if(!file.open(QFile::ReadOnly))
+            return outStr;
 
-    out << "#Face Number: " << index << endl
-        << "AttributeBegin" << endl
-        << "\tShape \"trianglemesh\" \"string name\" \"Face " << index << "\"" << endl;
-
-    // Write the Vertex Points in order
-    out << "\n\t\"point P\"" << endl
-        << "\t[" << endl;
-    for (int i = 0; i < nbNodesInFace; i++) {
-        out << "\t\t" <<  verts[i].X() << " " << verts[i].Y() << " " << verts[i].Z() << " " << endl;
+        // Read the external template file
+        QTextStream textStr(&file);
+        while(!textStr.atEnd())
+        {
+            out << textStr.readAll();
+        }
     }
-    out << "\t]" << endl; // End Property
-
-    // Write the Normals in order
-    out << "\n\t\"normal N\"" << endl
-        << "\t[" << endl;
-    for (int j = 0; j < nbNodesInFace; j++) {
-        out << "\t\t" <<  vertNorms[j].X() << " " << vertNorms[j].Y() << " " << vertNorms[j].Z() << " " << endl;
-    }
-    out << "\t]" << endl; // End Property
-
-    // Write the Face Indices in order
-    out << "\n\t\"integer indices\"" << endl
-        << "\t[" << endl;
-   for (int k = 0; k < nbTriInFace; k++) {
-        out << "\t\t" <<  cons[3 * k] << " " << cons[3 * k + 2] << " " << cons[3 * k + 1] << endl;
-    }
-    out << "\t]" << endl; // End Property
-
-    // End of Face
-    out << "AttributeEnd\n" << endl;
-
-    delete [] vertNorms;
-    delete [] verts;
-    delete [] cons;
 
     return outStr;
 }

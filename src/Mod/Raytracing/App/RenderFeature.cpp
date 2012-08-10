@@ -59,6 +59,7 @@ RenderFeature::RenderFeature()
 {
     ADD_PROPERTY(RendererType,((long)0));
     ADD_PROPERTY(Preset,(""));
+    ADD_PROPERTY(SceneTemplate,(""));
     ADD_PROPERTY(OutputX,(800));
     ADD_PROPERTY(OutputY,(800));
     RendererType.setEnums(TypeEnums);
@@ -212,6 +213,7 @@ void RenderFeature::preview(int x1, int y1, int x2, int y2)
         return;
 
     // Argument Variables are temporary
+    renderer->setRenderTemplate(SceneTemplate.getValue());
     renderer->attachRenderMaterials(MaterialsList.getValues());
     renderer->setRenderPreset(Preset.getValue());
     renderer->setRenderSize(OutputX.getValue(), OutputY.getValue());
@@ -234,7 +236,7 @@ void RenderFeature::preview()
     light->setPlacement(lightPos, lightRot);
 
     renderer->addLight(light);
-
+    renderer->setRenderTemplate(SceneTemplate.getValue());
     renderer->attachRenderMaterials(MaterialsList.getValues());
     renderer->setRenderPreset(Preset.getValue());
     renderer->setRenderSize(OutputX.getValue(), OutputY.getValue());
@@ -247,6 +249,7 @@ void RenderFeature::render()
         return;
 
     renderer->attachRenderMaterials(MaterialsList.getValues());
+    renderer->setRenderTemplate(SceneTemplate.getValue());
     renderer->setRenderPreset(Preset.getValue());
     renderer->setRenderSize(OutputX.getValue(), OutputY.getValue());
     renderer->render();
@@ -311,6 +314,19 @@ void RenderFeature::setRenderPreset(const char * presetName)
     Preset.setValue(presetName);
 }
 
+void RenderFeature::setRenderTemplate(const char * templateName)
+{
+    if(!renderer)
+       Base::Console().Error("Renderer is not available\n");
+
+    // Check if the Render Preset exists for the given render backend
+    RenderTemplate *fndTemplate = renderer->getRenderTemplate(templateName);
+    if(!fndTemplate)
+        Base::Console().Error("The Render Template couldn't be found\n");
+
+    // Finally Set the Render Preset
+    SceneTemplate.setValue(templateName);
+}
 
 void RenderFeature::setOutputPath(const char * outputPath)
 {

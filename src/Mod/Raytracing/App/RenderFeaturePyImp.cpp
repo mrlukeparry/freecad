@@ -113,6 +113,16 @@ PyObject* RenderFeaturePy::setRenderPreset(PyObject *args)
     Py_Return;
 }
 
+PyObject* RenderFeaturePy::setRenderTemplate(PyObject *args)
+{
+    char *templateName;
+    if (!PyArg_ParseTuple(args, "s", &templateName))
+        return 0;
+
+    this->getRenderFeaturePtr()->setRenderTemplate(templateName);
+    Py_Return;
+}
+
 PyObject* RenderFeaturePy::removeRenderMaterialFromPart(PyObject *args)
 {
     char *partName;

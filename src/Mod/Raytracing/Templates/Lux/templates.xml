@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<!--
+ FreeCAD Materials LUX Render, see http://free-cad.sourceforge.net for more information...
+-->
+<Document SchemaVersion="1">
+  <Templates>
+    <Template id="lux_default" type="external" render="lux">
+      <label>Lux Default</label>
+      <description>Default Lux Render Scene</description>
+      <filename>default.lxs</filename>
+      <provides>default</provides>
+    </Template>
+  </Templates>
+</Document>

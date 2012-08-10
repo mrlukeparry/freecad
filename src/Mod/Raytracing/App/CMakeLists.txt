@@ -44,6 +44,10 @@ set(Raytracing_MOC_HDRS
 fc_wrap_cpp(Raytracing_MOC_SRCS ${Raytracing_MOC_HDRS})
 SOURCE_GROUP("Moc" FILES ${Raytracing_MOC_SRCS})
 
+SET(LuxRenderTemplates
+    Templates/Lux/Default/Default.xml
+    Templates/Lux/Default/Default.lxs
+)
 
 SET(LuxRenderPresets
     Presets/Lux/luxPresets.xml
@@ -134,12 +138,16 @@ SET(Raytracing_SRCS
     ${Python_SRCS}
 )
 
-SET(Raytracing_Materials
+SET(Raytracing_RenderMaterials
     ${LuxMaterials}
 )
 
 SET(Raytracing_RenderPresets
     ${LuxRenderPresets}
+)
+
+SET(Raytracing_RenderTemplates
+    ${LuxRenderTemplates}
 )
 
 SET(Raytracing_Scripts
@@ -163,8 +171,9 @@ fc_target_copy_resource(Raytracing
 fc_target_copy_resource(Raytracing 
     ${CMAKE_SOURCE_DIR}/src/Mod/Raytracing
     ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_DATADIR}/Mod/Raytracing
-    ${Raytracing_Materials}
+    ${Raytracing_RenderMaterials}
     ${Raytracing_RenderPresets}
+    ${Raytracing_RenderTemplates}
     ${Raytracing_Templates})
 
 if(MSVC)

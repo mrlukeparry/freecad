@@ -33,12 +33,13 @@
 # include <gp_Vec.hxx>
 #include <vector>
 
+#include "Appearances.h"
 #include "RenderMaterial.h"
 #include "RenderCamera.h"
 #include "RenderLights.h"
 #include "RenderPreset.h"
 #include "RenderProcess.h"
-#include "Appearances.h"
+#include "RenderTemplate.h"
 
 #include <3rdParty/salomesmesh/inc/Rn.h>
 
@@ -81,18 +82,29 @@ public:
     void addObject(const char *PartName, const TopoDS_Shape &Shape, float meshDeviation);
     void addObject(RenderPart *part);
 
-    void attachRenderMaterials(const std::vector<RenderMaterial *> &mats);
-    void setRenderPreset(const char *presetId);
-    void setRenderPreset(RenderPreset *preset);
     void attachRenderProcess(RenderProcess *process);
     RenderProcess * getRenderProcess() { return process; }
 
     /// Functions for find Render Presets
-    void scanPresets(void);
     std::vector<RenderPreset *> parsePresetXML(QString filename);
-    void clearPresets(void);
     RenderPreset * getRenderPreset(const char *id) const;
     std::vector<RenderPreset *> getRenderPresets(void) const;
+    void clearPresets(void);
+    void scanPresets(void);
+    void setRenderPreset(const char *presetId);
+    void setRenderPreset(RenderPreset *preset);
+
+    /// Functions for finding Render Templates;
+    std::vector<RenderTemplate *> parseTemplateXML(QString filename);
+    RenderTemplate * getRenderTemplate(const char *id) const;
+    std::vector<RenderTemplate *> getRenderTemplates(void) const;
+    void clearTemplates(void);
+    void scanTemplates(void);
+    void setRenderTemplate(const char *presetId);
+    void setRenderTemplate(RenderTemplate *preset);
+
+    /// Functions related to Render Materials
+    void attachRenderMaterials(const std::vector<RenderMaterial *> &mats);
     std::vector<RenderMaterial *>getRenderPartMaterials(RenderPart *part) const;
     bool hasCamera(void) { return (camera == 0) ? false: true; }
     const char * getOutputPath() const { return outputPath.c_str(); }
@@ -123,6 +135,7 @@ protected:
     virtual QString genObject(RenderPart *part) = 0;
     virtual QString genMaterial(RenderMaterial *mat) = 0;
     virtual QString genRenderProps() = 0;
+    virtual QString genRenderTemplate() = 0;
     virtual void generateScene() = 0;
 
     bool getOutputStream(QTextStream &ts);
@@ -136,13 +149,20 @@ protected:
     RenderCamera *camera;
     RenderProcess *process;
     RenderPreset *preset;
+    RenderTemplate *renderTemplate;
+
     std::vector<RenderLight *> lights;
     std::vector<RenderMaterial *> materials;
     std::vector<RenderPart *> parts;
-    std::vector<RenderPreset *> libraryPresets;
 
+    /// Library Collections
+    std::vector<RenderPreset *> libraryPresets;
+    std::vector<RenderTemplate *> libraryTemplates;
+
+    /// Path storage
     std::string outputPath;
     std::string renderPresetsPath;
+    std::string renderTemplatesPath;
 
     QTemporaryFile inputFile;
 
