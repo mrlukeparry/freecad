@@ -453,9 +453,11 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
                                      camLookAt.x, camLookAt.y, camLookAt.z, camTypeStr);
 
     doCommand(Doc,"App.ActiveDocument.%s.setRenderPreset('metropolisUnbiased')", FeatName.c_str());
+    doCommand(Doc,"App.ActiveDocument.%s.setRenderTemplate('lux_default')", FeatName.c_str());
+
     doCommand(Gui,"Gui.activeDocument().setEdit('%s')",FeatName.c_str());
     commitCommand();
-
+/*
     LuxRender *renderer = new LuxRender();
 //     RenderCamera *camera = new RenderCamera(camPos, camDir, camLookAt, camUp, camType);
 //     camera->Autofocus = true;
@@ -513,7 +515,7 @@ void CmdRaytracingWriteViewLux::activated(int iMsg)
             }
             renderer->addObject(part);
         }
-    }
+    }*/
 //      RenderPreset *preset = renderer->getRenderPreset("metropolisUnbiased");
 // 
 //      if(!preset) {

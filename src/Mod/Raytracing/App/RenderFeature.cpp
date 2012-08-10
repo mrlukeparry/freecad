@@ -226,16 +226,17 @@ void RenderFeature::preview()
       return;
 
     // Adding stuff for testing
-    RenderAreaLight *light = new RenderAreaLight();
-    light->setColor(255, 255, 255);
-    light->Height = 100;
-    light->Width = 100;
+//     RenderAreaLight *light = new RenderAreaLight();
+//     light->setColor(255, 255, 255);
+//     light->Height = 100;
+//     light->Width = 100;
+// 
+//     Base::Rotation lightRot = Base::Rotation(Base::Vector3d(0, 1, 0), 0.);
+//     Base::Vector3d lightPos = Base::Vector3d(-50., -50., 200);
+//     light->setPlacement(lightPos, lightRot);
+// 
+//     renderer->addLight(light);
 
-    Base::Rotation lightRot = Base::Rotation(Base::Vector3d(0, 1, 0), 0.);
-    Base::Vector3d lightPos = Base::Vector3d(-50., -50., 200);
-    light->setPlacement(lightPos, lightRot);
-
-    renderer->addLight(light);
     renderer->setRenderTemplate(SceneTemplate.getValue());
     renderer->attachRenderMaterials(MaterialsList.getValues());
     renderer->setRenderPreset(Preset.getValue());

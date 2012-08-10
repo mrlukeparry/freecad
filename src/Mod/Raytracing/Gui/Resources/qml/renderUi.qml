@@ -112,6 +112,18 @@ Item {
                              onComboClicked: renderFeature.setRenderPreset(renderPreset.selectedItem)
                          }
                      }
+                     Row {
+                         width: parent.width
+
+                         ComboBox {
+                             id: renderTemplate
+                             model: ["lux_default"]
+                             selectedItem: renderFeature.getRenderTemplate()
+                             width: parent.width
+                             height: 20
+                             onComboClicked: renderFeature.setRenderTemplate(renderPreset.selectedItem)
+                         }
+                     }
 
                 } // Column End
             }
