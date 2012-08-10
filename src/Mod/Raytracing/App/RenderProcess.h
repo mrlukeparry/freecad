@@ -30,8 +30,6 @@
 #include <QBasicTimer>
 #include <QTimerEvent>
 #include <QString>
-#include <QFileSystemWatcher>
-
 # include <TopoDS.hxx>
 # include <gp_Vec.hxx>
 # include <TopoDS_Face.hxx>
@@ -60,9 +58,12 @@ public:
 
   void addArguments(const QString &arg);
 
+  void timerEvent(QTimerEvent *event);
+  void setUpdateInterval(float time);
+
   bool isActive();
   State getState() { return status; };
-
+  bool getOutput(QImage &img);
   bool isExecPathValid(void);
 //   virtual QImage getOutput() = 0;
 //   virtual QImage getPreview() = 0;
@@ -74,10 +75,10 @@ public:
   void setExecPath(const QString &str);
   void setInputPath(const QString &str);
   void setOutputPath(const QString &str);
+  void setUpdateInterval(int msecs) { updateInterval = msecs; }
 
 public Q_SLOTS:
     void processError(void);
-    void getOutput();
     void setStatusAsRunning(void) { status = RUNNING; }
     void begin(void);
     void stop(void);
@@ -96,7 +97,8 @@ protected:
   State status;
 
 private:
-  QFileSystemWatcher watcher;
+  int updateInterval;
+  QBasicTimer timer;
 };
 
 }
