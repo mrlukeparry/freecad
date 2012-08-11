@@ -98,10 +98,16 @@ public:
 
     void getRenderBBox(SbBox3f &box);
 
+Q_SIGNALS:
+  void renderStart();
+  void renderStop();
+
 public Q_SLOTS:
   void preview();
   void previewWindow();
   void render();
+  void renderStarted();
+  void renderStopped();
 public:
 
     /// is called the TaskView when the dialog is opened

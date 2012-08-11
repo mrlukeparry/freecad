@@ -105,7 +105,7 @@ TaskDlgRender::TaskDlgRender(ViewProviderRender *vp)
     assert(renderView);
     documentName = renderView->getObject()->getDocument()->getName();
 
-    view = new QDeclarativeView ();
+    view = new QDeclarativeView (qobject_cast<QWidget *>(this));
 
     RenderFeature *feat = this->getRenderView()->getRenderFeature();
     RenderFeatureData *data = new RenderFeatureData(feat); // Assuming this gets deleted with destruction of QDeclartiveContext
@@ -129,11 +129,14 @@ TaskDlgRender::TaskDlgRender(ViewProviderRender *vp)
 
 
      // Connect an Update Signal when an image is available
-    QObject *rootObject = view->rootObject();
+    QObject *rootObject = qobject_cast<QObject *>(view->rootObject());
 
     // Connect the slots
     QObject::connect(rootObject, SIGNAL(preview()), this , SLOT(preview()));
     QObject::connect(rootObject, SIGNAL(previewWindow()), this , SLOT(previewWindow()));
+
+    QObject::connect(this, SIGNAL(renderStop()), rootObject , SLOT(renderStopped()));
+    QObject::connect(this, SIGNAL(renderStart()), rootObject , SLOT(renderRunning()));
 
     // Check if a Render is currently active for this RenderFeature
     if(isRenderActive()) {
@@ -146,12 +149,7 @@ TaskDlgRender::TaskDlgRender(ViewProviderRender *vp)
         QObject::connect(renderProcQObj , SIGNAL(finished()), rootObject , SLOT(renderStopped())); // Connect Render Process Signal when stopped by user
     }
 
-//     QObject::connect(rootObject, SIGNAL(updateSizeX(int)), this , SLOT(updateSizeX(int)));
-//     QObject::connect(rootObject, SIGNAL(updateSizeY(int)), this , SLOT(updateSizeY(int)));
-
-
     this->Content.push_back(view);
-
 }
 
 TaskDlgRender::~TaskDlgRender()
@@ -208,14 +206,13 @@ void TaskDlgRender::preview()
       return;
     }
 
-    QObject *rootObject = view->rootObject();
     QObject *renderProcQObj = qobject_cast<QObject *>(process);
-    QObject::connect(renderProcQObj , SIGNAL(finished()), rootObject , SLOT(renderStopped())); // Connect Render Process Signal when stopped by user
-    QObject::connect(renderProcQObj , SIGNAL(started()) , rootObject , SLOT(renderRunning())); // Connect Render Process (QProcess) start signal when active
+    QObject::connect(renderProcQObj , SIGNAL(finished()), this , SLOT(renderStopped())); // Connect Render Process Signal when stopped by user
+    QObject::connect(renderProcQObj , SIGNAL(started()) , this , SLOT(renderStarted())); // Connect Render Process (QProcess) start signal when active
 
     // Invoke renderActive slot if active, because we have most likely missed RenderProcess Start Method
     if(process->isActive())
-        QMetaObject::invokeMethod(rootObject, "renderRunning");
+        Q_EMIT renderStart();
 
     renderView->attachRender(feat->getRenderer());
     renderView->setWindowTitle(QObject::tr("Render viewer") + QString::fromAscii("[*]"));
@@ -248,6 +245,19 @@ void TaskDlgRender::getRenderBBox(SbBox3f &box)
     action.apply(viewer->getSceneGraph());
 }
 
+//---------- SLOTS ---------//
+void TaskDlgRender::renderStopped()
+{
+    // Basically need to emit signals so that these are guaranteed to be picked up by the QML UI
+    Q_EMIT renderStop();
+}
+
+void TaskDlgRender::renderStarted()
+{
+    Q_EMIT renderStart();
+}
+
+
 void TaskDlgRender::previewWindow()
 {
 
@@ -264,7 +274,7 @@ void TaskDlgRender::previewWindow()
         Gui::View3DInventorViewer *viewer = static_cast<Gui::View3DInventor *>(mdi)->getViewer();
         Cam =  viewer->getCamera();
     } else {
-        throw Base::Exception("Could Not Read Camera");
+        return; //throw Base::Exception("Could Not Read Camera");
     }
 
     Gui::Document * doc = Gui::Application::Instance->activeDocument();
@@ -368,16 +378,19 @@ void TaskDlgRender::previewWindow()
       return;
     }
 
+    QList<QDeclarativeError> errors = this->view->errors();
+    int count = errors.count();
+
     RenderView *renderView    = new RenderView(doc, Gui::getMainWindow());
 
-    QObject *rootObject = view->rootObject();
+
     QObject *renderProcQObj = qobject_cast<QObject *>(process);
-    QObject::connect(renderProcQObj , SIGNAL(finished()), rootObject , SLOT(renderStopped())); // Connect Render Process Signal when stopped by user
-    QObject::connect(renderProcQObj , SIGNAL(started()) , rootObject , SLOT(renderRunning())); // Connect Render Process (QProcess) start signal when active
+    // Unfortunatly we have to make this class acts as a middleman with events
+    QObject::connect(renderProcQObj , SIGNAL(finished()), this , SLOT(renderStopped())); // Connect Render Process Signal when stopped by user
+    QObject::connect(renderProcQObj , SIGNAL(started()) , this , SLOT(renderStarted())); // Connect Render Process (QProcess) start signal when active
 
     // Invoke renderActive slot if active, because we have most likely missed RenderProcess Start Method
-    if(process->isActive())
-        QMetaObject::invokeMethod(rootObject, "renderRunning");
+
 
     renderView->attachRender(feat->getRenderer());
     renderView->setWindowTitle(QObject::tr("Render viewer") + QString::fromAscii("[*]"));
