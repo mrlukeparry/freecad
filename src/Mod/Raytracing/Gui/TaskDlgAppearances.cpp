@@ -68,7 +68,7 @@ TaskDlgAppearances::TaskDlgAppearances()
     Appearances().scanMaterials();
 
     AppearancesModel model;
-    
+
     std::vector<LibraryMaterial *> materials = Appearances().getMaterialsByProvider("lux");
     for (std::vector<LibraryMaterial *>::const_iterator it= materials.begin(); it!= materials.end(); ++it) {
             model.addLibraryMaterial(*it);

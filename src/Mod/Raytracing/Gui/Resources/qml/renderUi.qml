@@ -119,11 +119,58 @@ Item {
 
                          ComboBox {
                              id: renderPreset
-                             model: ["directLighting", "metropolisUnbiased"]
+                             model: presetsModel
+                             property string preset;
                              selectedItem: renderFeature.getRenderPreset()
                              width: parent.width
                              height: 20
-                             onComboClicked: renderFeature.setRenderPreset(renderPreset.selectedItem)
+                             onComboClicked: renderFeature.setRenderPreset(renderPreset.preset)
+                             delegate: Item {
+                                 id: presetsDelegate
+                                 width: parent.width;
+                                 height: textLabel.height + textDesc.height + 15
+                                 property string presetId: id
+
+                                 Text {
+                                     id: textLabel
+                                     text: label
+                                     anchors.verticalCenter: parent.center
+                                     anchors.right: parent.right
+                                     anchors.rightMargin: 10
+                                     color: "#fff"
+                                 }
+
+                                 Text {
+                                     id: textDesc
+                                     text: description
+                                     anchors.top: textLabel.bottom
+                                     anchors.topMargin: 5
+                                     anchors.right: parent.right
+                                     anchors.rightMargin: 10
+                                     width: parent.width
+                                     horizontalAlignment: TextInput.AlignRight
+                                     font.pointSize: 7
+                                     color: "#fff"
+                                     opacity: 0.6
+                                     states: State {name: "display"; when: mouseArea.containsMouse
+                                                    PropertyChanges { target: textDesc; opacity: 1.0} }
+                                 }
+                                 MouseArea {
+                                     id: mouseArea
+                                     hoverEnabled: true;
+                                     anchors.fill: parent
+                                     onClicked: {
+                                         comboBox.state = ""
+                                         var prevSelection = chosenItemText.text
+                                         chosenItemText.text = label
+                                         if(chosenItemText.text != prevSelection){
+                                             renderPreset.preset = parent.presetId
+                                             comboBox.comboClicked();
+                                         }
+                                         listView.currentIndex = index;
+                                     }
+                                 }
+                             }
                          }
                      } // Row End
                      Row {

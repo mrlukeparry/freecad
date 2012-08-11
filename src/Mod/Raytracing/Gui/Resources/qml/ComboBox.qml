@@ -7,6 +7,8 @@ Item {
         property alias delegate: listView.delegate
         property alias selectedItem: chosenItemText.text;
         property alias selectedIndex: listView.currentIndex;
+
+        property variant selectedValue
         signal comboClicked;
         width: 250;
         height: 30;

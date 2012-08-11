@@ -25,14 +25,41 @@
 #define RAYTRACINGGUI_TaskDlgRender_H
 
 #include <QDeclarativeView>
+#include <QAbstractListModel>
 
 #include <Mod/Raytracing/App/RenderFeature.h>
 #include <Gui/TaskView/TaskDialog.h>
-#include "ViewProviderRender.h"
 
+
+#include <Mod/Raytracing/App/RenderPreset.h>
+#include "ViewProviderRender.h"
 class SbBox3f;
 
 namespace RaytracingGui {
+
+// Helper Classes
+class RaytracingGuiExport PresetsModel : public QAbstractListModel
+{
+    Q_OBJECT
+public:
+    enum AppearancesRoles {
+         IdRole = Qt::UserRole + 1,
+         DescriptionRole,
+         LabelRole
+     };
+
+    PresetsModel(QObject *parent = 0);
+    ~PresetsModel(){}
+
+    void addRenderPreset(Raytracing::RenderPreset *preset);
+
+    int rowCount(const QModelIndex & parent = QModelIndex()) const;
+
+    QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
+
+private:
+    QList<Raytracing::RenderPreset *> m_libPresets;
+};
 
 class RaytracingGuiExport RenderFeatureData : public QObject
 {

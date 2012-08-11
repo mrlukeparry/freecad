@@ -57,6 +57,41 @@
 using namespace Raytracing;
 using namespace RaytracingGui;
 
+PresetsModel::PresetsModel(QObject *parent)
+    : QAbstractListModel(parent)
+{
+    QHash<int, QByteArray> roles;
+    roles[IdRole] = "id";
+    roles[LabelRole] = "label";
+    roles[DescriptionRole] = "description";
+    setRoleNames(roles);
+}
+
+void PresetsModel::addRenderPreset(RenderPreset *preset)
+{
+    beginInsertRows(QModelIndex(), rowCount(), rowCount());
+    m_libPresets << preset;
+    endInsertRows();
+}
+
+int PresetsModel::rowCount(const QModelIndex & parent) const {
+    return m_libPresets.count();
+}
+
+QVariant PresetsModel::data(const QModelIndex & index, int role) const {
+    if (index.row() < 0 || index.row() > m_libPresets.count())
+        return QVariant();
+
+    const RenderPreset *preset = m_libPresets[index.row()];
+
+    if (role == IdRole)
+        return preset->getId();
+    else if (role == LabelRole)
+        return preset->getLabel();
+    else if (role == DescriptionRole)
+        return preset->getDescription();
+    return QVariant();
+}
 
 //**************************************************************************
 //**************************************************************************
@@ -69,13 +104,24 @@ TaskDlgRender::TaskDlgRender(ViewProviderRender *vp)
 {
     assert(renderView);
     documentName = renderView->getObject()->getDocument()->getName();
-    
+
     view = new QDeclarativeView ();
 
     RenderFeature *feat = this->getRenderView()->getRenderFeature();
-    RenderFeatureData *data = new RenderFeatureData(feat);
+    RenderFeatureData *data = new RenderFeatureData(feat); // Assuming this gets deleted with destruction of QDeclartiveContext
 
-    view->rootContext()->setContextProperty(QString::fromAscii("renderFeature"), data);
+    PresetsModel presetsModel;
+
+    std::vector<RenderPreset *> presets = feat->getRenderer()->getRenderPresets();
+    for (std::vector<RenderPreset *>::const_iterator it= presets.begin(); it!= presets.end(); ++it) {
+            presetsModel.addRenderPreset(*it);
+    }
+
+    QDeclarativeView *view = new QDeclarativeView ();
+    QDeclarativeContext *ctxt = view->rootContext();
+
+    ctxt->setContextProperty(QString::fromAscii("presetsModel"), &presetsModel); // Render Presets    
+    ctxt->setContextProperty(QString::fromAscii("renderFeature"), data);
 
     view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
     view->setSource(QUrl(QString::fromAscii("qrc:/qml/renderUi.qml"))); // Load the Main QML File

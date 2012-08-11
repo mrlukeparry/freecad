@@ -24,7 +24,6 @@
 #define _AppearancesModel_h_
 
 #include <QAbstractListModel>
-#include <QStringList>
 
 #include <Mod/Raytracing/App/LibraryMaterial.h>
 
