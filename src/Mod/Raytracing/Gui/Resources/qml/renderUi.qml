@@ -118,10 +118,16 @@ Item {
                          width: parent.width
 
                          ComboBox {
+                             function  getLabel(myId) {
+                                 for(var i = 0; i < renderPreset.listview.count; i++) {
+                                     var listItem = listview.contentItem.children[i];
+                                     if(listItem.presetId == myId) {return listItem.presetLabel; }
+                                 }
+                                 return "";
+                             }
                              id: renderPreset
                              model: presetsModel
-                             property string preset;
-                             selectedItem: renderFeature.getRenderPreset()
+                             property string preset;                             
                              width: parent.width
                              height: 20
                              onComboClicked: renderFeature.setRenderPreset(renderPreset.preset)
@@ -129,7 +135,10 @@ Item {
                                  id: presetsDelegate
                                  width: parent.width;
                                  height: textLabel.height + textDesc.height + 15
+
+                                 // Due to lazy loading these need to be set
                                  property string presetId: id
+                                 property string presetLabel: label
 
                                  Text {
                                      id: textLabel
@@ -171,6 +180,7 @@ Item {
                                      }
                                  }
                              }
+                             selectedItem: getLabel(renderFeature.getRenderPreset())
                          }
                      } // Row End
                      Row {
