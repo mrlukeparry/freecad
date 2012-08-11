@@ -126,21 +126,21 @@ Item {
                              }
                              id: renderPreset
                              model: presetsModel
-                             property string preset;                             
+                             property string preset;
                              width: parent.width
                              height: 20
                              onComboClicked: renderFeature.setRenderPreset(renderPreset.preset)
                              delegate: Item {
                                  id: presetsDelegate
                                  width: parent.width;
-                                 height: textLabel.height + textDesc.height + 15
+                                 height: presDelLabel.height + presDelDesc.height + 15
 
                                  // Due to lazy loading these need to be set
                                  property string presetId: id
                                  property string presetLabel: label
 
                                  Text {
-                                     id: textLabel
+                                     id: presDelLabel
                                      text: label
                                      anchors.verticalCenter: parent.center
                                      anchors.right: parent.right
@@ -149,9 +149,9 @@ Item {
                                  }
 
                                  Text {
-                                     id: textDesc
+                                     id: presDelDesc
                                      text: description
-                                     anchors.top: textLabel.bottom
+                                     anchors.top: presDelLabel.bottom
                                      anchors.topMargin: 5
                                      anchors.right: parent.right
                                      anchors.rightMargin: 10
@@ -160,11 +160,11 @@ Item {
                                      font.pointSize: 7
                                      color: "#fff"
                                      opacity: 0.6
-                                     states: State {name: "display"; when: mouseArea.containsMouse
-                                                    PropertyChanges { target: textDesc; opacity: 1.0} }
+                                     states: State {name: "display"; when: preDelMouseArea.containsMouse
+                                                    PropertyChanges { target: presDelDesc; opacity: 1.0} }
                                  }
                                  MouseArea {
-                                     id: mouseArea
+                                     id: presDelMouseArea
                                      hoverEnabled: true;
                                      anchors.fill: parent
                                      onClicked: {
@@ -184,14 +184,70 @@ Item {
                      } // Row End
                      Row {
                          width: parent.width
-
                          ComboBox {
+                             function  getLabel(myId) {
+                                 for(var i = 0; i < renderTemplate.listview.count; i++) {
+                                     var listItem = listview.contentItem.children[i];
+                                     if(listItem.templateId == myId) {return listItem.templateLabel; }
+                                 }
+                                 return "";
+                             }
                              id: renderTemplate
-                             model: ["lux_default"]
-                             selectedItem: renderFeature.getRenderTemplate()
+                             model: templatesModel
+                             property string templateName;
                              width: parent.width
                              height: 20
-                             onComboClicked: renderFeature.setRenderTemplate(renderPreset.selectedItem)
+                             onComboClicked: renderFeature.setRenderTemplate(renderPreset.templateName)
+                             delegate: Item {
+                                 id: templatesDelegate
+                                 width: parent.width;
+                                 height: tempDelLabel.height + tempDelDesc.height + 15
+
+                                 // Due to lazy loading these need to be set
+                                 property string templateId: id
+                                 property string templateLabel: label
+
+                                 Text {
+                                     id: tempDelLabel
+                                     text: label
+                                     anchors.verticalCenter: parent.center
+                                     anchors.right: parent.right
+                                     anchors.rightMargin: 10
+                                     color: "#fff"
+                                 }
+
+                                 Text {
+                                     id: tempDelDesc
+                                     text: description
+                                     anchors.top: tempDelLabel.bottom
+                                     anchors.topMargin: 5
+                                     anchors.right: parent.right
+                                     anchors.rightMargin: 10
+                                     width: parent.width
+                                     horizontalAlignment: TextInput.AlignRight
+                                     font.pointSize: 7
+                                     color: "#fff"
+                                     opacity: 0.6
+                                     states: State {name: "display"; when: tempDelMouseArea.containsMouse
+                                                    PropertyChanges { target: tempDelDesc; opacity: 1.0} }
+                                 }
+                                 MouseArea {
+                                     id: tempDelMouseArea
+                                     hoverEnabled: true;
+                                     anchors.fill: parent
+                                     onClicked: {
+                                         comboBox.state = ""
+                                         var prevSelection = chosenItemText.text
+                                         chosenItemText.text = label
+                                         if(chosenItemText.text != prevSelection){
+                                             renderTemplate.templateName = parent.templateId
+                                             comboBox.comboClicked();
+                                         }
+                                         listView.currentIndex = index;
+                                     }
+                                 }
+                             }
+                             selectedItem: getLabel(renderFeature.getRenderTemplate())
                          }
                      } // Row End
 

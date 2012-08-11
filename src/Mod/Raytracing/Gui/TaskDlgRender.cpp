@@ -93,6 +93,43 @@ QVariant PresetsModel::data(const QModelIndex & index, int role) const {
     return QVariant();
 }
 
+// ====== Templates Model for QML ============ //
+TemplatesModel::TemplatesModel(QObject *parent)
+    : QAbstractListModel(parent)
+{
+    QHash<int, QByteArray> roles;
+    roles[IdRole] = "id";
+    roles[LabelRole] = "label";
+    roles[DescriptionRole] = "description";
+    setRoleNames(roles);
+}
+
+void TemplatesModel::addRenderTemplate(RenderTemplate *renderTemplate)
+{
+    beginInsertRows(QModelIndex(), rowCount(), rowCount());
+    m_rendTemplates << renderTemplate;
+    endInsertRows();
+}
+
+int TemplatesModel::rowCount(const QModelIndex & parent) const {
+    return m_rendTemplates.count();
+}
+
+QVariant TemplatesModel::data(const QModelIndex & index, int role) const {
+    if (index.row() < 0 || index.row() > m_rendTemplates.count())
+        return QVariant();
+
+    const RenderTemplate *templ = m_rendTemplates[index.row()];
+
+    if (role == IdRole)
+        return templ->getId();
+    else if (role == LabelRole)
+        return templ->getLabel();
+    else if (role == DescriptionRole)
+        return templ->getDescription();
+    return QVariant();
+}
+
 //**************************************************************************
 //**************************************************************************
 // TaskDialog
@@ -110,6 +147,7 @@ TaskDlgRender::TaskDlgRender(ViewProviderRender *vp)
     RenderFeature *feat = this->getRenderView()->getRenderFeature();
     RenderFeatureData *data = new RenderFeatureData(feat); // Assuming this gets deleted with destruction of QDeclartiveContext
 
+    // Create the Presets Model using all the Render Presets found in Renderer
     PresetsModel presetsModel;
 
     std::vector<RenderPreset *> presets = feat->getRenderer()->getRenderPresets();
@@ -117,16 +155,22 @@ TaskDlgRender::TaskDlgRender(ViewProviderRender *vp)
             presetsModel.addRenderPreset(*it);
     }
 
+    TemplatesModel templatesModel;
+
+    std::vector<RenderTemplate *> renderTemplates = feat->getRenderer()->getRenderTemplates();
+    for (std::vector<RenderTemplate *>::const_iterator it= renderTemplates.begin(); it!= renderTemplates.end(); ++it) {
+            templatesModel.addRenderTemplate(*it);
+    }
+
     QDeclarativeView *view = new QDeclarativeView ();
     QDeclarativeContext *ctxt = view->rootContext();
 
-    ctxt->setContextProperty(QString::fromAscii("presetsModel"), &presetsModel); // Render Presets    
+    ctxt->setContextProperty(QString::fromAscii("presetsModel"), &presetsModel); // Render Presets
+    ctxt->setContextProperty(QString::fromAscii("templatesModel"), &templatesModel); // Render Templates
     ctxt->setContextProperty(QString::fromAscii("renderFeature"), data);
 
     view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
     view->setSource(QUrl(QString::fromAscii("qrc:/qml/renderUi.qml"))); // Load the Main QML File
-
-
 
      // Connect an Update Signal when an image is available
     QObject *rootObject = qobject_cast<QObject *>(view->rootObject());

@@ -61,6 +61,29 @@ private:
     QList<Raytracing::RenderPreset *> m_libPresets;
 };
 
+class RaytracingGuiExport TemplatesModel : public QAbstractListModel
+{
+    Q_OBJECT
+public:
+    enum AppearancesRoles {
+         IdRole = Qt::UserRole + 1,
+         DescriptionRole,
+         LabelRole
+     };
+
+    TemplatesModel(QObject *parent = 0);
+    ~TemplatesModel(){}
+
+    void addRenderTemplate(Raytracing::RenderTemplate *renderTemplate);
+
+    int rowCount(const QModelIndex & parent = QModelIndex()) const;
+
+    QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
+
+private:
+    QList<Raytracing::RenderTemplate *> m_rendTemplates;
+};
+
 class RaytracingGuiExport RenderFeatureData : public QObject
 {
     Q_OBJECT
