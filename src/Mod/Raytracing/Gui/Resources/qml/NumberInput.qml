@@ -8,6 +8,7 @@ Item {
     property alias suffix: suffixLabel.text
     property alias text: textInput.text
     property alias inputMask: textInput.inputMask
+    property alias validator: textInput.validator
     width: 100
     height: 20
 

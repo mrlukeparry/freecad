@@ -117,6 +117,33 @@ void RenderFeature::removeRenderer(void)
     this->renderer = 0; // Make it a null pointer
 }
 
+int RenderFeature::setRenderMaterial(const RenderMaterial *material)
+{
+    const std::vector< RenderMaterial * > &vals = this->MaterialsList.getValues();
+
+    RenderMaterial *matNew = material->clone();
+    const char *partName = material->Link.getValue()->getNameInDocument();
+
+    int i = 0, idx = -1;
+    //TODO make this for individual faces
+    for (std::vector<RenderMaterial*>::const_iterator it=vals.begin();it!=vals.end();++it, i++) {
+        if(strcmp((*it)->Link.getValue()->getNameInDocument(), partName) == 0)
+            idx = i;
+    }
+
+    if(idx >= 0) {
+        //Material Found
+        std::vector< RenderMaterial * > newVals(vals);
+        newVals[idx] = matNew;
+        this->MaterialsList.setValues(newVals);
+        return idx;
+    } else {
+      return 0;
+    }
+
+    delete matNew;
+}
+
 int RenderFeature::addRenderMaterial(const RenderMaterial *material)
 {
     const std::vector< RenderMaterial * > &vals = this->MaterialsList.getValues();

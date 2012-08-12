@@ -38,6 +38,7 @@
 
 #include <QDeclarativeContext>
 #include <QDeclarativeView>
+#include <QDeclarativeItem>
 #include <QGraphicsObject>
 #include <QGLWidget>
 #include <QDragMoveEvent>
@@ -49,6 +50,7 @@
 
 #include "TaskDlgAppearances.h"
 #include "AppearancesModel.h"
+#include "MaterialParametersModel.h"
 #include <App/Application.h>
 
 using namespace Raytracing;
@@ -74,7 +76,7 @@ TaskDlgAppearances::TaskDlgAppearances()
             model.addLibraryMaterial(*it);
     }
 
-    QDeclarativeView *view = new QDeclarativeView ();
+    view = new QDeclarativeView (qobject_cast<QWidget *>(this));
     QDeclarativeContext *ctxt = view->rootContext();
     ctxt->setContextProperty(QString::fromAscii("appearancesModel"), &model);
 
@@ -168,9 +170,64 @@ void TaskDlgAppearances::materialDropEvent(QDropEvent *ev)
             Gui::Command::commitCommand();
         }
         feat->addRenderMaterial(&myMaterial);
+
+        // TODO check if we should reload the QML or create a new widget
+        // TODO should params model be put on the heap - likely
+        MaterialParametersModel paramsModel;
+
+        QMap<QString, MaterialParameter*> params =  myMaterial.getMaterial()->parameters;
+        QMap<QString, MaterialParameter*>::const_iterator i;
+        for (i = params.constBegin(); i != params.constEnd(); ++i) {
+            MaterialParameter *param = i.value();
+            paramsModel.addParameter(param); //Add the parameter to model
+        }
+
+        QDeclarativeView *paramView = new QDeclarativeView (qobject_cast<QWidget *>(this));
+        QDeclarativeContext *ctxt = paramView->rootContext();
+        ctxt->setContextProperty(QString::fromAscii("appearancesModel"), &paramsModel);
+
+        paramView->setResizeMode(QDeclarativeView::SizeRootObjectToView);
+
+        RenderMaterial *matClone = new RenderMaterial(myMaterial); // Make a copy of the material on the heap
+        materialData = new RenderMaterialData(matClone); // Assuming this gets deleted with destruction of QDeclartiveContext
+        // TODO delete above
+
+        ctxt->setContextProperty(QString::fromAscii("materialData"), materialData);
+
+        ctxt->setContextProperty(QString::fromAscii("materialParametersModel"), &paramsModel);
+        paramView->setSource(QUrl(QString::fromAscii("qrc:/qml/materialParametersUi.qml"))); // Load the Main QML File
+
+        // Connect an Update Signal when an image is available
+        QString str = QString::fromAscii("materialParametersWidget");
+        QObject *rootObject = paramView->rootObject();
+        QObject::connect(rootObject, SIGNAL(accepted()), this , SLOT(materialParamSave()));
+        //QObject::connect(rootObject, SIGNAL(cancel()) , paramView , SLOT(close()));
+
+        this->Content[0]->hide();
+        this->Content.push_back(paramView);
+        this->Content[1]->show();
     }
 }
 
+void TaskDlgAppearances::materialParamSave()
+{
+        // Find the RenderFeature object. It must be currently active to add the RenderMaterial
+    App::DocumentObject *activeObj =  App::GetApplication().getActiveDocument()->getActiveObject();
+    if(activeObj->getTypeId() == RenderFeature::getClassTypeId()) {
+        RenderFeature *feat = static_cast<RenderFeature *>(activeObj);
+        if(!materialData)
+            return; //No Material Data Set
+
+        // TODO implement App::Command for undo states
+        feat->setRenderMaterial(materialData->getRenderMaterial()); //setRenderMaterial will clone the material
+        // delete temporary material
+    }
+}
+
+void TaskDlgAppearances::materialParamCancel()
+{
+
+}
 void TaskDlgAppearances::materialDragEvent(QDragMoveEvent *ev)
 {
 

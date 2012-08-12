@@ -142,6 +142,9 @@ TaskDlgRender::TaskDlgRender(ViewProviderRender *vp)
     assert(renderView);
     documentName = renderView->getObject()->getDocument()->getName();
 
+    RenderMaterial *mat;
+    LibraryMaterial *libMat;
+    libMat->parameters;
     view = new QDeclarativeView (qobject_cast<QWidget *>(this));
 
     RenderFeature *feat = this->getRenderView()->getRenderFeature();

@@ -49,7 +49,7 @@ public:
   : MaterialProperty(MaterialParameter::BOOL), value(val) {}
   ~MaterialBoolProperty (){}
 
-  void setValue(bool val) { val = value;}
+  void setValue(bool val) { value = val;}
   bool getValue(void) { return value; }
 private:
   bool value;
@@ -62,7 +62,7 @@ public:
   : MaterialProperty(MaterialParameter::FLOAT), value(val) {}
   ~MaterialFloatProperty(){}
 
-  void setValue(float val) { val = value;}
+  void setValue(float val) { value = val;}
   float getValue(void) { return value; }
 private:
   float value;

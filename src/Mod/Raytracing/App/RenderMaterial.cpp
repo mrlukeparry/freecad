@@ -47,15 +47,17 @@ RenderMaterial::RenderMaterial(const RenderMaterial& from)
           case MaterialParameter::COLOR: {
             MaterialColorProperty *ref  = static_cast<MaterialColorProperty*>(it.value());
             MaterialColorProperty *prop = new MaterialColorProperty(ref->getValue());
+            Properties.insert(it.key(), prop);
           } break;
           case MaterialParameter::BOOL: {
             MaterialBoolProperty *ref  = static_cast<MaterialBoolProperty*>(it.value());
             MaterialBoolProperty *prop = new MaterialBoolProperty(ref->getValue());
+            Properties.insert(it.key(), prop);
           } break;
           case MaterialParameter::FLOAT: {
             MaterialFloatProperty *ref  = static_cast<MaterialFloatProperty*>(it.value());
             MaterialFloatProperty *prop = new MaterialFloatProperty(ref->getValue());
-
+            Properties.insert(it.key(), prop);
           } break;
         }
         ++it;

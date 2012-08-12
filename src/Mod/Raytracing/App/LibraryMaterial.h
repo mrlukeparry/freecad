@@ -90,9 +90,9 @@ public:
       rangeSet = false;
   }
   ~MaterialParameterFloat(){}
-  bool hasRange() {return rangeSet;}
+  bool hasRange() const {return rangeSet;}
   void getRange(float &min, float &max) const { min = range[0]; max = range[1];}
-
+  float getValue() const { return value; }
   float setRange(float low, float high) { range[0] = low; range[1] = high;}
 
 private:

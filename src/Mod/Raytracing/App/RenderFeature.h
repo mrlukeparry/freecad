@@ -54,7 +54,7 @@ public:
     App::PropertyString                        SceneTemplate;
     App::PropertyEnumeration                   RendererType;
     App::PropertyInteger                       UpdateInterval;
-    
+
 //     Part    ::PropertyGeometryList   Geometry;
 //     Sketcher::PropertyConstraintList Constraints;
 //     App     ::PropertyLinkSubList    ExternalGeometry;
@@ -70,9 +70,12 @@ public:
     //@}
 
 
-    /// Render MaterialsListconst
+    /// Render MaterialsList
+    int  addRenderMaterial(const RenderMaterial *material);
     const RenderMaterial * getRenderMaterial(const char *partName) const;
     int removeRenderMaterialFromPart(const char *partName);
+    int setRenderMaterial(const RenderMaterial *material);
+
 
     /// Render getters and setters
     void removeRenderer(void);
@@ -82,7 +85,7 @@ public:
     bool isRendererReady(void);
 
     void attachRenderCamera(RenderCamera *cam);
-    int  addRenderMaterial(const RenderMaterial *material);
+
 
     RenderProcess * getActiveRenderProcess(void) const; // Should this be a const method?
     void finish();

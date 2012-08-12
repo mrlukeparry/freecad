@@ -129,6 +129,8 @@ void RenderView::attachRender(Renderer *attachedRender)
 
 }
 
+;
+
 void RenderView::saveRender()
 {
     QFile file(QString::fromAscii(render->getOutputPath()));

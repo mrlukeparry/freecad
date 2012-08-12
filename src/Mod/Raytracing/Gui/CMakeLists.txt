@@ -37,9 +37,10 @@ endmacro(generate_from_py2)
 generate_from_py2(FreeCADpov FreeCADpov.h)
 
 set(RaytracingGui_MOC_HDRS
-    DlgSettingsRayImp.h
-    RenderView.h
     AppearancesModel.h
+    DlgSettingsRayImp.h
+    MaterialParametersModel.h
+    RenderView.h
     TaskDlgAppearances.h
     TaskDlgRender.h
 )
@@ -69,6 +70,8 @@ SET(RaytracingGui_SRCS
     DlgSettingsRayImp.cpp
     DlgSettingsRayImp.h
     FreeCADpov
+    MaterialParametersModel.cpp
+    MaterialParametersModel.h
     PovrayHighlighter.cpp
     PovrayHighlighter.h
     PreCompiled.cpp
