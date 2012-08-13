@@ -48,8 +48,8 @@ Item {
         color: "#ffffff"
         selectByMouse: true
         font.pointSize: 10
-        horizontalAlignment: TextInput.AlignRight
-        onFocusChanged: function() {if(textInput.acceptableInput) { numberInput.valueChanged()} }()
+        horizontalAlignment: TextInput.AlignLeft
+        onFocusChanged: function() {if(validator == undefined || textInput.acceptableInput) { numberInput.valueChanged()} }()
     }
     Text {
         id: suffixLabel

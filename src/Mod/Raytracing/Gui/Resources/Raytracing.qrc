@@ -33,5 +33,7 @@
         <file>qml/NumberInput.qml</file>
         <file>qml/ScrollBar.qml</file>
         <file>qml/ComboBox.qml</file>
+        <file>qml/Slider.qml</file>
+        <file>qml/ColorWidget.qml</file>
     </qresource>
 </RCC> 

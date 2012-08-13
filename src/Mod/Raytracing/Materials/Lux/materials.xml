@@ -10,21 +10,13 @@
       <compat>matte</compat>
       <provides>diffuse</provides>
       <parameters>
-        <parameter type="color" id="color">
+        <parameter type="color" id="Kd">
           <label>Diffuse Colour</label>
-        </parameter>
-        <parameter type="texture" id="bumpmap">
-          <label>Bump Map</label>
         </parameter>
         <parameter type="float" id="sigma">
           <label>Sigma Value</label>
           <default>0.0</default>
           <description>Sigma Parameter</description>
-        </parameter>
-        <parameter type="float" id="Kd">
-          <label>Diffuse Reflectivitiy</label>
-          <default>1.0</default>
-          <description>Coefficient of Diffuse</description>
         </parameter>
       </parameters>
     </Material>
@@ -32,5 +24,48 @@
       <label>Matte Translucent</label>
       <description>Default matte transparent</description>
       <compat>mattetranslucent</compat>
+       <parameters>
+        <parameter type="color" id="Kd">
+          <label>Diffuse Colour</label>
+        </parameter>
+        <parameter type="color" id="Kt">
+          <label>Diffuse Trasnmitivity</label>
+        </parameter>
+        <parameter type="float" id="sigma">
+          <label>Sigma Value</label>
+          <default>0.0</default>
+          <description>Sigma Parameter</description>
+        </parameter>
+      </parameters>
+  </Material>
+  <Material id="lux_default_roughGlass" type="builtin" render="lux">
+      <label>Rough Glass</label>
+      <description>Default Rough Glass</description>
+      <provides>glass</provides>
+      <compat>roughglass</compat>
+       <parameters>
+        <parameter type="color" id="Kr">
+          <label>Reflectivity</label>
+        </parameter>
+        <parameter type="color" id="Kt">
+          <label>Transmittivity</label>
+        </parameter>
+        <parameter type="float" id="uroughness">
+          <label>U roughness</label>
+          <default>0.001</default>
+          <description>Sigma Parameter</description>
+        </parameter>
+        <parameter type="float" id="vroughness">
+          <label>Y roughness</label>
+          <default>0.001</default>
+          <description>Sigma Parameter</description>
+        </parameter>
+        <parameter type="float" id="vroughness">
+          <label>Refraction</label>
+          <default>1.5</default>
+          <description>Sigma Parameter</description>
+        </parameter>
+      </parameters>
+  </Material>
   </Materials>
 </Document>

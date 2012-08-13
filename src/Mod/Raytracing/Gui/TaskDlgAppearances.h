@@ -129,6 +129,12 @@ public:
 
 
     }
+
+    //Colour Helper
+    Q_INVOKABLE QColor pickColor(QColor init = QColor()) {
+      QString str = QString::fromAscii("Select Color");
+      return QColorDialog::getColor(init, 0, str);
+    }
     Raytracing::RenderMaterial * getRenderMaterial(){ return material; }
 protected:
       Raytracing::MaterialParameter * findMaterialParameter (const QString &paramId) const {

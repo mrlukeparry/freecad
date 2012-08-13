@@ -224,7 +224,7 @@ void TaskDlgRender::preview()
 {
 
     RenderFeature *feat = this->getRenderView()->getRenderFeature();
-
+    feat->reset(); 
     Gui::Document * doc = Gui::Application::Instance->activeDocument();
 
         // get all objects of the active document
@@ -310,6 +310,7 @@ void TaskDlgRender::previewWindow()
 
    // Check if a renderer camera exists
     RenderFeature *feat = this->getRenderView()->getRenderFeature();
+    feat->reset(); 
     RenderCamera *renderCam = feat->getCamera();
     if(!renderCam)
         return;

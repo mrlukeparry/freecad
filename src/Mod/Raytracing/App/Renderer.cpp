@@ -65,13 +65,15 @@ Renderer::Renderer(void)
 Renderer::~Renderer(void)
 {
     this->clear();
+    delete this->camera;
+    this->camera = 0;
+
+    clearPresets();
+    clearTemplates();
 }
 
 void Renderer::clear()
 {
-    delete this->camera;
-    this->camera = 0;
-
     delete this->process;
     this->process = 0;
     for (std::vector<RenderLight *>::iterator it = lights.begin(); it != lights.end(); ++it) {
@@ -80,8 +82,7 @@ void Renderer::clear()
     for (std::vector<RenderPart *>::iterator it = parts.begin(); it != parts.end(); ++it) {
       delete *it;
     }
-    clearPresets();
-    clearTemplates();
+
     materials.empty(); // We don't delete these because they are only list of RenderMaterial references
     lights.clear();
     parts.clear();
@@ -492,7 +493,9 @@ void Renderer::reset(void)
 {
     //Clear up any previously stored data associated with a render process or preview
      // Clear the previous contents and regenerate
-    clear();
+
+    this->clear();
+    
     previewCoords[0] = -1;
     previewCoords[1] = -1;
     previewCoords[2] = -1;

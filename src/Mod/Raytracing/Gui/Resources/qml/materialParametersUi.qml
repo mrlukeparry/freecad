@@ -18,7 +18,8 @@ Item {
         }
     }
     Column {
-        spacing: 10
+        width: parent.width
+        spacing: 20
         Row {
             spacing: 10
             Button {
@@ -47,6 +48,7 @@ Item {
                 flickDeceleration: 7000
                 focus: true
                 height: 800
+                width: parent.width
                 model: materialParametersModel
                 delegate:  Item {
                     function createParameter(mod)
@@ -57,16 +59,26 @@ Item {
                             var hasRange = (mod.minVal && mod.maxVal);
                             var numComp = Qt.createComponent("NumberInput.qml")
                             if(numComp.status == Component.Ready) {
+                                var numValue = (materialData.getPropertyValue(mod.id) === undefined) ? "": materialData.getPropertyValue(mod.id);
                                 var input = numComp.createObject(row,
                                                                  {'label': mod.label,
-                                                                  'text': materialData.getPropertyValue(mod.id),
+                                                                  'text':  numValue
                                                                  });
                                 row.height = input.height + 10
+                                input.width = parent.width
                                 input.valueChanged.connect(function(){materialData.setProperty(mod.id, parseFloat(input.text));});
                             }
-                        } else {
-                            var button =  myComponent.createObject(row)
-                            row.height = button.height + 10
+                        } else if(mod.type == "color") {
+                            var colorComp = Qt.createComponent("ColorWidget.qml")
+                            if(colorComp.status == Component.Ready) {
+                                var colorValue = (materialData.getPropertyValue(mod.id) === undefined) ? "": materialData.getPropertyValue(mod.id);
+                                var colour = Qt.rgba(0,0.5,0.5,255)
+                                console.log(colour)
+                                var colorInput = colorComp.createObject(row,  {'label': mod.label});
+                                row.height = colorInput.height + 10
+                                colorInput.valueChanged.connect(function(val){ console.log("colour is" + val); materialData.setProperty(mod.id, val);});
+                                colorInput.pickColor.connect(function(){ var colorPicked = materialData.pickColor(); colorInput.setColor(colorPicked);});
+                            }
                         }
                     }
                     id: parametersDelegate

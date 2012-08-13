@@ -240,9 +240,12 @@ void RenderFeature::preview(int x1, int y1, int x2, int y2)
     if(!isRendererReady())
         return;
 
+    // Make a copy of the materials
+
+    PropertyRenderMaterialList *matListCopy = static_cast<PropertyRenderMaterialList *> (MaterialsList.Copy());
     // Argument Variables are temporary
     renderer->setRenderTemplate(SceneTemplate.getValue());
-    renderer->attachRenderMaterials(MaterialsList.getValues());
+    renderer->attachRenderMaterials(matListCopy->getValues());
     renderer->setUpdateInteval(UpdateInterval.getValue());
     renderer->setRenderPreset(Preset.getValue());
     renderer->setRenderSize(OutputX.getValue(), OutputY.getValue());
