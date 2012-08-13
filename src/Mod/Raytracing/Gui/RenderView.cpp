@@ -129,8 +129,6 @@ void RenderView::attachRender(Renderer *attachedRender)
 
 }
 
-;
-
 void RenderView::saveRender()
 {
     QFile file(QString::fromAscii(render->getOutputPath()));
@@ -151,7 +149,6 @@ void RenderView::saveRender()
 void RenderView::stopRender()
 {
     // Only one render process is assigned per Render Feature, so it should be safe to call this.
-    Gui::Command::doCommand(Gui::Command::Doc,"App.ActiveDocument.ActiveObject.finish()");
     render->getRenderProcess()->stop();
 }
 
