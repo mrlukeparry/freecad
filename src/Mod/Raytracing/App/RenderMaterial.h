@@ -84,7 +84,7 @@ public:
       color[1] = val[1];
       color[2] = val[2];
   }
-  void setValue(int r, int b, int g)
+  void setValue(int r, int g, int b)
   {
     color[0] = (float) r / 255;
     color[1] = (float) g / 255;

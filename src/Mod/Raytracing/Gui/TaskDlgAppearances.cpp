@@ -157,7 +157,7 @@ void TaskDlgAppearances::materialDropEvent(QDropEvent *ev)
 
     // Find the RenderFeature object. It must be currently active to add the RenderMaterial
     App::DocumentObject *activeObj =  App::GetApplication().getActiveDocument()->getActiveObject();
-    if(activeObj->getTypeId() == RenderFeature::getClassTypeId()) {
+    if(activeObj && activeObj->getTypeId() == RenderFeature::getClassTypeId()) {
         RenderFeature *feat = static_cast<RenderFeature *>(activeObj);
 
         // Remove the previous RenderMaterial if one exists
