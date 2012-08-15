@@ -216,7 +216,6 @@ const char* ViewProviderDocumentObject::getDefaultDisplayMode() const
 std::vector<std::string> ViewProviderDocumentObject::getDisplayModes(void) const
 {
     // empty
-    
     return std::vector<std::string>();
 }
 
