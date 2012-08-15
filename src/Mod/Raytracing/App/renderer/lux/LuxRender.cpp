@@ -413,17 +413,17 @@ QString LuxRender::genRenderTemplate()
     Base::Vector3d camPos = getCamera()->CamPos;
 
     
-    Base::Vector3d delta = (bbMax - bbMin) * 2; // 2 is a factor just to prevent the camera being to close causing problems.
+    Base::Vector3d delta = (bbMax - bbMin) ; 
     // Check if the bounding box was set for the scene
     if (delta.Length() < FLT_EPSILON) {
         return outStr; // Throw exception MUST BE SET?
     }
 
     float scale = (camPos.Length() > delta.Length()) ? camPos.Length() : delta.Length();
-
+    scale *= exp(ceil(log(std::abs(scale)))) * 1.2;
     out << "\n# Scene Template" << endl
         << "TransformBegin" << endl
-        << "Scale " << exp(ceil(log(std::abs(scale)))) << " " << exp(ceil(log(std::abs(scale)))) << " " << exp(ceil(log(std::abs(scale)))) << endl;
+        << "Scale " << scale << " " << scale << " " << scale << endl;
 
     if(renderTemplate->getSource() == RenderTemplate::EXTERNAL)
     {
