@@ -14,5 +14,15 @@
       <description>A setting for Lux's classic metropolis light transport mode, to get you back to sane, simple, unbiased settings</description>
       <filename>files/metropolisUnbiased.lbs</filename>
     </Preset>
+    <Preset id="globalIlluminationPreview">
+      <label>Global Illumnation (Preview)</label>
+      <description>Global Illumination Preview</description>
+      <filename>files/globalIllumination.lbs</filename>
+    </Preset>
+    <Preset id="sppm">
+      <label>SPPM</label>
+      <description>Hybrid Approach</description>
+      <filename>files/sppm.lbs</filename>
+    </Preset>
   </Presets>
 </Document>

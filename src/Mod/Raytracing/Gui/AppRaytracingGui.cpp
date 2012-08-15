@@ -42,6 +42,7 @@ using namespace RaytracingGui;
 
 // Create the commands
 void CreateRaytracingCommands(void);
+void CreateRenderCommands(void);
 
 void loadRaytracingResource()
 {
@@ -73,6 +74,7 @@ void RaytracingGuiExport initRaytracingGui()
 
     // instantiating the commands
     CreateRaytracingCommands();
+    CreateRenderCommands();
 
     RaytracingGui::ViewProviderRender     ::init();
         

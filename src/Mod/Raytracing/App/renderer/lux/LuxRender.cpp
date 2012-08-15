@@ -91,6 +91,7 @@ LuxRender::LuxRender(void)
     renderTemplatesPath = App::Application::getResourceDir() + "Mod/Raytracing/Templates/Lux";
     scanTemplates();
 }
+
 LuxRender::~LuxRender(void){}
 
 void LuxRender::generateScene()
@@ -409,7 +410,20 @@ QString LuxRender::genRenderTemplate()
     if(!renderTemplate)
       return outStr; // Throw exception?
 
-    out << "# Scene Template" << endl;
+    Base::Vector3d camPos = getCamera()->CamPos;
+
+    
+    Base::Vector3d delta = (bbMax - bbMin);
+    // Check if the bounding box was set for the scene
+    if (delta.Length() < FLT_EPSILON) {
+        return outStr; // Throw exception MUST BE SET?
+    }
+
+    float scale = (camPos.Length() > delta.Length()) ? camPos.Length() : delta.Length();
+
+    out << "\n# Scene Template" << endl
+        << "TransformBegin" << endl
+        << "Scale " << exp(ceil(log(std::abs(scale)))) << " " << exp(ceil(log(std::abs(scale)))) << " " << exp(ceil(log(std::abs(scale)))) << endl;
 
     if(renderTemplate->getSource() == RenderTemplate::EXTERNAL)
     {
@@ -426,6 +440,7 @@ QString LuxRender::genRenderTemplate()
         }
     }
 
+    out << "\n\nTransformEnd" << endl;
     return outStr;
 }
 

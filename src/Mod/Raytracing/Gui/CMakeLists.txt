@@ -66,6 +66,7 @@ SET(RaytracingGui_SRCS
     AppearancesModel.cpp
     AppearancesModel.h
     Command.cpp
+    CommandAlterRender.cpp
     DlgSettingsRay.ui
     DlgSettingsRayImp.cpp
     DlgSettingsRayImp.h

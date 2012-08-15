@@ -29,6 +29,8 @@
 #include <App/DocumentObject.h>
 #include <Base/Axis.h>
 
+#include <Inventor/SbBox3f.h>
+
 #include "Renderer.h"
 #include "PropertyRenderMaterialList.h"
 // #include <Mod/Part/App/Part2DObject.h>
@@ -81,9 +83,8 @@ public:
     void removeRenderer(void);
     void setRenderer(const char *);
     Renderer * getRenderer(void) const { return renderer; }
-
-    bool isRendererReady(void);
-
+    bool hasRenderer(void) const;
+    bool isRendererReady(void) const;
     void attachRenderCamera(RenderCamera *cam);
 
 
@@ -94,13 +95,14 @@ public:
     void render();
     void reset();
     void setCamera(const Base::Vector3d &v1, const Base::Vector3d &v2, const Base::Vector3d &v3, const Base::Vector3d &v4, const char *camType);
+    void setBBox(const Base::Vector3d &min, const Base::Vector3d &max);
     RenderCamera * getCamera(void);
     void setRenderPreset(const char * presetName);
     void setRenderTemplate(const char * templateName);
     void setRenderSize(int x, int y);
     void setOutputPath(const char * outputPath);
     void setUpdateInterval(int interval);
-    
+
     // from base class
     virtual PyObject *getPyObject(void);
     virtual unsigned int getMemSize(void) const;
@@ -113,6 +115,7 @@ protected:
     virtual void onDocumentRestored();
     virtual void onFinishDuplicating();
 
+    SbBox3f bbox;
     Renderer *renderer;
     static const char* TypeEnums[];
 };

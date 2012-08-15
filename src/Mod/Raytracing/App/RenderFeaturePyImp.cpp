@@ -170,6 +170,21 @@ PyObject* RenderFeaturePy::setCamera(PyObject *args)
     }
 }
 
+PyObject* RenderFeaturePy::setBBox(PyObject *args)
+{
+    PyObject *pcObj1, *pcObj2;
+
+     // Two Lines, radius
+    if (PyArg_ParseTuple(args, "O!O!", &(Base::VectorPy::Type), &pcObj1, &(Base::VectorPy::Type), &pcObj2)) {
+
+        Base::Vector3d min = static_cast<Base::VectorPy*>(pcObj1)->value(); // CamPos
+        Base::Vector3d max = static_cast<Base::VectorPy*>(pcObj2)->value(); // CamDir
+
+        this->getRenderFeaturePtr()->setBBox(min, max);
+        Py_Return;
+    }
+}
+
 PyObject* RenderFeaturePy::clear(PyObject *args)
 {
     this->getRenderFeaturePtr()->finish();

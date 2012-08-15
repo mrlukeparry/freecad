@@ -83,6 +83,9 @@ void Renderer::clear()
       delete *it;
     }
 
+    bbMin.Set(0.f , 0.f, 0.f);
+    bbMax.Set(0.f , 0.f, 0.f);
+
     materials.empty(); // We don't delete these because they are only list of RenderMaterial references
     lights.clear();
     parts.clear();

@@ -42,6 +42,7 @@
 #include <Gui/SoFCSelection.h>
 #include <Gui/Selection.h>
 #include <Gui/MainWindow.h>
+#include <Gui/SoFCUnifiedSelection.h>
 #include <Gui/View3DInventor.h>
 #include <QMenu>
 #include <QDropEvent>
@@ -92,8 +93,9 @@ void ViewProviderRender::setDisplayMode(const char* ModeName)
 std::vector<std::string> ViewProviderRender::getDisplayModes(void) const
 {
     // get the modes of the father
-    std::vector<std::string> StrList = ViewProviderDocumentObject::getDisplayModes();
-    StrList.push_back("Render");
+    //TODO unsure about this
+    std::vector<std::string> StrList;
+    StrList.push_back("Flat Lines");
     return StrList;
 }
 
@@ -152,6 +154,8 @@ bool ViewProviderRender::doubleClicked(void)
 }
 
 
+
+
 void ViewProviderRender::setEditViewer(Gui::View3DInventorViewer* viewer, int ModNum)
 {
     RenderCamera *cam = getRenderFeature()->getCamera();
@@ -167,6 +171,8 @@ void ViewProviderRender::setEditViewer(Gui::View3DInventorViewer* viewer, int Mo
     myCam->focalDistance.setValue((lookAt - pos).Length());
 
     viewer->setEditing(TRUE);
+    SoNode* root = viewer->getSceneGraph();
+    static_cast<Gui::SoFCUnifiedSelection*>(root)->selectionRole.setValue(FALSE);
 }
 
 void ViewProviderRender::unsetEditViewer(Gui::View3DInventorViewer* viewer)

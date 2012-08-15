@@ -31,7 +31,7 @@
 
 namespace RaytracingGui {
 
-class RaytracingGuiExport ViewProviderRender : public Gui::ViewProviderDocumentObject
+class RaytracingGuiExport ViewProviderRender : public Gui::ViewProviderDocumentObjectGroup
 {
     PROPERTY_HEADER(RaytracingGui::ViewProviderRender);
 
@@ -44,10 +44,10 @@ public:
     virtual void attach(App::DocumentObject *);
     virtual void setDisplayMode(const char* ModeName);
 
-    virtual Raytracing::RenderFeature * getRenderFeature(void) const;
-
     /// returns a list of all possible modes
     virtual std::vector<std::string> getDisplayModes(void) const;
+    virtual Raytracing::RenderFeature * getRenderFeature(void) const;
+
 
     /// Is called by the tree if the user double click on the object
     virtual bool doubleClicked(void);

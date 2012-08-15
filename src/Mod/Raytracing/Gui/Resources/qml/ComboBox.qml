@@ -8,6 +8,7 @@ Item {
         property alias selectedItem: chosenItemText.text;
         property alias selectedIndex: listView.currentIndex;
         property alias listview: listView
+        property int numShowItems: 3
         property variant selectedValue
 
         signal comboClicked;
@@ -52,7 +53,7 @@ Item {
             ListView {
 
                 id:listView
-                height:150;
+                height: 30
                 clip: true
                 width: parent.width
                 anchors.left: parent.left
@@ -64,7 +65,7 @@ Item {
                 delegate: Item {
                     id: defaultDelegate
                     width:parent.width;
-                    height: label.height + 10
+                    height: 40
 
                     Text {
                         id: label
@@ -95,6 +96,12 @@ Item {
                     anchors.right: parent.right
                     anchors.rightMargin: 5
                 }
+
+                states: State {
+                    name: "listDown";
+                    when: comboBox.state === "dropDown"
+                    PropertyChanges { target: listView; height: listView.contentItem.children[0].height * comboBox.numShowItems}
+                }
             }
         }
 
@@ -112,7 +119,7 @@ Item {
 
         states: State {
             name: "dropDown";
-            PropertyChanges { target: comboBox; height: 40 + listView.height }
+            PropertyChanges { target: comboBox; height: 40 + listView.height}
         }
 
         transitions: Transition {

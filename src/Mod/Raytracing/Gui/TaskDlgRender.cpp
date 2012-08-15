@@ -78,6 +78,35 @@ int PresetsModel::rowCount(const QModelIndex & parent) const {
     return m_libPresets.count();
 }
 
+QVariant PresetsModel::getById(QString id)
+{
+    QListIterator<RenderPreset *> presetItr(m_libPresets);
+    int i = 0;
+    while(presetItr.hasNext()) {
+        if(presetItr.next()->getId() == id)
+            return get(i);
+        ++i;
+    }
+}
+
+QVariant PresetsModel::get(int row)
+{
+    RenderPreset * item = m_libPresets.at(row);
+    QMap<QString, QVariant> itemData;
+    QHashIterator<int, QByteArray> hashItr(roleNames());
+    while(hashItr.hasNext()){
+        hashItr.next();
+        if (hashItr.key() == IdRole)
+          itemData.insert(QString::fromAscii(hashItr.value()), item->getId());
+        else if (hashItr.key() == LabelRole)
+            itemData.insert(QString::fromAscii(hashItr.value()),item->getLabel());
+        else if (hashItr.key() == DescriptionRole)
+            itemData.insert(QString::fromAscii(hashItr.value()),item->getDescription());
+    }
+
+    return QVariant(itemData);
+}
+
 QVariant PresetsModel::data(const QModelIndex & index, int role) const {
     if (index.row() < 0 || index.row() > m_libPresets.count())
         return QVariant();
@@ -130,6 +159,35 @@ QVariant TemplatesModel::data(const QModelIndex & index, int role) const {
     return QVariant();
 }
 
+QVariant TemplatesModel::getById(QString id)
+{
+    QListIterator<RenderTemplate *> templateItr(m_rendTemplates);
+    int i = 0;
+    while(templateItr.hasNext()) {
+        if(templateItr.next()->getId() == id)
+            return get(i);
+        ++i;
+    }
+}
+
+QVariant TemplatesModel::get(int row)
+{
+    RenderTemplate * item = m_rendTemplates.at(row);
+    QMap<QString, QVariant> itemData;
+    QHashIterator<int, QByteArray> hashItr(roleNames());
+    while(hashItr.hasNext()){
+        hashItr.next();
+        if (hashItr.key() == IdRole)
+          itemData.insert(QString::fromAscii(hashItr.value()), item->getId());
+        else if (hashItr.key() == LabelRole)
+            itemData.insert(QString::fromAscii(hashItr.value()),item->getLabel());
+        else if (hashItr.key() == DescriptionRole)
+            itemData.insert(QString::fromAscii(hashItr.value()),item->getDescription());
+    }
+
+    return QVariant(itemData);
+}
+
 //**************************************************************************
 //**************************************************************************
 // TaskDialog
@@ -151,25 +209,26 @@ TaskDlgRender::TaskDlgRender(ViewProviderRender *vp)
     RenderFeatureData *data = new RenderFeatureData(feat); // Assuming this gets deleted with destruction of QDeclartiveContext
 
     // Create the Presets Model using all the Render Presets found in Renderer
-    PresetsModel presetsModel;
+    // TODO check if needs to be deleted
+    PresetsModel *presetsModel = new PresetsModel();
 
     std::vector<RenderPreset *> presets = feat->getRenderer()->getRenderPresets();
     for (std::vector<RenderPreset *>::const_iterator it= presets.begin(); it!= presets.end(); ++it) {
-            presetsModel.addRenderPreset(*it);
+            presetsModel->addRenderPreset(*it);
     }
 
-    TemplatesModel templatesModel;
+    TemplatesModel *templatesModel = new TemplatesModel();
 
     std::vector<RenderTemplate *> renderTemplates = feat->getRenderer()->getRenderTemplates();
     for (std::vector<RenderTemplate *>::const_iterator it= renderTemplates.begin(); it!= renderTemplates.end(); ++it) {
-            templatesModel.addRenderTemplate(*it);
+            templatesModel->addRenderTemplate(*it);
     }
 
     QDeclarativeView *view = new QDeclarativeView ();
     QDeclarativeContext *ctxt = view->rootContext();
 
-    ctxt->setContextProperty(QString::fromAscii("presetsModel"), &presetsModel); // Render Presets
-    ctxt->setContextProperty(QString::fromAscii("templatesModel"), &templatesModel); // Render Templates
+    ctxt->setContextProperty(QString::fromAscii("presetsModel"), presetsModel); // Render Presets
+    ctxt->setContextProperty(QString::fromAscii("templatesModel"), templatesModel); // Render Templates
     ctxt->setContextProperty(QString::fromAscii("renderFeature"), data);
 
     view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
@@ -242,6 +301,16 @@ void TaskDlgRender::preview()
         }
     }
 
+    // Get the Render Scene Bounding box and set it because contents of scene may haved updated
+    SbBox3f bbox;
+    getRenderBBox(bbox);
+
+    SbVec3f min = bbox.getMin();
+    SbVec3f max = bbox.getMax();
+
+    // set the scene bounding box for the template
+    feat->setBBox(Base::Vector3d(min[0],min[1], min[2]), Base::Vector3d(max[0],max[1], max[2]));
+
     RenderView *renderView    = new RenderView(doc, Gui::getMainWindow());
 
     feat->preview();
@@ -290,6 +359,7 @@ void TaskDlgRender::getRenderBBox(SbBox3f &box)
 
     SoGetBoundingBoxAction action(viewer->getViewportRegion());
     action.apply(viewer->getSceneGraph());
+    box = action.getBoundingBox();
 }
 
 //---------- SLOTS ---------//
@@ -342,6 +412,15 @@ void TaskDlgRender::previewWindow()
         }
     }
 
+    // Get the Render Scene Bounding box and set it
+    SbBox3f bbox;
+    getRenderBBox(bbox);
+
+    SbVec3f min = bbox.getMin();
+    SbVec3f max = bbox.getMax();
+
+    // set the scene bounding box for the template
+    feat->setBBox(Base::Vector3d(min[0],min[1], min[2]), Base::Vector3d(max[0],max[1], max[2]));
 
     // Get the current camera positions
     SbRotation camrot = Cam->orientation.getValue();
@@ -466,7 +545,7 @@ void TaskDlgRender::clicked(int)
 
 bool TaskDlgRender::accept()
 {
-    return true;
+  return true;
 }
 
 bool TaskDlgRender::reject()
@@ -475,6 +554,8 @@ bool TaskDlgRender::reject()
 //     Gui::Command::doCommand(Gui::Command::Gui,"Gui.getDocument('%s').resetEdit()", document.c_str());
 //     Gui::Command::doCommand(Gui::Command::Doc,"App.getDocument('%s').recompute()", document.c_str());
 
+    std::string document = documentName; // needed because resetEdit() deletes this instance
+    Gui::Command::doCommand(Gui::Command::Gui,"Gui.getDocument('%s').resetEdit()", document.c_str());
     return true;
 }
 

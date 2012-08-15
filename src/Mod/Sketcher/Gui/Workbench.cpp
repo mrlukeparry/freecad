@@ -58,6 +58,7 @@ Gui::MenuItem* Workbench::setupMenuBar() const
     Gui::MenuItem* sketch = new Gui::MenuItem;
     root->insertItem(item, sketch);
     sketch->setCommand("S&ketch");
+    
     Gui::MenuItem* geom = new Gui::MenuItem();
     geom->setCommand("Sketcher geometries");
     *geom << "Sketcher_CreatePoint"

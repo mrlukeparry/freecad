@@ -117,13 +117,6 @@ Item {
                          width: parent.width
 
                          ComboBox {
-                             function  getLabel(myId) {
-                                 for(var i = 0; i < renderPreset.listview.count; i++) {
-                                     var listItem = listview.contentItem.children[i];
-                                     if(listItem.presetId == myId) {return listItem.presetLabel; }
-                                 }
-                                 return "";
-                             }
                              id: renderPreset
                              model: presetsModel
                              property string preset;
@@ -134,10 +127,6 @@ Item {
                                  id: presetsDelegate
                                  width: parent.width;
                                  height: presDelLabel.height + presDelDesc.height + 15
-
-                                 // Due to lazy loading these need to be set
-                                 property string presetId: id
-                                 property string presetLabel: label
 
                                  Text {
                                      id: presDelLabel
@@ -172,40 +161,31 @@ Item {
                                          var prevSelection = chosenItemText.text
                                          chosenItemText.text = label
                                          if(chosenItemText.text != prevSelection){
-                                             renderPreset.preset = parent.presetId
+                                             renderPreset.preset = id
                                              comboBox.comboClicked();
                                          }
                                          listView.currentIndex = index;
                                      }
                                  }
                              }
-                             selectedItem: getLabel(renderFeature.getRenderPreset())
+                             selectedItem: { var item = renderPreset.model.getById(renderFeature.getRenderPreset()); if(item !== undefined) { return item.label; } }
                          }
                      } // Row End
                      Row {
                          width: parent.width
                          ComboBox {
-                             function  getLabel(myId) {
-                                 for(var i = 0; i < renderTemplate.listview.count; i++) {
-                                     var listItem = listview.contentItem.children[i];
-                                     if(listItem.templateId == myId) {return listItem.templateLabel; }
-                                 }
-                                 return "";
-                             }
+
                              id: renderTemplate
-                             model: templatesModel
                              property string templateName;
+
                              width: parent.width
                              height: 20
-                             onComboClicked: renderFeature.setRenderTemplate(renderPreset.templateName)
+                             onComboClicked: renderFeature.setRenderTemplate(renderTemplate.templateName)
+                             model: templatesModel
                              delegate: Item {
                                  id: templatesDelegate
                                  width: parent.width;
                                  height: tempDelLabel.height + tempDelDesc.height + 15
-
-                                 // Due to lazy loading these need to be set
-                                 property string templateId: id
-                                 property string templateLabel: label
 
                                  Text {
                                      id: tempDelLabel
@@ -240,14 +220,15 @@ Item {
                                          var prevSelection = chosenItemText.text
                                          chosenItemText.text = label
                                          if(chosenItemText.text != prevSelection){
-                                             renderTemplate.templateName = parent.templateId
+                                             renderTemplate.templateName = id
                                              comboBox.comboClicked();
                                          }
                                          listView.currentIndex = index;
                                      }
                                  }
                              }
-                             selectedItem: getLabel(renderFeature.getRenderTemplate())
+                             selectedItem: { var item = renderTemplate.model.getById(renderFeature.getRenderTemplate()); if(item !== undefined) { return item.label; } }
+
                          }
                      } // Row End
 

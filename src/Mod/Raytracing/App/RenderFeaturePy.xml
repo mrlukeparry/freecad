@@ -68,6 +68,11 @@
         <UserDocu>Set the properties for the current render camera</UserDocu>
       </Documentation>
     </Methode>
+    <Methode Name="setBBox">
+      <Documentation>
+        <UserDocu>Set the properties for the current render camera</UserDocu>
+      </Documentation>
+    </Methode>
     <Methode Name="removeRenderMaterialFromPart">
       <Documentation>
         <UserDocu>Remove a render material from a part feature</UserDocu>

@@ -41,6 +41,10 @@ namespace RaytracingGui {
 class RaytracingGuiExport PresetsModel : public QAbstractListModel
 {
     Q_OBJECT
+    Q_PROPERTY( int count READ getCount() NOTIFY countChanged())
+
+Q_SIGNALS:
+  void countChanged();
 public:
     enum AppearancesRoles {
          IdRole = Qt::UserRole + 1,
@@ -48,22 +52,33 @@ public:
          LabelRole
      };
 
+
     PresetsModel(QObject *parent = 0);
     ~PresetsModel(){}
+
+    int getCount() { this->count = this->rowCount(); return count; }
+
+    Q_INVOKABLE QVariant getById(QString id);
+    Q_INVOKABLE QVariant get(int row);
 
     void addRenderPreset(Raytracing::RenderPreset *preset);
 
     int rowCount(const QModelIndex & parent = QModelIndex()) const;
-
     QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
 
 private:
     QList<Raytracing::RenderPreset *> m_libPresets;
+    int count;
 };
 
 class RaytracingGuiExport TemplatesModel : public QAbstractListModel
 {
     Q_OBJECT
+    Q_PROPERTY( int count READ getCount() NOTIFY countChanged())
+
+Q_SIGNALS:
+    void countChanged();
+  
 public:
     enum AppearancesRoles {
          IdRole = Qt::UserRole + 1,
@@ -74,14 +89,18 @@ public:
     TemplatesModel(QObject *parent = 0);
     ~TemplatesModel(){}
 
-    void addRenderTemplate(Raytracing::RenderTemplate *renderTemplate);
+    Q_INVOKABLE QVariant getById(QString id);
+    Q_INVOKABLE QVariant get(int row);
 
+    void addRenderTemplate(Raytracing::RenderTemplate *renderTemplate);
+    int getCount() { this->count = this->rowCount(); return count; }
     int rowCount(const QModelIndex & parent = QModelIndex()) const;
 
     QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
 
 private:
     QList<Raytracing::RenderTemplate *> m_rendTemplates;
+    int count;
 };
 
 class RaytracingGuiExport RenderFeatureData : public QObject
@@ -146,9 +165,9 @@ public:
     virtual bool isAllowedAlterDocument(void) const
     { return false; }
 
-    /// returns for Close and Help button 
-//     virtual QDialogButtonBox::StandardButtons getStandardButtons(void) const
-//     { return 0; }
+    /// returns for Close and Help button
+    virtual QDialogButtonBox::StandardButtons getStandardButtons(void) const
+    { return QDialogButtonBox::Close|QDialogButtonBox::Help; }
 
 protected:
   bool isRenderActive();

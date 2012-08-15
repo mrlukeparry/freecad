@@ -105,8 +105,8 @@ void RenderFeature::setRenderer(const char *rendererType)
 
 void RenderFeature::removeRenderer(void)
 {
-    if(!this->renderer)
-      return;
+    if(!hasRenderer())
+        return;
 
     // Determine the type to ensure the correct renderer destructor is called
     if(this->renderer->getTypeId() == LuxRender::getClassTypeId())
@@ -198,11 +198,9 @@ const RenderMaterial * RenderFeature::getRenderMaterial(const char *partName) co
 
 RenderProcess * RenderFeature::getActiveRenderProcess() const
 {
-    if(!renderer) {
-//         Base::Console().Error("Renderer is not available\n");
+    if(!hasRenderer())
         return 0;
-    }
-    
+
     if(!renderer->getRenderProcess() || !renderer->getRenderProcess()->isActive())  {
 //         Base::Console().Error("Render Process is not available\n");
         return 0;
@@ -213,10 +211,8 @@ RenderProcess * RenderFeature::getActiveRenderProcess() const
 /// Methods
 void RenderFeature::setCamera(const Base::Vector3d &v1, const Base::Vector3d &v2, const Base::Vector3d &v3, const Base::Vector3d &v4, const char *camType)
 {
-    if(!renderer) {
-        Base::Console().Error("Renderer is not available\n");
+    if(!hasRenderer())
         return;
-    }
 
     if(!renderer->hasCamera()) {
         Base::Console().Error("Renderer doesn't have a camera set\n");
@@ -227,12 +223,32 @@ void RenderFeature::setCamera(const Base::Vector3d &v1, const Base::Vector3d &v2
     renderer->setCamera(v1, v2, v3, v4);
 }
 
+
+bool RenderFeature::hasRenderer() const
+{
+    if(!renderer) {
+        Base::Console().Error("Renderer is not available\n");
+        return false;
+    }
+
+    return true;
+}
+
+
+void RenderFeature::setBBox(const Base::Vector3d &min, const Base::Vector3d &max)
+{
+    if(!hasRenderer())
+        return;
+
+    renderer->setBBox(min, max);
+}
+
 RenderCamera * RenderFeature::getCamera(void)
 {
-  if(!renderer)
-        Base::Console().Error("Renderer is not available\n");
+    if(!hasRenderer())
+        return 0;
 
-  return renderer->getCamera();
+    return renderer->getCamera();
 }
 
 void RenderFeature::preview(int x1, int y1, int x2, int y2)
@@ -292,8 +308,8 @@ void RenderFeature::render()
 
 void RenderFeature::finish()
 {
-    if(!renderer)
-        Base::Console().Error("Renderer is not available\n");
+    if(!hasRenderer())
+        return;
 
     RenderProcess *process = renderer->getRenderProcess();
     if(!process || !process->isActive())
@@ -304,19 +320,16 @@ void RenderFeature::finish()
 
 void RenderFeature::reset()
 {
-    if(!renderer)
-      Base::Console().Error("Renderer is not available\n");
+    if(!hasRenderer())
+        return;
 
     renderer->reset();
 }
 
-bool RenderFeature::isRendererReady()
+bool RenderFeature::isRendererReady() const
 {
-
-    if(!this->renderer) {
-        Base::Console().Error("Renderer is not available\n");
+    if(!hasRenderer())
         return false;
-    }
 
     if(!this->renderer->hasCamera()) {
         Base::Console().Error("Camera has not been set for the render\n");
@@ -337,8 +350,8 @@ void RenderFeature::setRenderSize(int x, int y)
 
 void RenderFeature::setRenderPreset(const char * presetName)
 {
-    if(!renderer)
-       Base::Console().Error("Renderer is not available\n");
+    if(!hasRenderer())
+        return;
 
     // Check if the Render Preset exists for the given render backend
     RenderPreset *fndPreset = renderer->getRenderPreset(presetName);
@@ -351,8 +364,8 @@ void RenderFeature::setRenderPreset(const char * presetName)
 
 void RenderFeature::setRenderTemplate(const char * templateName)
 {
-    if(!renderer)
-       Base::Console().Error("Renderer is not available\n");
+    if(!hasRenderer())
+        return;
 
     // Check if the Render Preset exists for the given render backend
     RenderTemplate *fndTemplate = renderer->getRenderTemplate(templateName);
@@ -365,8 +378,8 @@ void RenderFeature::setRenderTemplate(const char * templateName)
 
 void RenderFeature::setOutputPath(const char * outputPath)
 {
-    if(!renderer)
-       Base::Console().Error("Renderer is not available\n");
+    if(!hasRenderer())
+        return;
 
     renderer->setOutputPath(outputPath);
 }

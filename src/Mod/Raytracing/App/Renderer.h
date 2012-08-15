@@ -123,6 +123,7 @@ public:
     void setOutputPath(const char *loc) { outputPath = loc; }
     void setRenderSize(int x, int y) { xRes = x; yRes = y;}
     void setUpdateInteval(int msecs) { updateInterval = msecs; }
+    void setBBox(const Base::Vector3d &min, const Base::Vector3d &max) { bbMin = min; bbMax = max; } 
 
     //virtual void loadSceneDefinition(const char *file);
     //virtual void Restore(Base::XMLReader &/*reader*/);
@@ -166,6 +167,8 @@ protected:
     std::string renderTemplatesPath;
 
     QTemporaryFile inputFile;
+
+    Base::Vector3d bbMin, bbMax; // Bounding Box
 
     int xRes;
     int yRes;

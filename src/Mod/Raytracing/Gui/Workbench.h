@@ -42,6 +42,7 @@ public:
 protected:
     Gui::MenuItem* setupMenuBar() const;
     Gui::ToolBarItem* setupToolBars() const;
+    Gui::ToolBarItem* setupCommandBars() const;
 };
 
 } // namespace RaytracingGui

@@ -47,12 +47,16 @@ SOURCE_GROUP("Moc" FILES ${Raytracing_MOC_SRCS})
 SET(LuxRenderTemplates
     Templates/Lux/Default/Default.xml
     Templates/Lux/Default/Default.lxs
+    Templates/Lux/Classic/luxsceneClassic.lxs
+    Templates/Lux/Classic/Classic.xml
 )
 
 SET(LuxRenderPresets
     Presets/Lux/luxPresets.xml
     Presets/Lux/files/directLighting.lbs
+    Presets/Lux/files/globalIllumination.lbs
     Presets/Lux/files/metropolisUnbiased.lbs
+    Presets/Lux/files/sppm.lbs
 )
 
 SET(LuxMaterials
