@@ -106,9 +106,21 @@ RenderView::RenderView(Gui::Document* doc, QWidget* parent)
 
 bool RenderView::onMsg(const char* pMsg, const char** ppReturn)
 {
+    if (strcmp("ViewFit",pMsg) == 0) {
+        QObject *rootObject = view->rootObject();
+        if(rootObject)
+            QMetaObject::invokeMethod(rootObject, "viewAll");
+        return true;
+    }
     return false;
 }
 
+bool RenderView::onHasMsg(const char* pMsg) const
+{
+    if (strcmp("ViewFit",pMsg) == 0)
+        return true;
+
+}
 void RenderView::attachRender(Renderer *attachedRender)
 {
     render = attachedRender;
@@ -152,9 +164,19 @@ void RenderView::stopRender()
     render->getRenderProcess()->stop();
 }
 
-bool RenderView::onHasMsg(const char* pMsg) const
+bool RenderView::canClose(void)
 {
-    return false;
+    return !render->getRenderProcess()->isActive();
+}
+
+void RenderView::closeEvent(QCloseEvent *e)
+{
+    // We must force the render process to stop
+    if(render->getRenderProcess()->isActive())
+        stopRender();
+
+    // Run parent class method
+    MDIView::closeEvent(e);
 }
 
 void RenderView::updateOutput()

@@ -81,14 +81,16 @@ Q_SIGNALS:
   void updatePreview();
 
 public:
+    void attachRender(Renderer *renderer);
+    bool canClose(void);
     bool onMsg(const char* pMsg,const char** ppReturn);
     bool onHasMsg(const char* pMsg) const;
-    void attachRender(Renderer *renderer);
-
     PyObject* getPyObject();
 
 protected:
 //     void contextMenuEvent(QContextMenuEvent *event);
+
+    void closeEvent(QCloseEvent *e);
 
 private:
     ImageProvider *imgProv;

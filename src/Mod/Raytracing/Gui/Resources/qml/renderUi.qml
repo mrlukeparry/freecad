@@ -36,10 +36,11 @@ Item {
             anchors.topMargin: 25
             spacing: 10
             Row {
-                spacing: 10
-
+                width: parent.width
+                spacing: width * 0.05
                  Button {
                      id: previewButton
+                     width: parent.width * 0.33
                      anchors.bottom: parent.bottom
                      anchors.bottomMargin: 0
                      text: qsTr("Preview")
@@ -53,6 +54,7 @@ Item {
                      text: qsTr("Preview Window")
                      onClicked: renderTaskWidget.previewWindow()
                      enabled: !renderTaskWidget.renderActive
+                      width: parent.width * 0.62
                  }
             }
             Row {

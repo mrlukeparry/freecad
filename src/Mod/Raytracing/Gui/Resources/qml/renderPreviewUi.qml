@@ -1,5 +1,6 @@
 import QtQuick 1.1
 import FreeCAD 1.0
+
 Item {
 
     id: previewWidget
@@ -18,6 +19,15 @@ Item {
 
         renderActive = true;
         previewLoaded = true;
+    }
+
+    function viewAll() {
+
+        var yScale = previewWidget.height / (previewImage.myHeight);
+        previewImage.zoomAnim.newX = 0;
+        previewImage.zoomAnim.newY = 0;
+        previewImage.zoomAnim.newZoom = yScale;
+        previewImage.zoomAnim.start();
     }
 
     function renderActive() {
@@ -70,6 +80,7 @@ Item {
             id: previewImage
             opacity: 0
             anchors.centerIn : parent
+            property alias zoomAnim: zoomOut;
 
             MouseArea {
                 id: dragMouseArea
@@ -82,6 +93,17 @@ Item {
                 drag.minimumY: -parent.height /2
                 drag.maximumY: previewWidget.height -parent.height / 2
             }
+
+            ParallelAnimation {
+                id: zoomOut
+                property int newX;
+                property int newY;
+                property real newZoom;
+
+                NumberAnimation  { target: previewImage; property: "zoom"; to: zoomOut.newZoom; easing.type: Easing.OutCubic; duration: 300 }
+                NumberAnimation  { target: previewImage; property: "x"; to:  zoomOut.newX; easing.type: Easing.OutCubic; duration: 300 }
+                NumberAnimation  { target: previewImage; property: "y"; to:  zoomOut.newY; easing.type: Easing.OutCubic; duration: 300 }
+            }
         }
 
        Row {
@@ -91,12 +113,21 @@ Item {
            anchors.bottomMargin: 25
            spacing: 10
 
+           Button {
+               id: fitAll
+               anchors.bottom: parent.bottom
+               anchors.bottomMargin: 0
+               text: qsTr("Fit All")
+               enabled: previewWidget.previewLoaded
+               onClicked: previewWidget.viewAll()
+           }
+
             Button {
                 id: saveButton
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: 0
                 text: qsTr("Save")
-                enabled: false
+                enabled: previewWidget.previewLoaded
                 onClicked: previewWidget.saveOutput()
 
             }
@@ -110,13 +141,6 @@ Item {
             }
        }
     }
-    states: [
-        State {
-            name:"enabled";
-            when: previewWidget.previewLoaded
-            PropertyChanges { target: saveButton; enabled: true}
-        }]
-
     SequentialAnimation {
         id: loadingAnim
              running: false

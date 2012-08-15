@@ -413,7 +413,7 @@ QString LuxRender::genRenderTemplate()
     Base::Vector3d camPos = getCamera()->CamPos;
 
     
-    Base::Vector3d delta = (bbMax - bbMin);
+    Base::Vector3d delta = (bbMax - bbMin) * 2; // 2 is a factor just to prevent the camera being to close causing problems.
     // Check if the bounding box was set for the scene
     if (delta.Length() < FLT_EPSILON) {
         return outStr; // Throw exception MUST BE SET?

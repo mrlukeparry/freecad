@@ -30,7 +30,7 @@ Item {
         id: pictureSrc
         asynchronous: true
         scale: previewImage.zoom
-
+        source: ""
     }
 
     Rectangle {
