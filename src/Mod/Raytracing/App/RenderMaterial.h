@@ -23,9 +23,11 @@
 #ifndef _RAYTRACING_RENDERMATERIAL_h_
 #define _RAYTRACING_RENDERMATERIAL_h_
 
-#include "LibraryMaterial.h"
 #include <App/PropertyLinks.h>
 #include <Base/Persistence.h>
+
+#include "Appearances.h"
+#include "LibraryMaterial.h"
 
 namespace Raytracing {
   
@@ -103,7 +105,7 @@ public:
   App::PropertyLinkSub Link;
 
   RenderMaterial(){}
-  RenderMaterial(const LibraryMaterial *mat) : LibMaterial(mat) {}
+  RenderMaterial(const LibraryMaterial *mat) { LibMaterialId = mat->id.toStdString(); }
   RenderMaterial(const RenderMaterial&);
   ~RenderMaterial();
   virtual RenderMaterial * clone(void) const;
@@ -116,8 +118,9 @@ public:
 //   virtual PyObject *getPyObject(void);
     
   QMap<QString, MaterialProperty *> Properties;
-  const LibraryMaterial * getMaterial() const { return LibMaterial; }
+  const LibraryMaterial * getMaterial() const { Appearances().getMaterialById(LibMaterialId.c_str()); }
   std::string Name;
+  std::string LibMaterialId;
 private:
   const LibraryMaterial *LibMaterial; //TODO convert this to an ID and do a lookup to get LibMaterial   
 };

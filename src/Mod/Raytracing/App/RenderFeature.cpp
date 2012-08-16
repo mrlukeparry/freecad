@@ -100,7 +100,7 @@ void RenderFeature::setRenderer(const char *rendererType)
     }
 
     // Reload the materials
-    Appearances().scanMaterials();
+    // Appearances().scanMaterials();
 }
 
 void RenderFeature::removeRenderer(void)

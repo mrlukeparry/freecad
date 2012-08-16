@@ -118,6 +118,8 @@ public:
 
     /// Get methods
     RenderCamera * getCamera() { return camera; }
+    const char * getProviderName() { return providerName; }
+
     ///Setter methods
     void setCamera(const Base::Vector3d &camPos, const Base::Vector3d &CamDir, const Base::Vector3d &Up, const Base::Vector3d &lookAt);
     void setOutputPath(const char *loc) { outputPath = loc; }
@@ -139,6 +141,8 @@ protected:
     virtual QString genRenderProps() = 0;
     virtual QString genRenderTemplate() = 0;
     virtual void generateScene() = 0;
+
+    char *providerName;
 
     bool getOutputStream(QTextStream &ts);
 
@@ -163,6 +167,7 @@ protected:
 
     /// Path storage
     std::string outputPath;
+    std::string materialsPath;
     std::string renderPresetsPath;
     std::string renderTemplatesPath;
 

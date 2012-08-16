@@ -83,12 +83,16 @@ using namespace std;
 // 
 // WorldEnd
 
-LuxRender::LuxRender(void)
+LuxRender::LuxRender()
 {
-    renderPresetsPath = App::Application::getResourceDir() + "Mod/Raytracing/Presets/Lux";
-    scanPresets();
+    //Each renderer must declare a name used to distinguish itself from other render backends
+    providerName = "lux";
 
+    renderPresetsPath   = App::Application::getResourceDir() + "Mod/Raytracing/Presets/Lux";
+    materialsPath       = App::Application::getResourceDir() + "Mod/Raytracing/Materials/Lux";
     renderTemplatesPath = App::Application::getResourceDir() + "Mod/Raytracing/Templates/Lux";
+
+    scanPresets();
     scanTemplates();
 }
 

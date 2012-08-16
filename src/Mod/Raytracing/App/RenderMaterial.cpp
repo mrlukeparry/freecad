@@ -35,9 +35,9 @@ TYPESYSTEM_SOURCE(Raytracing::RenderMaterial, Base::Persistence)
 
 // Copy Constructor
 RenderMaterial::RenderMaterial(const RenderMaterial& from)
-: Name(from.Name)
+: Name(from.Name),
+  LibMaterialId(from.LibMaterialId)
 {
-    LibMaterial = from.getMaterial();
     Link.setValue(from.Link.getValue());
 
     // Copy all the properties. New object must be made

@@ -28,6 +28,7 @@
 
 #include <Base/Console.h>
 #include <Base/Interpreter.h>
+#include <App/Application.h>
 
 #include "RenderCameraPy.h"
 
@@ -59,7 +60,7 @@ void RaytracingExport initRaytracing()
 
       // Add Types to module
       Base::Interpreter().addType(&Raytracing::RenderCameraPy::Type,raytracingModule,"RenderCamera");
-      
+
       Raytracing::RenderCamera        ::init();
       Raytracing::RenderFeature       ::init();
       Raytracing::RenderFeaturePython ::init();
@@ -67,13 +68,19 @@ void RaytracingExport initRaytracing()
 
       Raytracing::PropertyRenderMaterialList::init();
       Raytracing::RenderMaterial::init();
+
       Raytracing::RaySegment          ::init();
       Raytracing::RayFeature          ::init();
       Raytracing::RayProject          ::init();
 
-   
-    Base::Console().Log("Loading Raytracing module... done\n");
 
+      // Load all the library materials
+      // TODO we need enable Appearances to scan recursivly - temporarily use Lux as default directory
+      std::string matPath = App::Application::getResourceDir() + "Mod/Raytracing/Materials/Lux";
+      Raytracing::Appearances().setUserMaterialsPath(matPath.c_str());
+      Raytracing::Appearances().scanMaterials();
+
+      Base::Console().Log("Loading Raytracing module... done\n");
 }
 
 } // extern "C" {

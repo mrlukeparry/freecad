@@ -28,6 +28,7 @@
 #include <Base/Console.h>
 
 #include <App/Application.h>
+#include <Base/Exception.h>
 
 #include <Gui/Application.h>
 #include <Gui/Command.h>
@@ -68,13 +69,22 @@ using namespace RaytracingGui;
 TaskDlgAppearances::TaskDlgAppearances()
     : TaskDialog()
 {
-    std::string matPath = App::Application::getResourceDir() + "Mod/Raytracing/Materials/Lux";
-    Appearances().setUserMaterialsPath(matPath.c_str());
-    Appearances().scanMaterials();
+    // A Render Feature MUST be active to open the appearances dialog
+    RenderFeature *feat;
+    App::DocumentObject *activeObj =  App::GetApplication().getActiveDocument()->getActiveObject();
+    if(activeObj && activeObj->getTypeId() == RenderFeature::getClassTypeId())
+      feat = static_cast<RenderFeature *>(activeObj);
+
+
+    if(!feat || !feat->hasRenderer())
+        throw Base::Exception("The currently active object must be a render feature and have a render backend");
 
     model = new AppearancesModel();
 
-    std::vector<LibraryMaterial *> materials = Appearances().getMaterialsByProvider("lux");
+    Base::Console().Log(feat->getRenderer()->getProviderName());
+    // Load the materials for the render feature's renderer
+    std::vector<LibraryMaterial *> materials = Appearances().getMaterialsByProvider(feat->getRenderer()->getProviderName());
+
     for (std::vector<LibraryMaterial *>::const_iterator it= materials.begin(); it!= materials.end(); ++it) {
             model->addLibraryMaterial(*it);
     }
@@ -92,7 +102,6 @@ TaskDlgAppearances::TaskDlgAppearances()
     QObject::connect(rootObject, SIGNAL( materialPropsAccepted()), this , SLOT(materialParamSave())); // Initiated when a Material Properties is Saved
 
     this->Content.push_back(view);
-
 }
 
 TaskDlgAppearances::~TaskDlgAppearances()
