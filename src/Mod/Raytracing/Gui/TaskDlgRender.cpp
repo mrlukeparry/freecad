@@ -203,33 +203,36 @@ TaskDlgRender::TaskDlgRender(ViewProviderRender *vp)
     RenderMaterial *mat;
     LibraryMaterial *libMat;
     libMat->parameters;
-    view = new QDeclarativeView (qobject_cast<QWidget *>(this));
 
     RenderFeature *feat = this->getRenderView()->getRenderFeature();
-    RenderFeatureData *data = new RenderFeatureData(feat); // Assuming this gets deleted with destruction of QDeclartiveContext
+    featViewData = new RenderFeatureData(feat); // Assuming this gets deleted with destruction of QDeclartiveContext
 
     // Create the Presets Model using all the Render Presets found in Renderer
     // TODO check if needs to be deleted
-    PresetsModel *presetsModel = new PresetsModel();
+    presetsModel = new PresetsModel();
 
     std::vector<RenderPreset *> presets = feat->getRenderer()->getRenderPresets();
     for (std::vector<RenderPreset *>::const_iterator it= presets.begin(); it!= presets.end(); ++it) {
-            presetsModel->addRenderPreset(*it);
+        presetsModel->addRenderPreset(*it);
     }
 
-    TemplatesModel *templatesModel = new TemplatesModel();
+    templatesModel = new TemplatesModel();
 
     std::vector<RenderTemplate *> renderTemplates = feat->getRenderer()->getRenderTemplates();
     for (std::vector<RenderTemplate *>::const_iterator it= renderTemplates.begin(); it!= renderTemplates.end(); ++it) {
             templatesModel->addRenderTemplate(*it);
     }
 
-    QDeclarativeView *view = new QDeclarativeView ();
+    // Create the QDeclartiveView for loading the QML UI
+    view = new QDeclarativeView (qobject_cast<QWidget *>(this));
+
+    // Set the context data for the View
     QDeclarativeContext *ctxt = view->rootContext();
 
-    ctxt->setContextProperty(QString::fromAscii("presetsModel"), presetsModel); // Render Presets
+    ctxt->setContextProperty(QString::fromAscii("presetsModel")  , presetsModel); // Render Presets
     ctxt->setContextProperty(QString::fromAscii("templatesModel"), templatesModel); // Render Templates
-    ctxt->setContextProperty(QString::fromAscii("renderFeature"), data);
+    ctxt->setContextProperty(QString::fromAscii("renderFeature") , featViewData);
+
 
     view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
     view->setSource(QUrl(QString::fromAscii("qrc:/qml/renderUi.qml"))); // Load the Main QML File
@@ -260,12 +263,15 @@ TaskDlgRender::TaskDlgRender(ViewProviderRender *vp)
 
 TaskDlgRender::~TaskDlgRender()
 {
+    // These models only stopy copy of data or act as references so we can just remove from heap
+    delete featViewData;
+    featViewData = 0;
 
-    // Disable Drag and Drops on the 3D Inventor Window
-//     Gui::MDIView *mdi = Gui::Application::Instance->activeDocument()->getActiveView();
-//     if(mdi) {
-//         mdi->setAcceptDrops(false);
-//     }
+    delete presetsModel;
+    presetsModel = 0;
+
+    delete templatesModel;
+    templatesModel = 0;
 }
 
 bool TaskDlgRender::isRenderActive()
@@ -505,24 +511,16 @@ void TaskDlgRender::previewWindow()
       return;
     }
 
-    QList<QDeclarativeError> errors = this->view->errors();
-    int count = errors.count();
-
-    RenderView *renderView    = new RenderView(doc, Gui::getMainWindow());
-
+    RenderView *renderView = new RenderView(doc, Gui::getMainWindow());
 
     QObject *renderProcQObj = qobject_cast<QObject *>(process);
     // Unfortunatly we have to make this class acts as a middleman with events
     QObject::connect(renderProcQObj , SIGNAL(finished()), this , SLOT(renderStopped())); // Connect Render Process Signal when stopped by user
     QObject::connect(renderProcQObj , SIGNAL(started()) , this , SLOT(renderStarted())); // Connect Render Process (QProcess) start signal when active
 
-    // Invoke renderActive slot if active, because we have most likely missed RenderProcess Start Method
-
-
     renderView->attachRender(feat->getRenderer());
     renderView->setWindowTitle(QObject::tr("Render viewer") + QString::fromAscii("[*]"));
     Gui::getMainWindow()->addWindow(renderView);
-
 }
 
 void TaskDlgRender::render()

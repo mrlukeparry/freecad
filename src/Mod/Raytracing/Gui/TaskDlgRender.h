@@ -172,7 +172,10 @@ public:
 protected:
   bool isRenderActive();
   ViewProviderRender *renderView;
-  QDeclarativeView *view ;
+  QDeclarativeView   *view ;
+  RenderFeatureData  *featViewData;
+  PresetsModel       *presetsModel;
+  TemplatesModel     *templatesModel;
 };
 
 

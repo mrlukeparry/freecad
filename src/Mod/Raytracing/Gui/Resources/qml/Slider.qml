@@ -23,6 +23,15 @@ Item {
         control.x = bar.width * (slider.val / (max-min)) - control.width / 2
     }
 
+    function updateValue(value)
+    {
+        if(value)
+            slider.val = value;
+        control.x = bar.width * (slider.val / (max-min)) - control.width / 2
+        return slider.val;
+    }
+
+
     function setValue()
     {
         slider.val = min + (max-min) * control.xPos / bar.width

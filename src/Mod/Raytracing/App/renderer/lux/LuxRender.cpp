@@ -383,7 +383,7 @@ QString LuxRender::genRenderProps()
     if(!preset)
       return outStr; // Throw exception?
 
-    out << "# Scene render Properties:" << endl;
+    out << "\n# Scene render Properties:" << endl;
 
     //Open the filename and append
     QFile file(preset->getFilename());
@@ -397,7 +397,7 @@ QString LuxRender::genRenderProps()
         out << textStr.readAll();
     }
 
-    out << "\nFilm \"fleximage\" \"integer xresolution\" [" << this->xRes << "] \"integer yresolution\" [" << yRes << "]" << endl;
+    out << "\n\nFilm \"fleximage\" \"integer xresolution\" [" << this->xRes << "] \"integer yresolution\" [" << yRes << "]" << endl;
     out << "\n\t\"integer writeinterval\" 3" << endl;
     return outStr;
 }

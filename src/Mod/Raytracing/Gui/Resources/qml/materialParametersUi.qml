@@ -1,5 +1,6 @@
 import QtQuick 1.1
 Item {
+    clip: true
     id: materialParametersWidget
     width: 300
     height: 700

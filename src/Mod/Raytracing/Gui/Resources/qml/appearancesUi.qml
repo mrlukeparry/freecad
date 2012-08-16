@@ -1,8 +1,30 @@
 
 import QtQuick 1.1
 Item {
-    signal materialDrag(string  matId)
+    id: appearancesTaskWidget
+
     height: 800
+    clip: true;
+    anchors.fill: parent
+
+    // Slots
+    function openMaterialParameters()
+    {
+         parametersUiLoader.source = "";
+        parametersUiLoader.source = "materialParametersUi.qml";
+        appearancesTaskWidget.state = "viewProperties";
+    }
+
+    // Signals
+    signal materialDrag(string  matId)
+    signal materialPropsAccepted()
+
+    //Connections to Material Paremeters Panel
+    Connections {
+             target: parametersUiLoader.item
+             onCancel: { parametersUiLoader.visible = false; appearancesTaskWidget.state = ""; }
+             onAccepted: appearancesTaskWidget.materialPropsAccepted()
+         }
     Component {
          id: libMatDelegate
          Item {
@@ -58,21 +80,40 @@ Item {
             }
          }
      }
-
     ListView {
-        anchors.fill: parent
+        id: materialList
+        width: 300
+        height: 700
         snapMode: ListView.SnapToItem
-        highlightRangeMode: ListView.StrictlyEnforceRange
-
         flickDeceleration: 7000
         focus: true
-        height: 800
         model: appearancesModel
         delegate: libMatDelegate
 
+        clip: true
         ScrollBar {
             flickable: parent
             vertical: true
         }
+
     }
+
+    Loader {
+        id: parametersUiLoader
+        anchors.left: materialList.right
+        visible: false
+    }
+
+    transitions: Transition {
+        //NumberAnimation {properties: "x";  duration: 400;}
+    }
+
+    states: [
+        State {
+        name: "viewProperties"
+        PropertyChanges {target: materialList;
+                         x: -materialList.width}
+        PropertyChanges {target: parametersUiLoader; visible: true}
+        }
+    ]
 }

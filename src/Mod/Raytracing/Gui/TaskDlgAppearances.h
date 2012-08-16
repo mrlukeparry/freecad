@@ -27,6 +27,8 @@
 #include <QDeclarativeView>
 #include <QVariant>
 #include <Gui/TaskView/TaskDialog.h>
+
+#include "AppearancesModel.h"
 #include <Mod/Raytracing/App/RenderMaterial.h>
 
 namespace RaytracingGui {
@@ -188,6 +190,7 @@ public:
 protected:
     void materialDragEvent(QDragMoveEvent *);
     void materialDropEvent(QDropEvent *);
+    AppearancesModel *model;
     QDeclarativeView *view;
     QDeclarativeView *paramView;
     RenderMaterialData *materialData;

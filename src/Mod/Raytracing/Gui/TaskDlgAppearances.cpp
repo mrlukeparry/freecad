@@ -27,8 +27,11 @@
 #include <Inventor/events/SoLocation2Event.h>
 #include <Base/Console.h>
 
+#include <App/Application.h>
+
 #include <Gui/Application.h>
 #include <Gui/Command.h>
+#include <Gui/Control.h>
 #include <Gui/Document.h>
 #include <Gui/MainWindow.h>
 #include <Gui/MDIView.h>
@@ -48,10 +51,10 @@
 #include <Mod/Raytracing/App/RenderMaterial.h>
 #include <Mod/Raytracing/App/RenderFeature.h>
 
-#include "TaskDlgAppearances.h"
-#include "AppearancesModel.h"
 #include "MaterialParametersModel.h"
-#include <App/Application.h>
+#include "TaskDlgAppearances.h"
+#include "TaskDlgRender.h"
+#include "ViewProviderRender.h"
 
 using namespace Raytracing;
 using namespace RaytracingGui;
@@ -69,16 +72,16 @@ TaskDlgAppearances::TaskDlgAppearances()
     Appearances().setUserMaterialsPath(matPath.c_str());
     Appearances().scanMaterials();
 
-    AppearancesModel model;
+    model = new AppearancesModel();
 
     std::vector<LibraryMaterial *> materials = Appearances().getMaterialsByProvider("lux");
     for (std::vector<LibraryMaterial *>::const_iterator it= materials.begin(); it!= materials.end(); ++it) {
-            model.addLibraryMaterial(*it);
+            model->addLibraryMaterial(*it);
     }
 
-    view = new QDeclarativeView (qobject_cast<QWidget *>(this));
+    view = new QDeclarativeView(qobject_cast<QWidget *>(this));
     QDeclarativeContext *ctxt = view->rootContext();
-    ctxt->setContextProperty(QString::fromAscii("appearancesModel"), &model);
+    ctxt->setContextProperty(QString::fromAscii("appearancesModel"), model);
 
     view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
     view->setSource(QUrl(QString::fromAscii("qrc:/qml/appearancesUi.qml"))); // Load the Main QML File
@@ -86,10 +89,18 @@ TaskDlgAppearances::TaskDlgAppearances()
      // Connect an Update Signal when an image is available
     QObject *rootObject = view->rootObject();
     QObject::connect(rootObject, SIGNAL(materialDrag(QString)), this , SLOT(dragInit(QString)));
+    QObject::connect(rootObject, SIGNAL( materialPropsAccepted()), this , SLOT(materialParamSave())); // Initiated when a Material Properties is Saved
 
     this->Content.push_back(view);
 
 }
+
+TaskDlgAppearances::~TaskDlgAppearances()
+{
+    delete model;
+    model = 0;
+}
+
 void TaskDlgAppearances::dragInit(QString str)
 {
     const LibraryMaterial *dragMaterial = Appearances().getMaterialById(str.toAscii());
@@ -182,30 +193,31 @@ void TaskDlgAppearances::materialDropEvent(QDropEvent *ev)
             paramsModel.addParameter(param); //Add the parameter to model
         }
 
-        QDeclarativeView *paramView = new QDeclarativeView (qobject_cast<QWidget *>(this));
-        QDeclarativeContext *ctxt = paramView->rootContext();
-        ctxt->setContextProperty(QString::fromAscii("appearancesModel"), &paramsModel);
-
-        paramView->setResizeMode(QDeclarativeView::SizeRootObjectToView);
+//         QDeclarativeView *paramView = new QDeclarativeView (qobject_cast<QWidget *>(this));
+//         QDeclarativeContext *ctxt = paramView->rootContext();
+//         ctxt->setContextProperty(QString::fromAscii("appearancesModel"), &paramsModel);
+// 
+//         paramView->setResizeMode(QDeclarativeView::SizeRootObjectToView);
 
         RenderMaterial *matClone = new RenderMaterial(myMaterial); // Make a copy of the material on the heap
         materialData = new RenderMaterialData(matClone); // Assuming this gets deleted with destruction of QDeclartiveContext
         // TODO delete above
 
+        QDeclarativeContext *ctxt = view->rootContext();
         ctxt->setContextProperty(QString::fromAscii("materialData"), materialData);
-
         ctxt->setContextProperty(QString::fromAscii("materialParametersModel"), &paramsModel);
-        paramView->setSource(QUrl(QString::fromAscii("qrc:/qml/materialParametersUi.qml"))); // Load the Main QML File
+
+        QObject *rootObject = qobject_cast<QObject *>(view->rootObject());
+        QMetaObject::invokeMethod(rootObject, "openMaterialParameters");
+
+       //paramView->setSource(QUrl(QString::fromAscii("qrc:/qml/materialParametersUi.qml"))); // Load the Main QML File
 
         // Connect an Update Signal when an image is available
-        QString str = QString::fromAscii("materialParametersWidget");
-        QObject *rootObject = paramView->rootObject();
-        QObject::connect(rootObject, SIGNAL(accepted()), this , SLOT(materialParamSave()));
+//         QString str = QString::fromAscii("materialParametersWidget");
+//         QObject *rootObject = paramView->rootObject();
+
         //QObject::connect(rootObject, SIGNAL(cancel()) , paramView , SLOT(close()));
 
-        this->Content[0]->hide();
-        this->Content.push_back(paramView);
-        this->Content[1]->show();
     }
 }
 
@@ -249,17 +261,6 @@ void TaskDlgAppearances::materialDragEvent(QDragMoveEvent *ev)
 }
 
 
-
-TaskDlgAppearances::~TaskDlgAppearances()
-{
-
-    // Disable Drag and Drops on the 3D Inventor Window
-//     Gui::MDIView *mdi = Gui::Application::Instance->activeDocument()->getActiveView();
-//     if(mdi) {
-//         mdi->setAcceptDrops(false);
-//     }
-}
-
 //==== calls from the TaskView ===============================================================
 
 
@@ -270,21 +271,41 @@ void TaskDlgAppearances::open()
 
 void TaskDlgAppearances::clicked(int)
 {
-    
+
 }
 
 bool TaskDlgAppearances::accept()
 {
+        // We load the TaskDlgRender, since this is the active
+    Gui::Document * doc = Gui::Application::Instance->activeDocument();
+    if (doc) {
+        if (doc->getInEdit() && doc->getInEdit()->isDerivedFrom(ViewProviderRender::getClassTypeId())) {
+            ViewProviderRender *vp = dynamic_cast<ViewProviderRender*>(doc->getInEdit());
+
+            Gui::Control().closeDialog();
+            Gui::Selection().clearSelection();
+            Gui::Control().showDialog(new TaskDlgRender(vp));
+            return false;
+        }
+    }
     return true;
 }
 
 bool TaskDlgAppearances::reject()
 {
-//     std::string document = documentName; // needed because resetEdit() deletes this instance
-//     Gui::Command::doCommand(Gui::Command::Gui,"Gui.getDocument('%s').resetEdit()", document.c_str());
-//     Gui::Command::doCommand(Gui::Command::Doc,"App.getDocument('%s').recompute()", document.c_str());
 
-    return true;
+    // We load the TaskDlgRender, since this is the active 
+    Gui::Document * doc = Gui::Application::Instance->activeDocument();
+    if (doc) {
+        if (doc->getInEdit() && doc->getInEdit()->isDerivedFrom(ViewProviderRender::getClassTypeId())) {
+            ViewProviderRender *vp = dynamic_cast<ViewProviderRender*>(doc->getInEdit());
+
+            Gui::Control().closeDialog();
+            Gui::Selection().clearSelection();
+            Gui::Control().showDialog(new TaskDlgRender(vp));
+            return false;
+        }
+    }
 }
 
 void TaskDlgAppearances::helpRequested()

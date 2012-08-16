@@ -51,6 +51,7 @@ Item {
                 width: 200
                 sliderColor: "#cc0000"
                 min: 0
+                val: updateValue(0)
                 max: 255
                 onSliderMove: { redNumInput.text = val.toString(); colorWidget.red = val; redChanged(); }
             }
@@ -58,6 +59,7 @@ Item {
                 id: redNumInput
                 numDigits: 3
                 width: 40
+                text: "0"
                 validator: IntValidator { bottom: 0; top: 255 }
                 onValueChanged: { redSlider.val = parseInt(redNumInput.text); colorWidget.red = redSlider.val; redSlider.updatePos(); redChanged(); }
             }
@@ -74,6 +76,7 @@ Item {
                 width: 200
                 sliderColor: "#008000"
                 min: 0
+                val: updateValue(0)
                 max: 255
                 onSliderMove: { greenNumInput.text = val.toString(); colorWidget.green = val; greenChanged(); }
             }
@@ -81,6 +84,7 @@ Item {
                 id: greenNumInput
                 numDigits: 3
                 width: 40
+                text: "0"
                 validator: IntValidator { bottom: 0; top: 255 }
                 onValueChanged: { greenSlider.val = parseInt(greenNumInput.text); colorWidget.green = greenSlider.val; greenSlider.updatePos(); greenChanged(); }
             }
@@ -96,6 +100,7 @@ Item {
                 id: blueSlider
                 width: 200
                 min: 0
+                val: updateValue(0)
                 max: 255
                 sliderColor: Qt.rgba(0,0,0.6,1)
                 onSliderMove: { blueNumInput.text = val.toString(); colorWidget.blue = val; blueChanged(); }
@@ -104,27 +109,23 @@ Item {
                 id: blueNumInput
                 numDigits: 3
                 width: 40
+                text: "0"
                 validator: IntValidator { bottom: 0; top: 255 }
                 onValueChanged: { blueSlider.val = parseInt(blueNumInput.text); colorWidget.blue = blueSlider.val; blueSlider.updatePos(); blueChanged(); }
             }
         } // End Row
 
-        Row {
-            width: parent.width
-            height: 30
-            Rectangle {
-                id: mixer
-
-                width: blueNumInput.width
-                height: blueNumInput.height
-                anchors.leftMargin: 220
-                anchors.left: parent.left
-                radius: 3
-                border.width: 2
-                border.color: "#ffffff"
-                color: Qt.rgba(colorWidget.red / 255,colorWidget.green /255,  colorWidget.blue / 255, 1)
-            }
-
+        Rectangle {
+            id: mixer
+            anchors.leftMargin: 220
+            anchors.left: parent.left
+            width: blueNumInput.width
+            height: blueNumInput.height
+            radius: 3
+            border.width: 2
+            border.color: "#ffffff"
+            color: Qt.rgba(colorWidget.red / 255,colorWidget.green /255,  colorWidget.blue / 255, 1)
         }
+
     }
 }
