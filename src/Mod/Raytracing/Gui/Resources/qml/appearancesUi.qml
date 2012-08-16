@@ -8,9 +8,15 @@ Item {
     anchors.fill: parent
 
     // Slots
-    function openMaterialParameters()
+    function openMaterialLibraryWidget()
     {
-         parametersUiLoader.source = "";
+        parametersUiLoader.visible = false;
+        appearancesTaskWidget.state = "";
+    }
+
+    function openMaterialParametersWidget()
+    {
+        parametersUiLoader.source = "";
         parametersUiLoader.source = "materialParametersUi.qml";
         appearancesTaskWidget.state = "viewProperties";
     }
@@ -24,7 +30,8 @@ Item {
              target: parametersUiLoader.item
              onCancel: { parametersUiLoader.visible = false; appearancesTaskWidget.state = ""; }
              onAccepted: appearancesTaskWidget.materialPropsAccepted()
-         }
+
+    }
     Component {
          id: libMatDelegate
          Item {

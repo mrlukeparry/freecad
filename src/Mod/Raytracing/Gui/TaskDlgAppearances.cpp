@@ -208,7 +208,7 @@ void TaskDlgAppearances::materialDropEvent(QDropEvent *ev)
         ctxt->setContextProperty(QString::fromAscii("materialParametersModel"), &paramsModel);
 
         QObject *rootObject = qobject_cast<QObject *>(view->rootObject());
-        QMetaObject::invokeMethod(rootObject, "openMaterialParameters");
+        QMetaObject::invokeMethod(rootObject, "openMaterialParametersWidget");
 
        //paramView->setSource(QUrl(QString::fromAscii("qrc:/qml/materialParametersUi.qml"))); // Load the Main QML File
 
@@ -232,6 +232,8 @@ void TaskDlgAppearances::materialParamSave()
 
         // TODO implement App::Command for undo states
         feat->setRenderMaterial(materialData->getRenderMaterial()); //setRenderMaterial will clone the material
+        QObject *rootObject = qobject_cast<QObject *>(view->rootObject());
+        QMetaObject::invokeMethod(rootObject, "openMaterialLibraryWidget");
         // delete temporary material
     }
 }

@@ -153,9 +153,6 @@ bool ViewProviderRender::doubleClicked(void)
     return true;
 }
 
-
-
-
 void ViewProviderRender::setEditViewer(Gui::View3DInventorViewer* viewer, int ModNum)
 {
     RenderCamera *cam = getRenderFeature()->getCamera();
@@ -172,7 +169,7 @@ void ViewProviderRender::setEditViewer(Gui::View3DInventorViewer* viewer, int Mo
 
     viewer->setEditing(TRUE);
     SoNode* root = viewer->getSceneGraph();
-    static_cast<Gui::SoFCUnifiedSelection*>(root)->selectionRole.setValue(FALSE);
+    //static_cast<Gui::SoFCUnifiedSelection*>(root)->selectionRole.setValue(FALSE);
 }
 
 void ViewProviderRender::unsetEditViewer(Gui::View3DInventorViewer* viewer)
