@@ -175,6 +175,7 @@ void CmdRaytracingCreateRenderFeature::activated(int iMsg)
 
     RenderCamera::CamType camType;
 
+    float fov = 0;
     char *camTypeStr;
     switch(CamType) {
       case SbViewVolume::ORTHOGRAPHIC:
@@ -183,6 +184,8 @@ void CmdRaytracingCreateRenderFeature::activated(int iMsg)
       case SbViewVolume::PERSPECTIVE:
         camType = RenderCamera::PERSPECTIVE;
         camTypeStr = "Perspective";
+        fov = static_cast<SoPerspectiveCamera *>(Cam) ->heightAngle.getValue();
+        fov *= 180 / M_PI; //Convert to degrees
         break;
     }
 
@@ -198,18 +201,23 @@ void CmdRaytracingCreateRenderFeature::activated(int iMsg)
     doCommand(Doc,"import Raytracing,RaytracingGui");
     doCommand(Doc,"App.activeDocument().addObject('Raytracing::RenderFeature','%s')",FeatName.c_str());
 
-    doCommand(Doc,"App.activeDocument().%s.setRenderer('Lux')",FeatName.c_str());
+    doCommand(Doc,"App.activeDocument().%s.setRenderer('Lux')",FeatName.c_str()); // Set Lux Render as the default
 
     int x = 1024, y = 768;
     doCommand(Doc,"App.ActiveDocument.%s.setRenderSize(%i, %i)",FeatName.c_str(), x, y);
-    doCommand(Doc,"App.ActiveDocument.%s.attachRenderCamera(Raytracing.RenderCamera())", FeatName.c_str());
 
-    // Set the camera to current view's camera
-    doCommand(Doc,"App.activeDocument().%s.setCamera(App.Vector(%f,%f,%f), App.Vector(%f,%f,%f), App.Vector(%f,%f,%f), App.Vector(%f,%f,%f), '%s')",
-                   FeatName.c_str(), camPos.x, camPos.y, camPos.z,
-                                     camDir.x, camDir.y, camDir.z,
-                                     camUp.x, camUp.y, camUp.z,
-                                     camLookAt.x, camLookAt.y, camLookAt.z, camTypeStr);
+    // Create a new camera and attach specific properties if needed
+    doCommand(Doc,"renderCam = Raytracing.RenderCamera(App.Vector(%f,%f,%f), App.Vector(%f,%f,%f), App.Vector(%f,%f,%f), App.Vector(%f,%f,%f), '%s')",
+                   camPos.x, camPos.y, camPos.z,
+                   camDir.x, camDir.y, camDir.z,
+                   camUp.x, camUp.y, camUp.z,
+                   camLookAt.x, camLookAt.y, camLookAt.z, camTypeStr);
+
+    if(camType == RenderCamera::PERSPECTIVE)
+        doCommand(Doc, "renderCam.Fov = %f", fov);
+
+    // Attach this temporary camera to the Render Feature
+    doCommand(Doc,"App.ActiveDocument.%s.attachRenderCamera(renderCam)", FeatName.c_str());
 
     doCommand(Doc,"App.ActiveDocument.%s.setRenderPreset('metropolisUnbiased')", FeatName.c_str());
     doCommand(Doc,"App.ActiveDocument.%s.setRenderTemplate('lux_default')", FeatName.c_str());

@@ -50,7 +50,7 @@ int RenderCameraPy::PyInit(PyObject* args, PyObject* /*kwd*/)
     char *CameraType;
     PyObject *pcObj1, *pcObj2, *pcObj3, *pcObj4;
 
-    if (PyArg_ParseTuple(args, "O!O!O!O!s", &(Base::VectorPy::Type), &pcObj1, &(Base::VectorPy::Type), &pcObj1,
+    if (PyArg_ParseTuple(args, "O!O!O!O!s", &(Base::VectorPy::Type), &pcObj1, &(Base::VectorPy::Type), &pcObj2,
                                             &(Base::VectorPy::Type), &pcObj3, &(Base::VectorPy::Type), &pcObj4,
                                             &CameraType)) {
         // Get the vectors
@@ -75,10 +75,10 @@ int RenderCameraPy::PyInit(PyObject* args, PyObject* /*kwd*/)
         }
 
         if (valid) {
-            this->getRenderCameraPtr()->CamPos = v1;
-            this->getRenderCameraPtr()->CamDir = v2;
-            this->getRenderCameraPtr()->LookAt = v3;
-            this->getRenderCameraPtr()->Up     = v4;
+            this->getRenderCameraPtr()->CamPos = v1; // cam pos
+            this->getRenderCameraPtr()->CamDir = v2; // Cam Dir
+            this->getRenderCameraPtr()->Up     = v3; // Cam Up
+            this->getRenderCameraPtr()->LookAt = v4; // Cam Look At
             return 0;
         }
     }
@@ -93,7 +93,7 @@ std::string RenderCameraPy::representation(void) const
     std::stringstream result;
     result << "<RenderCamera " ;
     switch(this->getRenderCameraPtr()->Type) {
-      case RenderCamera::PERSPECTIVE   : result << "'Perspective'>";break;
+        case RenderCamera::PERSPECTIVE   : result << "'Perspective'>";break;
         case RenderCamera::ORTHOGRAPHIC  : result << "'Orthographic'>";break;
         case RenderCamera::ENVIRONMENT   : result << "'Environment'>";break;
         case RenderCamera::REALISTIC     : result << "'Realistic'>";break;
@@ -110,6 +110,19 @@ Py::Float RenderCameraPy::getFocaldistance(void) const
 void RenderCameraPy::setFocaldistance(Py::Float arg)
 {
     this->getRenderCameraPtr()->Focaldistance = arg;
+}
+
+Py::Float RenderCameraPy::getFov(void) const
+{
+    return Py::Float(this->getRenderCameraPtr()->Fov);
+}
+
+
+void RenderCameraPy::setFov(Py::Float arg)
+{
+    if(this->getRenderCameraPtr()->Type == RenderCamera::PERSPECTIVE) {
+        this->getRenderCameraPtr()->Fov = arg;
+    }
 }
 
 Py::Boolean RenderCameraPy::getAutofocus(void) const

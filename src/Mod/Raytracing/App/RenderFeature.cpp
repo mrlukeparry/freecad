@@ -67,7 +67,6 @@ RenderFeature::RenderFeature()
 
     renderer = 0;
 
-//     ADD_PROPERTY_TYPE(Geometry,        (0)  ,"Sketch",(App::PropertyType)(App::Prop_None),"Sketch geometry");
 //     ADD_PROPERTY_TYPE(Constraints,     (0)  ,"Sketch",(App::PropertyType)(App::Prop_None),"Sketch constraints");
 //     ADD_PROPERTY_TYPE(ExternalGeometry,(0,0),"Sketch",(App::PropertyType)(App::Prop_None),"Sketch external geometry");
 }
@@ -411,11 +410,18 @@ unsigned int RenderFeature::getMemSize(void) const
 
 void RenderFeature::Save(Writer &writer) const
 {
-
+    App::DocumentObject::Save(writer);
+    renderer->getCamera()->Save(writer);
 }
 
 void RenderFeature::Restore(XMLReader &reader)
 {
+    App::DocumentObject::Restore(reader);
+
+    RenderCamera *cam = new RenderCamera();
+    cam->Restore(reader);
+
+    renderer->addCamera(cam);
 }
 
 void RenderFeature::onChanged(const App::Property* prop)

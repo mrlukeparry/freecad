@@ -19,7 +19,8 @@ Item {
         }
     }
     Column {
-        width: parent.width
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: parent.width * 0.8
         spacing: 20
         Row {
             spacing: 10
@@ -54,7 +55,6 @@ Item {
                 delegate:  Item {
                     function createParameter(mod)
                     {
-
                         var myComponent = Qt.createComponent("Button.qml")
                         if(mod.type == "float") {
                             var hasRange = (mod.minVal && mod.maxVal);

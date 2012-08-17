@@ -36,7 +36,6 @@
 # include <TopoDS.hxx>
 # include <TopoDS_Face.hxx>
 #endif
-
  
 #include <Base/Console.h>
 #include <Base/Exception.h>

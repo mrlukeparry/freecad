@@ -48,7 +48,7 @@ Item {
             spacing: 20
             Slider {
                 id: redSlider
-                width: 200
+                width: parent.width * 0.8
                 sliderColor: "#cc0000"
                 min: 0
                 val: updateValue(0)
@@ -73,7 +73,7 @@ Item {
             spacing: 20
             Slider {
                 id: greenSlider
-                width: 200
+                width: parent.width * 0.8
                 sliderColor: "#008000"
                 min: 0
                 val: updateValue(0)
@@ -98,7 +98,7 @@ Item {
             spacing: 20
             Slider {
                 id: blueSlider
-                width: 200
+                width: parent.width * 0.8
                 min: 0
                 val: updateValue(0)
                 max: 255
@@ -117,7 +117,7 @@ Item {
 
         Rectangle {
             id: mixer
-            anchors.leftMargin: 220
+            anchors.leftMargin: parent.width * 0.8 + 20
             anchors.left: parent.left
             width: blueNumInput.width
             height: blueNumInput.height

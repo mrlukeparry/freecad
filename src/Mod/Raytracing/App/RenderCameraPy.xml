@@ -21,6 +21,12 @@
       </Documentation>
       <Parameter Name="FocalDistance" Type="Float"/>
     </Attribute>
+      <Attribute Name="Fov" ReadOnly="false">
+      <Documentation>
+        <UserDocu>Set the Field of View for the Camera (deg)</UserDocu>
+      </Documentation>
+      <Parameter Name="Fov" Type="Float"/>
+    </Attribute>
     <Attribute Name="Autofocus" ReadOnly="false">
       <Documentation>
         <UserDocu>Controls the cameras focal distance</UserDocu>

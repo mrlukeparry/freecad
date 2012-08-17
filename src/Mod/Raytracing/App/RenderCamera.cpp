@@ -79,18 +79,25 @@ unsigned int RenderCamera::getMemSize (void) const
 
 void RenderCamera::Save (Writer &writer) const
 {
-    writer.Stream() << writer.ind() << "<RenderCamera "
+    writer.incInd(); 
+    writer.Stream() << writer.ind()
+    << "<RenderCamera "
     << "Name=\""          <<  Name            << "\" "
     << "Type=\""          <<  (int)Type       << "\" "
     << "Fov =\""          <<  Fov             << "\" "
     << "FocalDistance=\"" <<  Focaldistance   << "\" "
-    << "AutoFocus=\""     <<  Autofocus<< "\">"
-    << "<CamPos valueX=\"" <<  CamPos.x << "\" valueY=\"" <<  CamPos.y << "\" valueZ=\"" <<  CamPos.z << "\"/>" << endl
-    << "<CamDir valueX=\"" <<  CamDir.x << "\" valueY=\"" <<  CamDir.y << "\" valueZ=\"" <<  CamDir.z << "\"/>" << endl
-    << "<LookAt valueX=\"" <<  LookAt.x << "\" valueY=\"" <<  LookAt.y << "\" valueZ=\"" <<  LookAt.z << "\"/>" << endl
-    << "<Up valueX=\""     <<  Up.x     << "\" valueY=\"" <<  Up.y     << "\" valueZ=\"" <<  Up.z     << "\"/>" << endl
-    << "</RenderCamera>" << endl
-    << endl;
+    << "AutoFocus=\""     <<  (Autofocus ? "true" : "false") << "\">" << "\n";
+
+    writer.incInd();
+    writer.Stream()
+    << writer.ind() << "<CamPos valueX=\"" <<  CamPos.x << "\" valueY=\"" <<  CamPos.y << "\" valueZ=\"" <<  CamPos.z << "\"/>" << "\n"
+    << writer.ind() << "<CamDir valueX=\"" <<  CamDir.x << "\" valueY=\"" <<  CamDir.y << "\" valueZ=\"" <<  CamDir.z << "\"/>" << "\n"
+    << writer.ind() << "<LookAt valueX=\"" <<  LookAt.x << "\" valueY=\"" <<  LookAt.y << "\" valueZ=\"" <<  LookAt.z << "\"/>" << "\n"
+    << writer.ind() << "<Up valueX=\""     <<  Up.x     << "\" valueY=\"" <<  Up.y     << "\" valueZ=\"" <<  Up.z     << "\"/>" << "\n";
+
+    writer.decInd();
+    writer.Stream()
+    << writer.ind() << "</RenderCamera>" << "\n";
 }
 
 void RenderCamera::Restore(XMLReader &reader)
@@ -103,14 +110,14 @@ void RenderCamera::Restore(XMLReader &reader)
     Autofocus      = (bool) reader.getAttributeAsInteger("AutoFocus");
 
     reader.readElement("CamPos");
-    CamPos = Base::Vector3d (reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"));
+    CamPos = Base::Vector3d (reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueY"), reader.getAttributeAsFloat("valueZ"));
 
     reader.readElement("CamDir");
-    CamDir = Base::Vector3d (reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"));
+    CamDir = Base::Vector3d (reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueY"), reader.getAttributeAsFloat("valueZ"));
 
     reader.readElement("LookAt");
-    LookAt = Base::Vector3d (reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"));
+    LookAt = Base::Vector3d (reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueY"), reader.getAttributeAsFloat("valueZ"));
 
     reader.readElement("Up");
-    Up = Base::Vector3d (reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"));
+    Up = Base::Vector3d (reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueY"), reader.getAttributeAsFloat("valueZ"));
 }

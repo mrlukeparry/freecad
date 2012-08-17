@@ -117,6 +117,7 @@ protected:
 
     SbBox3f bbox;
     Renderer *renderer;
+
     static const char* TypeEnums[];
 };
 

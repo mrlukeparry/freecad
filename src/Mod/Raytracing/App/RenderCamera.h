@@ -48,11 +48,14 @@ public:
                    LookAt(cLookAt),
                    Up(cUp),
                    Type(cType)
-    {Autofocus = false;}
+    {
+        Autofocus = false;
+        Fov = 45; // TODO should we set this to 45 automatically?
+    }
 
 
     void setType(const char*);
-    
+
         // from base class
     virtual unsigned int getMemSize(void) const;
     virtual void Save(Base::Writer &/*writer*/) const;
