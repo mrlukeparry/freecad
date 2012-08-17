@@ -188,13 +188,17 @@ QString LuxRender::genCamera(RenderCamera *camera) const
     }
 
     out << "\nLookAt " << camera->CamPos.x << " " << camera->CamPos.y << " " << camera->CamPos.z << " "
-                     << camera->LookAt.x << " " << camera->LookAt.y << " " << camera->LookAt.z << " "
-                     << camera->Up.x     << " " << camera->Up.y     << " " << camera->Up.z     << "\n " << endl;
+                      << camera->LookAt.x  << " " << camera->LookAt.y << " " << camera->LookAt.z << " "
+                      << camera->Up.x      << " " << camera->Up.y     << " " << camera->Up.z     << "\n " << endl;
 
     out << "# Camera Declaration and View Direction" << endl
-        << "Camera \"" << camType << "\" \"float fov\" [50]" << endl;
-    if(camera->Type == RenderCamera::PERSPECTIVE && camera->Autofocus)
-        out << "\t\"bool autofocus\" [\"true\"]" << endl;
+        << "Camera \"" << camType << "\" ";
+    if(camera->Type == RenderCamera::PERSPECTIVE) {
+        out << "\t\"float fov\" [" << camera->Fov << "]" << endl;
+        if(camera->Autofocus)
+            out << "\t\"bool autofocus\" [\"true\"]" << endl;
+    }
+
     out << "\t\"float focaldistance\" [" << camera->Focaldistance << "]" << endl;
 
     // Process Preview Areas

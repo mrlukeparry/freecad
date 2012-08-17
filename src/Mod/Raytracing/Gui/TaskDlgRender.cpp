@@ -461,14 +461,7 @@ void TaskDlgRender::previewWindow()
     Base::Vector3d camUp(upvec[0],upvec[1], upvec[2]);
     Base::Vector3d camLookAt = camDir * Dist + camPos;
 
-
-    // Not happy with this, most likely will figure a better solution out
-    Base::Vector3d tmp1, tmp2, tmp3, tmp4;
-    tmp1 = renderCam->CamPos;
-    tmp2 = renderCam->CamDir;
-    tmp3 = renderCam->Up;
-    tmp4 = renderCam->LookAt;
-    RenderCamera::CamType tmp5 = renderCam->Type;
+    RenderCamera *camClone = renderCam->clone();
 
     // Set the rendera camera to viewport
     feat->setCamera(camPos, camDir, camUp, camLookAt, camTypeStr);
@@ -493,16 +486,10 @@ void TaskDlgRender::previewWindow()
     feat->OutputY.setValue(tempHeight);
 
     // Restore previous camera settings
-    switch(tmp5) {
-      case SbViewVolume::ORTHOGRAPHIC:
-        camTypeStr = "Orthographic";
-      case SbViewVolume::PERSPECTIVE:
-        camTypeStr = "Perspective";
-        break;
-    }
+  // Set the rendera camera back to previous
+    feat->setCamera(camClone);
 
-    // Set the rendera camera back to previous
-    feat->setCamera(tmp1,tmp2, tmp3, tmp4, camTypeStr);
+    delete camClone; // Destroy the clone
 
     // Get Active Render Process
     RenderProcess *process = feat->getActiveRenderProcess();

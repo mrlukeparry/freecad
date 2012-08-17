@@ -95,6 +95,7 @@ public:
     void render();
     void reset();
     void setCamera(const Base::Vector3d &v1, const Base::Vector3d &v2, const Base::Vector3d &v3, const Base::Vector3d &v4, const char *camType);
+    void setCamera(RenderCamera *cam);
     void setBBox(const Base::Vector3d &min, const Base::Vector3d &max);
     RenderCamera * getCamera(void);
     void setRenderPreset(const char * presetName);

@@ -50,6 +50,7 @@ public:
                    Type(cType)
     {
         Autofocus = false;
+        Focaldistance = (cLookAt - cCamPos).Length();
         Fov = 45; // TODO should we set this to 45 automatically?
     }
 

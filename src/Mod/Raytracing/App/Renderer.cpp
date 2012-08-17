@@ -535,15 +535,14 @@ void Renderer::initRender(RenderMode renderMode)
 void Renderer::setCamera(const Base::Vector3d &camPos, const Base::Vector3d &camDir, const Base::Vector3d &up, const Base::Vector3d &lookAt) {
   if(!camera)
     return;
-
+  
     camera->CamPos = camPos;
     camera->CamDir = camDir;
     camera->LookAt = lookAt;
     camera->Up     = up;
+    camera->Focaldistance = (lookAt - camPos).Length();
 }
 
-// void Renderer::loadSceneDefinition(const char *file) {}
-// void Renderer::loadXML(Base::XMLReader &/*reader*/) {}
 
 void Renderer::transferToArray(const TopoDS_Face& aFace,gp_Vec** vertices,gp_Vec** vertexnormals, long** cons,int &nbNodesInFace,int &nbTriInFace ) {
     TopLoc_Location aLoc;

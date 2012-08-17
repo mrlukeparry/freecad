@@ -222,6 +222,12 @@ void RenderFeature::setCamera(const Base::Vector3d &v1, const Base::Vector3d &v2
     renderer->setCamera(v1, v2, v3, v4);
 }
 
+void RenderFeature::setCamera(RenderCamera *cam)
+{
+    // Delete the previous camera
+    RenderCamera *originalCamera = renderer->getCamera();
+    *originalCamera = *cam;
+}
 
 bool RenderFeature::hasRenderer() const
 {
