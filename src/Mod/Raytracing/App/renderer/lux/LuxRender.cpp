@@ -344,13 +344,15 @@ QString LuxRender::genObject(RenderPart *obj)
     std::vector<RenderMaterial *> partMaterials = this->getRenderPartMaterials(obj);
 
     // Look for any whole feature materials
-    
+
     if(partMaterials.size() > 0) {
         for(std::vector<RenderMaterial *>::const_iterator it = partMaterials.begin(); it != partMaterials.end(); ++it) {
-            std::vector<std::string> subs = (*it)->Link.getSubValues();
-            if(subs.size() == 0) {
-                out << genMaterial(*it);
-            }
+            getRenderMaterialLink(*it);
+            out << genMaterial(*it);
+//             std::vector<std::string> subs = (*it)->Link.getSubValues();
+//             if(subs.size() == 0) {
+//                 out << genMaterial(*it);
+//             }
         }
     }
 

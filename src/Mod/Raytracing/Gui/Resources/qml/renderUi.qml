@@ -6,6 +6,7 @@ Item {
     signal previewWindow()
     signal preview()
     signal render()
+    signal saveCamera()
 
     // Slots
     function renderRunning() { renderActive = true }
@@ -71,11 +72,23 @@ Item {
                 }
             }
             Row {
+               layoutDirection: Qt.RightToLeft
+               width: parent.width
+               Button {
+                   id: saveCameraButton
+                   anchors.bottom: parent.bottom
+                   anchors.bottomMargin: 0
+                   text: qsTr("Save Camera")
+                   onClicked: renderTaskWidget.saveCamera()
+
+               }
+            }
+            Row {
                 Column {
                     spacing: 10
                     Text {
                         color: "#f9f9f9"
-                        text: qsTr("Render Properties:")
+                        text: qsTr("Render Properties")
                         font.pointSize: 12
                     }
                     Row {
@@ -83,19 +96,17 @@ Item {
 
                         NumberInput {
                             id: sizeX
-                            numDigits: 4
                             text: renderFeature.getOutputX().toString()
-                            inputMask: "0000"
+                            validator: IntValidator { bottom: 1; top: 10000 }
                             onValueChanged: renderFeature.setOutputX(parseInt(sizeX.text))
                             suffix: "px"
                             label: "x:"
                         }
                         NumberInput {
                             id: sizeY
-                            numDigits: 4
                             text: renderFeature.getOutputY().toString()
-                            inputMask: "0000"
                             onValueChanged: renderFeature.setOutputY(parseInt(sizeY.text))
+                            validator: IntValidator { bottom: 1; top: 10000 }
                             suffix: "px"
                             label: "y:"
                         }
@@ -107,14 +118,14 @@ Item {
                             id: updateInterval
                             width: parent.width
                             numDigits: 4
+                            validator: IntValidator { bottom: 3; top: 1000 }
                             text: (renderFeature.getUpdateInterval() / 1000).toString() // in seconds
                             inputMask: "0000"
                             onValueChanged: renderFeature.setUpdateInterval(parseInt(updateInterval.text) * 1000) // in milliseconds
                             suffix: "s"
-                            label: "Update Interval:"
+                            label: qsTr("Update Interval")
                         }
-
-                     } // Row End
+                      } // Row End
                      Row {
                          width: parent.width
 

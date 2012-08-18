@@ -104,7 +104,7 @@ public:
     void setRenderTemplate(RenderTemplate *preset);
 
     /// Functions related to Render Materials
-    void attachRenderMaterials(const std::vector<RenderMaterial *> &mats);
+    void attachRenderMaterials(const std::vector<RenderMaterial *> &mats, const std::vector<App::DocumentObject *> &objs);
     std::vector<RenderMaterial *>getRenderPartMaterials(RenderPart *part) const;
     bool hasCamera(void) { return (camera == 0) ? false: true; }
     const char * getOutputPath() const { return outputPath.c_str(); }
@@ -119,6 +119,7 @@ public:
     /// Get methods
     RenderCamera * getCamera() { return camera; }
     const char * getProviderName() { return providerName; }
+    App::DocumentObject * getRenderMaterialLink(const RenderMaterial *material) const;
 
     ///Setter methods
     void setCamera(const Base::Vector3d &camPos, const Base::Vector3d &CamDir, const Base::Vector3d &Up, const Base::Vector3d &lookAt);
@@ -159,6 +160,7 @@ protected:
 
     std::vector<RenderLight *> lights;
     std::vector<RenderMaterial *> materials;
+    std::vector<App::DocumentObject *> materialLinks;
     std::vector<RenderPart *> parts;
 
     /// Library Collections

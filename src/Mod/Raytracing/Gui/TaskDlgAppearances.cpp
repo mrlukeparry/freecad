@@ -173,7 +173,6 @@ void TaskDlgAppearances::materialDropEvent(QDropEvent *ev)
     std::vector<std::string> sub;
     //sub.push_back(selection.pSubName); //TODO
 
-    myMaterial.Link.setValue(docObj, sub);
 
     // Find the RenderFeature object. It must be currently active to add the RenderMaterial
     App::DocumentObject *activeObj =  App::GetApplication().getActiveDocument()->getActiveObject();
@@ -189,7 +188,13 @@ void TaskDlgAppearances::materialDropEvent(QDropEvent *ev)
             Gui::Command::doCommand(Gui::Command::Doc,"App.ActiveDocument.ActiveObject.removeRenderMaterialFromPart('%s')", selection.pObjectName);
             Gui::Command::commitCommand();
         }
-        feat->addRenderMaterial(&myMaterial);
+        int matLinkIndex = feat->addRenderMaterial(&myMaterial, docObj);
+
+        RenderMaterial *matClone = new RenderMaterial(myMaterial); // Make a copy of the material on the heap
+        matClone->LinkIndex.setValue(matLinkIndex);
+
+        if(matLinkIndex < 0)
+          return; // an error occured
 
         // TODO check if we should reload the QML or create a new widget
         // TODO should params model be put on the heap - likely
@@ -208,7 +213,7 @@ void TaskDlgAppearances::materialDropEvent(QDropEvent *ev)
 // 
 //         paramView->setResizeMode(QDeclarativeView::SizeRootObjectToView);
 
-        RenderMaterial *matClone = new RenderMaterial(myMaterial); // Make a copy of the material on the heap
+      
         materialData = new RenderMaterialData(matClone); // Assuming this gets deleted with destruction of QDeclartiveContext
         // TODO delete above
 

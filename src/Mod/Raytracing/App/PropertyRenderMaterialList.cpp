@@ -117,33 +117,32 @@ void PropertyRenderMaterialList::setPyObject(PyObject *value)
 
 void PropertyRenderMaterialList::Save(Writer &writer) const
 {
-//     writer.Stream() << writer.ind() << "<RenderMaterialList count=\"" << getSize() <<"\">" << endl;
-//     writer.incInd();
-//     for (int i = 0; i < getSize(); i++)
-//         _lValueList[i]->Save(writer);
-//     writer.decInd();
-//     writer.Stream() << writer.ind() << "</RenderMaterialList>" << endl ;
+    writer.Stream() << writer.ind() << "<RenderMaterialList count=\"" << getSize() <<"\">" << endl;
+    writer.incInd();
+    for (int i = 0; i < getSize(); i++)
+        _lValueList[i]->Save(writer);
+    writer.decInd();
+    writer.Stream() << writer.ind() << "</RenderMaterialList>" << endl ;
 }
 
 void PropertyRenderMaterialList::Restore(Base::XMLReader &reader)
 {
-    // read my element
-//     reader.readElement("RenderMaterialList");
-//     // get the value of my attribute
-//     int count = reader.getAttributeAsInteger("count");
-// 
-//     std::vector<RenderMaterial*> values;
-//     values.reserve(count);
-//     for (int i = 0; i < count; i++) {
-//         RenderMaterial *newC = new RenderMaterial();
-//         newC->Restore(reader);
-//         values.push_back(newC);
-//     }
-// 
-//     reader.readEndElement("RenderMaterialList");
-// 
-//     // assignment
-//     setValues(values);
+    reader.readElement("RenderMaterialList");
+    // get the value of my attribute
+    int count = reader.getAttributeAsInteger("count");
+
+    std::vector<RenderMaterial*> values;
+    values.reserve(count);
+    for (int i = 0; i < count; i++) {
+        RenderMaterial *newMat = new RenderMaterial();
+        newMat->Restore(reader);
+        values.push_back(newMat);
+    }
+
+    reader.readEndElement("RenderMaterialList");
+
+    // assignment
+    setValues(values);
 }
 
 Property *PropertyRenderMaterialList::Copy(void) const

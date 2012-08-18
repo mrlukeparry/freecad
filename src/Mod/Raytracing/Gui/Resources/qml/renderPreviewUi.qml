@@ -31,12 +31,10 @@ Item {
     }
 
     function renderActive() {
-        console.log("Render Active")
         renderActive = true;
     }
 
     function renderStopped() {
-                console.log("Render Stopped")
         renderActive = false;
     }
 

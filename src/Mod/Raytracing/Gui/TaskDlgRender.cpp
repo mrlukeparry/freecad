@@ -27,7 +27,7 @@
 #include <Inventor/actions/SoSearchAction.h>
 #include <Inventor/actions/SoGetBoundingBoxAction.h>
 #include <Inventor/events/SoLocation2Event.h>
-#include <Inventor/nodes/SoCamera.h>
+#include <Inventor/nodes/SoPerspectiveCamera.h>
 
 #include <Base/Console.h>
 
@@ -242,6 +242,7 @@ TaskDlgRender::TaskDlgRender(ViewProviderRender *vp)
 
     // Connect the slots
     QObject::connect(rootObject, SIGNAL(preview()), this , SLOT(preview()));
+    QObject::connect(rootObject, SIGNAL(saveCamera()), this , SLOT(saveCamera()));
     QObject::connect(rootObject, SIGNAL(previewWindow()), this , SLOT(previewWindow()));
 
     QObject::connect(this, SIGNAL(renderStop()), rootObject , SLOT(renderStopped()));
@@ -445,6 +446,7 @@ void TaskDlgRender::previewWindow()
 
     // Get viewport camera type
     char *camTypeStr;
+    float fov = 0;
     switch(CamType) {
       case SbViewVolume::ORTHOGRAPHIC:
         camTypeStr = "Orthographic";
@@ -452,6 +454,8 @@ void TaskDlgRender::previewWindow()
       case SbViewVolume::PERSPECTIVE:
         camType = RenderCamera::PERSPECTIVE;
         camTypeStr = "Perspective";
+        fov = static_cast<SoPerspectiveCamera *>(Cam)->heightAngle.getValue();
+        fov *= 180 / M_PI;
         break;
     }
 
@@ -465,7 +469,7 @@ void TaskDlgRender::previewWindow()
 
     // Set the rendera camera to viewport
     feat->setCamera(camPos, camDir, camUp, camLookAt, camTypeStr);
-
+    feat->getCamera()->Fov = fov;
      // Get the View Provider Height from MDI View
     int height = static_cast<Gui::View3DInventor *>(mdi)->height();
     int width  = static_cast<Gui::View3DInventor *>(mdi)->width();
@@ -513,6 +517,69 @@ void TaskDlgRender::previewWindow()
 void TaskDlgRender::render()
 {
 
+}
+
+void TaskDlgRender::saveCamera()
+{
+    // We get the current state of the camera and save it
+    // Check if a renderer camera exists
+    RenderFeature *feat = this->getRenderView()->getRenderFeature();
+
+    RenderCamera *renderCam = feat->getCamera();
+    if(!renderCam)
+        return;
+
+    SoCamera *Cam;
+
+    Gui::MDIView *mdi = Gui::Application::Instance->activeDocument()->getActiveView();
+    if (mdi && mdi->isDerivedFrom(Gui::View3DInventor::getClassTypeId())) {
+        Gui::View3DInventorViewer *viewer = static_cast<Gui::View3DInventor *>(mdi)->getViewer();
+        Cam =  viewer->getCamera();
+    } else {
+        return; //throw Base::Exception("Could Not Read Camera");
+    }
+
+    Gui::Document * doc = Gui::Application::Instance->activeDocument();
+
+    // Get the current camera positions
+    SbRotation camrot = Cam->orientation.getValue();
+    SbViewVolume::ProjectionType CamType = Cam->getViewVolume().getProjectionType();
+
+    SbVec3f upvec(0, 1, 0); // init to default up vector
+    camrot.multVec(upvec, upvec);
+
+    SbVec3f lookat(0, 0, -1); // init to default view direction vector
+    camrot.multVec(lookat, lookat);
+
+    SbVec3f pos = Cam->position.getValue();
+    float Dist = Cam->focalDistance.getValue();
+
+    RenderCamera::CamType camType;
+
+    // Get viewport camera type
+    char *camTypeStr;
+    float fov = 0;
+    switch(CamType) {
+      case SbViewVolume::ORTHOGRAPHIC:
+        camTypeStr = "Orthographic";
+        camType = RenderCamera::ORTHOGRAPHIC; break;
+      case SbViewVolume::PERSPECTIVE:
+        camType = RenderCamera::PERSPECTIVE;
+        camTypeStr = "Perspective";
+        fov = static_cast<SoPerspectiveCamera *>(Cam)->heightAngle.getValue();
+        fov *= 180 / M_PI;
+        break;
+    }
+
+        // Calculate Camera Properties
+    Base::Vector3d camPos(pos[0], pos[1], pos[2]);
+    Base::Vector3d camDir(lookat[0],lookat[1], lookat[2]);
+    Base::Vector3d camUp(upvec[0],upvec[1], upvec[2]);
+    Base::Vector3d camLookAt = camDir * Dist + camPos;
+
+    // Set the rendera camera to viewport - TODO make undo compatible
+    feat->setCamera(camPos, camDir, camUp, camLookAt, camTypeStr);
+    feat->getCamera()->Fov = fov;
 }
 
 //==== calls from the TaskView ===============================================================

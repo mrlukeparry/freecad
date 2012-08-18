@@ -98,9 +98,18 @@ void Renderer::addLight(RenderLight *light) {
   this->lights.push_back(light);
 }
 
-void Renderer::attachRenderMaterials(const std::vector<RenderMaterial *> &mats)
+void Renderer::attachRenderMaterials(const std::vector<RenderMaterial *> &mats, const std::vector<App::DocumentObject *> &objs)
 {
+    this->materialLinks = objs;
     this->materials = mats;
+}
+
+App::DocumentObject * Renderer::getRenderMaterialLink(const RenderMaterial *material) const
+{
+    int linkId = material->LinkIndex.getValue();
+    assert(linkId >= 0);
+
+    return materialLinks[linkId];
 }
 
 void Renderer::addObject( RenderPart *part) {
@@ -271,8 +280,8 @@ std::vector<RenderMaterial *> Renderer::getRenderPartMaterials(RenderPart *part)
 {
     std::vector<RenderMaterial *> mats;
     for(std::vector<RenderMaterial *>::const_iterator it = materials.begin(); it != materials.end(); ++it) {
-        // TODO I think this needs changing really. 
-        App::DocumentObject *obj = (*it)->Link.getValue();
+
+        App::DocumentObject *obj = getRenderMaterialLink((*it));
         App::DocumentObject *docObj = App::GetApplication().getActiveDocument()->getObject(part->getName());
         if(obj == docObj)
             mats.push_back(*it);

@@ -24,6 +24,7 @@
 #define _RAYTRACING_RENDERMATERIAL_h_
 
 #include <App/PropertyLinks.h>
+#include <App/PropertyStandard.h>
 #include <Base/Persistence.h>
 
 #include "Appearances.h"
@@ -88,9 +89,9 @@ public:
   }
   void setValue(int r, int g, int b)
   {
-    color[0] = (float) r / 255;
-    color[1] = (float) g / 255;
-    color[2] = (float) b / 255;
+      color[0] = (float) r / 255;
+      color[1] = (float) g / 255;
+      color[2] = (float) b / 255;
   }
   float * getValue(void) { return color; }
 private:
@@ -102,10 +103,12 @@ class RaytracingExport RenderMaterial: public Base::Persistence
     TYPESYSTEM_HEADER();
 
 public:
-  App::PropertyLinkSub Link;
+  App::PropertyInteger LinkIndex;
+  App::PropertyString  Name;
+  App::PropertyString  LibMaterialId;
 
   RenderMaterial(){}
-  RenderMaterial(const LibraryMaterial *mat) { LibMaterialId = mat->id.toStdString(); }
+  RenderMaterial(const LibraryMaterial *mat) { LibMaterialId.setValue(mat->id.toStdString()); }
   RenderMaterial(const RenderMaterial&);
   ~RenderMaterial();
   virtual RenderMaterial * clone(void) const;
@@ -115,14 +118,9 @@ public:
   virtual void Save(Base::Writer &/*writer*/) const;
   virtual void Restore(Base::XMLReader &/*reader*/);
 
-//   virtual PyObject *getPyObject(void);
-    
+//   virtual PyObject *getPyObject(void);    
   QMap<QString, MaterialProperty *> Properties;
-  const LibraryMaterial * getMaterial() const { Appearances().getMaterialById(LibMaterialId.c_str()); }
-  std::string Name;
-  std::string LibMaterialId;
-private:
-  const LibraryMaterial *LibMaterial; //TODO convert this to an ID and do a lookup to get LibMaterial   
+  const LibraryMaterial * getMaterial() const { Appearances().getMaterialById(LibMaterialId.getValue()); }
 };
 
 }

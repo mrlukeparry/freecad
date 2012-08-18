@@ -150,6 +150,7 @@ public Q_SLOTS:
   void render();
   void renderStarted();
   void renderStopped();
+  void saveCamera();
 public:
 
     /// is called the TaskView when the dialog is opened

@@ -24,6 +24,10 @@
 #ifndef _PreComp_
 #endif
 
+#include <App/Application.h>
+#include <App/Document.h>
+#include <App/DocumentObject.h>
+#include <Base/Console.h>
 #include <Base/Writer.h>
 #include <Base/Reader.h>
 #include "RenderMaterial.h"
@@ -35,10 +39,10 @@ TYPESYSTEM_SOURCE(Raytracing::RenderMaterial, Base::Persistence)
 
 // Copy Constructor
 RenderMaterial::RenderMaterial(const RenderMaterial& from)
-: Name(from.Name),
-  LibMaterialId(from.LibMaterialId)
 {
-    Link.setValue(from.Link.getValue());
+    LinkIndex.setValue(from.LinkIndex.getValue());
+    Name.setValue(from.Name.getValue());
+    LibMaterialId.setValue(from.LibMaterialId.getValue());
 
     // Copy all the properties. New object must be made
     QMap<QString, MaterialProperty *>::const_iterator it = from.Properties.constBegin();
@@ -105,38 +109,21 @@ unsigned int RenderMaterial::getMemSize (void) const
 
 void RenderMaterial::Save (Writer &writer) const
 {
-//     writer.Stream() << writer.ind() << "<RenderCamera "
-//     << "Name=\""          <<  Name            << "\" "
-//     << "Type=\""          <<  (int)Type       << "\" "
-//     << "Fov =\""          <<  Fov             << "\" "
-//     << "FocalDistance=\"" <<  Focaldistance   << "\" "
-//     << "AutoFocus=\""     <<  Autofocus<< "\">"
-//     << "<CamPos valueX=\"" <<  CamPos.x << "\" valueY=\"" <<  CamPos.y << "\" valueZ=\"" <<  CamPos.z << "\"/>" << endl
-//     << "<CamDir valueX=\"" <<  CamDir.x << "\" valueY=\"" <<  CamDir.y << "\" valueZ=\"" <<  CamDir.z << "\"/>" << endl
-//     << "<LookAt valueX=\"" <<  LookAt.x << "\" valueY=\"" <<  LookAt.y << "\" valueZ=\"" <<  LookAt.z << "\"/>" << endl
-//     << "<Up valueX=\""     <<  Up.x     << "\" valueY=\"" <<  Up.y     << "\" valueZ=\"" <<  Up.z     << "\"/>" << endl
-//     << "</RenderCamera>" << endl
-//     << endl;
+    writer.Stream() << writer.ind() << "<RenderMaterial "
+    << "Name=\""          <<  Name.getValue()            << "\" "
+    << "LibMatId=\""      <<  LibMaterialId.getValue()   << "\" "
+    << "LinkIndex=\""     <<  LinkIndex.getValue()        << "\">\n";
 }
 
 void RenderMaterial::Restore(XMLReader &reader)
 {
 
-//     reader.readElement("RenderCamera");
-//     Name           = reader.getAttribute("Name");
-//     Focaldistance  = reader.getAttributeAsFloat("FocalDistance");
-//     Fov            = reader.getAttributeAsFloat("Fov");
-//     Autofocus      = (bool) reader.getAttributeAsInteger("AutoFocus");
-//
-//     reader.readElement("CamPos");
-//     CamPos = Base::Vector3d (reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"));
-//
-//     reader.readElement("CamDir");
-//     CamDir = Base::Vector3d (reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"));
-//
-//     reader.readElement("LookAt");
-//     LookAt = Base::Vector3d (reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"));
-//
-//     reader.readElement("Up");
-//     Up = Base::Vector3d (reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"), reader.getAttributeAsFloat("valueX"));
+    reader.readElement("RenderMaterial");
+
+    Name.setValue(reader.getAttribute("Name"));
+    LibMaterialId.setValue(reader.getAttribute("LibMatId"));
+    LinkIndex.setValue(reader.getAttributeAsInteger("LinkIndex"));
+
+
+    //TODO what happens if the link wasn't correctly found?
 }

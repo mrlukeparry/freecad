@@ -56,6 +56,7 @@ public:
     App::PropertyString                        SceneTemplate;
     App::PropertyEnumeration                   RendererType;
     App::PropertyInteger                       UpdateInterval;
+    App::PropertyLinkSubList                   ExternalGeometry;
 
 //     Part    ::PropertyGeometryList   Geometry;
 //     Sketcher::PropertyConstraintList Constraints;
@@ -73,16 +74,20 @@ public:
 
 
     /// Render MaterialsList
-    int  addRenderMaterial(const RenderMaterial *material);
+    int  addRenderMaterial(const RenderMaterial *material, DocumentObject *pcObj);
     const RenderMaterial * getRenderMaterial(const char *partName) const;
     int removeRenderMaterialFromPart(const char *partName);
     int setRenderMaterial(const RenderMaterial *material);
-
+    int addMatLink(DocumentObject *Obj, const char* SubName);
+    int delMatLink(int linkId);
+    DocumentObject * getRenderMaterialLink(RenderMaterial *material);
 
     /// Render getters and setters
     void removeRenderer(void);
     void setRenderer(const char *);
     Renderer * getRenderer(void) const { return renderer; }
+
+
     bool hasRenderer(void) const;
     bool isRendererReady(void) const;
     void attachRenderCamera(RenderCamera *cam);

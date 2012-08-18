@@ -28,6 +28,7 @@
 
 namespace Raytracing {
 
+// TODO make this camera undo-redo save. It probably requires changing into App::Properties
 class RaytracingExport RenderCamera : public Base::Persistence
 {
     TYPESYSTEM_HEADER();

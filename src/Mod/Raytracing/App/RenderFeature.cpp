@@ -63,8 +63,10 @@ RenderFeature::RenderFeature()
     ADD_PROPERTY(OutputX,(800));
     ADD_PROPERTY(OutputY,(800));
     ADD_PROPERTY(UpdateInterval,(3000));
+    ADD_PROPERTY_TYPE(ExternalGeometry,(0,0),"RenderFeature",(App::PropertyType)(App::Prop_None),"External geometry");
+    ADD_PROPERTY_TYPE(MaterialsList,     (0)  ,"RenderFeature",(App::PropertyType)(App::Prop_None),"Render materials");
     RendererType.setEnums(TypeEnums);
-
+    
     renderer = 0;
 
 //     ADD_PROPERTY_TYPE(Constraints,     (0)  ,"Sketch",(App::PropertyType)(App::Prop_None),"Sketch constraints");
@@ -116,45 +118,74 @@ void RenderFeature::removeRenderer(void)
     this->renderer = 0; // Make it a null pointer
 }
 
-int RenderFeature::setRenderMaterial(const RenderMaterial *material)
+// TODO later this should be converted into a LinkProperty so it can have subvalues
+App::DocumentObject * RenderFeature::getRenderMaterialLink(RenderMaterial *material)
 {
+    int linkId = material->LinkIndex.getValue();
+    assert(linkId < 0);
+
+    std::vector<DocumentObject*> Objects     = ExternalGeometry.getValues();
+    std::vector<std::string>     SubElements = ExternalGeometry.getSubValues();
+
+    const std::vector<DocumentObject*> originalObjects = Objects;
+    const std::vector<std::string>     originalSubElements = SubElements;
+
     const std::vector< RenderMaterial * > &vals = this->MaterialsList.getValues();
 
-    RenderMaterial *matNew = material->clone();
-    const char *partName = material->Link.getValue()->getNameInDocument();
-
-    int i = 0, idx = -1;
+    int i = 0;
     //TODO make this for individual faces
-    for (std::vector<RenderMaterial*>::const_iterator it=vals.begin();it!=vals.end();++it, i++) {
-        if(strcmp((*it)->Link.getValue()->getNameInDocument(), partName) == 0)
-            idx = i;
+    for (std::vector<DocumentObject *>::const_iterator it= originalObjects.begin();it!= originalObjects.end();++it, i++) {
+        if(linkId == i)
+            return (*it);
     }
-
-    if(idx >= 0) {
-        //Material Found
-        std::vector< RenderMaterial * > newVals(vals);
-        newVals[idx] = matNew;
-        this->MaterialsList.setValues(newVals);
-        return idx;
-    } else {
-      return 0;
-    }
-
-    delete matNew;
+    return 0;
 }
 
-int RenderFeature::addRenderMaterial(const RenderMaterial *material)
+int RenderFeature::setRenderMaterial(const RenderMaterial *material)
 {
+    int idx = material->LinkIndex.getValue();
+    assert(idx >= 0);
+
     const std::vector< RenderMaterial * > &vals = this->MaterialsList.getValues();
+    RenderMaterial *matNew = material->clone();
+
+    std::vector< RenderMaterial * > newVals(vals);
+    newVals[idx] = matNew;
+    this->MaterialsList.setValues(newVals);
+
+    delete matNew;
+    // We don't have to alter the MaterialsLink fields since we are setting
+    return idx;
+}
+
+int RenderFeature::addRenderMaterial(const RenderMaterial *material, DocumentObject *pcObj)
+{
+    // Find the actual link for the Render Material
+    // get the actual lists of the externals
+    std::vector<DocumentObject*> Objects     = ExternalGeometry.getValues();
+    std::vector<std::string>     SubElements = ExternalGeometry.getSubValues();
+    const std::vector< RenderMaterial * > &vals = this->MaterialsList.getValues();
+
+    if(!pcObj) {
+        Base::Console().Warning("The part could not be found");
+        return -1;
+    }
+
+    // Currently only can add to whole objects - add a new material and get its index to store
+    int matIndex = addMatLink(pcObj, "");
 
     std::vector< RenderMaterial * > newVals(vals);
     RenderMaterial *matNew = material->clone();
+
+    // Assign the material index
+    matNew->LinkIndex.setValue(matIndex);
+
     newVals.push_back(matNew);
     this->MaterialsList.setValues(newVals);
 
     std::stringstream stream;
-    stream << "Attached Material " << material->getMaterial()->label.toStdString()
-           << " on object "        << material->Link.getValue()->getNameInDocument() << "\n";
+    stream << "Attached Material " << matNew->getMaterial()->label.toStdString()
+           << " on object "        << pcObj->getNameInDocument() << "\n";
 
     Base::Console().Log(stream.str().c_str());
     delete matNew;
@@ -164,20 +195,40 @@ int RenderFeature::addRenderMaterial(const RenderMaterial *material)
 // TODO Later need to give it a subvalues
 int RenderFeature::removeRenderMaterialFromPart(const char *partName)
 {
+    std::vector<DocumentObject*> Objects     = ExternalGeometry.getValues();
+    std::vector<std::string>     SubElements = ExternalGeometry.getSubValues();
+
+    const std::vector<DocumentObject*> originalObjects = Objects;
+    const std::vector<std::string>     originalSubElements = SubElements;
+
     const std::vector< RenderMaterial * > &vals = this->MaterialsList.getValues();
 
     int i = 0, idx = -1;
     //TODO make this for individual faces
-    for (std::vector<RenderMaterial*>::const_iterator it=vals.begin();it!=vals.end();++it, i++) {
-        if(strcmp((*it)->Link.getValue()->getNameInDocument(), partName) == 0)
+    for (std::vector<DocumentObject *>::const_iterator it= originalObjects.begin();it!= originalObjects.end();++it, i++) {
+        if(strcmp((*it)->getNameInDocument(), partName) == 0)
             idx = i;
     }
 
     if(idx >= 0) {
-        //Material Found
-        std::vector< RenderMaterial * > newVals(vals);
-        newVals.erase(newVals.begin() + idx);
-        this->MaterialsList.setValues(newVals);
+        //Index Found
+        //Search through the rendermaterials for any matching to idx
+        int matIndex = -1;
+
+        int i = 0;
+        for (std::vector<RenderMaterial *>::const_iterator it= vals.begin();it!=vals.end();++it, i++) {
+            if((*it)->LinkIndex.getValue() == idx)
+                matIndex = i;
+        }
+
+        // Currently one material can be assigned to each object (logical)
+        if(matIndex >= 0) {
+            delMatLink(idx);
+            std::vector< RenderMaterial * > newVals(vals);
+            newVals.erase(newVals.begin() + matIndex);
+            this->MaterialsList.setValues(newVals);
+            return 1;
+        }
     }
     return 0;
 }
@@ -185,14 +236,33 @@ int RenderFeature::removeRenderMaterialFromPart(const char *partName)
 // TODO Later need to give it a subvalues
 const RenderMaterial * RenderFeature::getRenderMaterial(const char *partName) const
 {
+    std::vector<DocumentObject*> Objects     = ExternalGeometry.getValues();
+    std::vector<std::string>     SubElements = ExternalGeometry.getSubValues();
+
+    const std::vector<DocumentObject*> originalObjects = Objects;
+    const std::vector<std::string>     originalSubElements = SubElements;
+    
     const std::vector< RenderMaterial * > &vals = this->MaterialsList.getValues();
 
-    int i = 0;
+    int i = 0, idx = -1;
     //TODO make this for individual faces
-    for (std::vector<RenderMaterial*>::const_iterator it=vals.begin();it!=vals.end();++it, i++) {
-        if(strcmp((*it)->Link.getValue()->getNameInDocument(), partName) == 0)
-            return (*it);
+    for (std::vector<DocumentObject *>::const_iterator it= originalObjects.begin();it!= originalObjects.end();++it, i++) {
+        if(strcmp((*it)->getNameInDocument(), partName) == 0)
+            idx = i;
     }
+
+    if(idx >= 0) {
+        //Index Found
+         // Currently one material can be assigned to each object (logical)
+        //Search through the rendermaterials for any matching to idx
+        int matIndex = -1;
+
+        for (std::vector<RenderMaterial *>::const_iterator it= vals.begin();it!=vals.end();++it, i++) {
+            if((*it)->LinkIndex.getValue() == idx)
+                return (*it);
+        }
+    }
+    return 0;
 }
 
 RenderProcess * RenderFeature::getActiveRenderProcess() const
@@ -266,7 +336,7 @@ void RenderFeature::preview(int x1, int y1, int x2, int y2)
     PropertyRenderMaterialList *matListCopy = static_cast<PropertyRenderMaterialList *> (MaterialsList.Copy());
     // Argument Variables are temporary
     renderer->setRenderTemplate(SceneTemplate.getValue());
-    renderer->attachRenderMaterials(matListCopy->getValues());
+    renderer->attachRenderMaterials(matListCopy->getValues(), ExternalGeometry.getValues());
     renderer->setUpdateInteval(UpdateInterval.getValue());
     renderer->setRenderPreset(Preset.getValue());
     renderer->setRenderSize(OutputX.getValue(), OutputY.getValue());
@@ -291,19 +361,68 @@ void RenderFeature::preview()
 //     renderer->addLight(light);
 
     renderer->setRenderTemplate(SceneTemplate.getValue());
-    renderer->attachRenderMaterials(MaterialsList.getValues());
+    renderer->attachRenderMaterials(MaterialsList.getValues(), ExternalGeometry.getValues());
     renderer->setRenderPreset(Preset.getValue());
     renderer->setUpdateInteval(UpdateInterval.getValue());
     renderer->setRenderSize(OutputX.getValue(), OutputY.getValue());
     renderer->preview();
 }
 
+int RenderFeature::addMatLink(App::DocumentObject *Obj, const char* SubName)
+{
+    // get the actual lists of the externals
+    std::vector<DocumentObject*> Objects     = ExternalGeometry.getValues();
+    std::vector<std::string>     SubElements = ExternalGeometry.getSubValues();
+
+   // TODO not sure if we should have unique indexes for each Render Material
+    // add the new ones
+    Objects.push_back(Obj);
+    SubElements.push_back(std::string(SubName));
+
+    // set the Link list.
+    ExternalGeometry.setValues(Objects,SubElements);
+
+    return ExternalGeometry.getValues().size()-1;
+}
+
+int RenderFeature::delMatLink(int linkId)
+{
+    // get the actual lists of the externals
+    std::vector<DocumentObject*> Objects     = ExternalGeometry.getValues();
+    std::vector<std::string>     SubElements = ExternalGeometry.getSubValues();
+
+    if (linkId < 0 || linkId >= int(SubElements.size()))
+        return -1;
+
+    const std::vector<DocumentObject*> originalObjects = Objects;
+    const std::vector<std::string>     originalSubElements = SubElements;
+
+    Objects.erase(Objects.begin()+linkId);
+    SubElements.erase(SubElements.begin()+linkId);
+
+    const std::vector< RenderMaterial* > &renderMaterials = MaterialsList.getValues();
+    std::vector< RenderMaterial * > newRenderMaterials(0);
+
+    for (std::vector<RenderMaterial *>::const_iterator it = renderMaterials.begin(); it != renderMaterials.end(); ++it) {
+        RenderMaterial *cloneMat = (*it)->clone();
+        int idx = cloneMat->LinkIndex.getValue();
+        if(idx > linkId)
+        cloneMat->LinkIndex.setValue(--idx);
+        newRenderMaterials.push_back(cloneMat);
+    }
+
+    ExternalGeometry.setValues(Objects,SubElements);
+    MaterialsList.setValues(newRenderMaterials);
+    return 0;
+}
+
+
 void RenderFeature::render()
 {
     if(!isRendererReady())
         return;
 
-    renderer->attachRenderMaterials(MaterialsList.getValues());
+    renderer->attachRenderMaterials(MaterialsList.getValues(), ExternalGeometry.getValues());
     renderer->setRenderTemplate(SceneTemplate.getValue());
     renderer->setRenderPreset(Preset.getValue());
     renderer->setUpdateInteval(UpdateInterval.getValue());
@@ -432,6 +551,7 @@ void RenderFeature::Restore(XMLReader &reader)
 
 void RenderFeature::onChanged(const App::Property* prop)
 {
+    Base::Console().Log("On Changed Called");
     if (prop == &RendererType) {
         setRenderer(RendererType.getValueAsString()); // Reload the Render Plugin
     }
