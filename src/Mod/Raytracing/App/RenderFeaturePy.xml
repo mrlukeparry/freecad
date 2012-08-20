@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <GenerateModel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="generateMetaModel_Module.xsd">
   <PythonExport
-    Father="DocumentObjectPy"
+    Father="DocumentObjectGroupPy"
     Name="RenderFeaturePy"
     Twin="RenderFeature"
     TwinPointer="RenderFeature"
     Include="Mod/Raytracing/App/RenderFeature.h"
     Namespace="Raytracing"
-    FatherInclude="App/DocumentObjectPy.h"
+    FatherInclude="App/DocumentObjectGroupPy.h"
     FatherNamespace="App">
     <Documentation>
       <Author Licence="LGPL" Name="Luke Parry" EMail="l.parry@warwick.ac.uk" />

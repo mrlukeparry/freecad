@@ -57,7 +57,7 @@
 using namespace Raytracing;
 using namespace RaytracingGui;
 
-PROPERTY_SOURCE(RaytracingGui::ViewProviderRender, Gui::ViewProviderDocumentObject)
+PROPERTY_SOURCE(RaytracingGui::ViewProviderRender, Gui::ViewProviderDocumentObjectGroup)
 
 
 //**************************************************************************

@@ -122,6 +122,8 @@ SET(RenderModule_SRCS
     RenderProcess.h
     RenderFeature.cpp
     RenderFeature.h
+    RenderFeatureGroup.cpp
+    RenderFeature.h
     Renderer.cpp
     Renderer.h
 )

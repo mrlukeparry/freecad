@@ -53,7 +53,7 @@ using namespace Base;
 
 const char* RenderFeature::TypeEnums[]= {"Lux","Povray",NULL};
 
-PROPERTY_SOURCE(Raytracing::RenderFeature, App::DocumentObject)
+PROPERTY_SOURCE(Raytracing::RenderFeature, App::DocumentObjectGroup)
 
 RenderFeature::RenderFeature()
 {
@@ -122,23 +122,10 @@ void RenderFeature::removeRenderer(void)
 App::DocumentObject * RenderFeature::getRenderMaterialLink(RenderMaterial *material)
 {
     int linkId = material->LinkIndex.getValue();
-    assert(linkId < 0);
+    assert(linkId >= 0);
 
-    std::vector<DocumentObject*> Objects     = ExternalGeometry.getValues();
-    std::vector<std::string>     SubElements = ExternalGeometry.getSubValues();
-
-    const std::vector<DocumentObject*> originalObjects = Objects;
-    const std::vector<std::string>     originalSubElements = SubElements;
-
-    const std::vector< RenderMaterial * > &vals = this->MaterialsList.getValues();
-
-    int i = 0;
-    //TODO make this for individual faces
-    for (std::vector<DocumentObject *>::const_iterator it= originalObjects.begin();it!= originalObjects.end();++it, i++) {
-        if(linkId == i)
-            return (*it);
-    }
-    return 0;
+    // Just return the RenderMaterial objRef
+    return material->getObjRef();
 }
 
 int RenderFeature::setRenderMaterial(const RenderMaterial *material)
@@ -158,13 +145,13 @@ int RenderFeature::setRenderMaterial(const RenderMaterial *material)
     return idx;
 }
 
-int RenderFeature::addRenderMaterial(const RenderMaterial *material, DocumentObject *pcObj)
+int RenderFeature::addRenderMaterial(RenderMaterial *material, DocumentObject *pcObj)
 {
     // Find the actual link for the Render Material
     // get the actual lists of the externals
     std::vector<DocumentObject*> Objects     = ExternalGeometry.getValues();
     std::vector<std::string>     SubElements = ExternalGeometry.getSubValues();
-    const std::vector< RenderMaterial * > &vals = this->MaterialsList.getValues();
+    const std::vector< RenderMaterial * > &vals     = MaterialsList.getValues();
 
     if(!pcObj) {
         Base::Console().Warning("The part could not be found");
@@ -178,7 +165,7 @@ int RenderFeature::addRenderMaterial(const RenderMaterial *material, DocumentObj
     RenderMaterial *matNew = material->clone();
 
     // Assign the material index
-    matNew->LinkIndex.setValue(matIndex);
+    matNew->setLink(matIndex, pcObj);
 
     newVals.push_back(matNew);
     this->MaterialsList.setValues(newVals);
@@ -515,7 +502,6 @@ void RenderFeature::setUpdateInterval(int interval)
 
 App::DocumentObjectExecReturn *RenderFeature::execute(void)
 {
-
     return App::DocumentObject::StdReturn;
 }
 
@@ -543,18 +529,65 @@ void RenderFeature::Restore(XMLReader &reader)
 {
     App::DocumentObject::Restore(reader);
 
+    //We must update the Render Material References
+    std::vector<DocumentObject*> Objects     = ExternalGeometry.getValues();
+    std::vector<std::string>     SubElements = ExternalGeometry.getSubValues();
+
+    const std::vector<DocumentObject*> originalObjects = Objects;
+    const std::vector<std::string>     originalSubElements = SubElements;
+
+    const std::vector< RenderMaterial * > &vals = this->MaterialsList.getValues();
+
+    std::vector<RenderMaterial *> newVals(vals);
+
+    for (std::vector<RenderMaterial *>::const_iterator it = vals.begin();it!=vals.end();++it) {
+        int idx = (*it)->LinkIndex.getValue();
+        RenderMaterial *newMat = (*it)->clone();
+        newMat->setLink(idx, Objects[idx]);
+        newVals.push_back(newMat);
+    }
+
+    MaterialsList.setValues(newVals);
+
+    // Update the Render Camera
     RenderCamera *cam = new RenderCamera();
     cam->Restore(reader);
 
     renderer->addCamera(cam);
 }
 
+void RenderFeature::updateMatLinks()
+{
+    // We Check any strangling links for deletion
+    // Check if all the external geometry items indexed exists
+    const std::vector<DocumentObject *> vals = ExternalGeometry.getValues();
+
+    const std::vector< RenderMaterial * > &materials = this->MaterialsList.getValues();
+    std::vector< RenderMaterial * > newVals;
+    for (std::vector<RenderMaterial *>::const_iterator mat= materials.begin(); mat!=materials.end();++ mat) {
+        bool fnd = false;
+        for (std::vector<DocumentObject *>::const_iterator it=vals.begin(); it!=vals.end();++it) {
+            if((*it) == (*mat)->getObjRef()) {
+              fnd = true;
+              break;
+            }
+        }
+
+        // If we reach the end the link has been removed
+        if (fnd)
+            newVals.push_back((*mat)->clone());
+    }
+    this->MaterialsList.setValues(newVals);
+}
+
 void RenderFeature::onChanged(const App::Property* prop)
 {
-    Base::Console().Log("On Changed Called");
     if (prop == &RendererType) {
         setRenderer(RendererType.getValueAsString()); // Reload the Render Plugin
+    } else if(prop == &ExternalGeometry) {
+         updateMatLinks();
     }
+    App::DocumentObjectGroup::onChanged(prop);
 }
 
 void RenderFeature::onDocumentRestored()

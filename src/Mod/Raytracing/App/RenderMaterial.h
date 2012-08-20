@@ -107,10 +107,15 @@ public:
   App::PropertyString  Name;
   App::PropertyString  LibMaterialId;
 
-  RenderMaterial(){}
-  RenderMaterial(const LibraryMaterial *mat) { LibMaterialId.setValue(mat->id.toStdString()); }
+  RenderMaterial(){ objRef = 0;}
+  RenderMaterial(const LibraryMaterial *mat) { LibMaterialId.setValue(mat->id.toStdString()); objRef = 0; }
   RenderMaterial(const RenderMaterial&);
   ~RenderMaterial();
+
+  /// Convenience method for setting both the link id and document object
+  void setLink(int idx, App::DocumentObject *obj) { objRef = obj; LinkIndex.setValue(idx); }
+  App::DocumentObject* getObjRef() const { return objRef; }
+
   virtual RenderMaterial * clone(void) const;
 
   // from base class
@@ -121,6 +126,10 @@ public:
 //   virtual PyObject *getPyObject(void);    
   QMap<QString, MaterialProperty *> Properties;
   const LibraryMaterial * getMaterial() const { Appearances().getMaterialById(LibMaterialId.getValue()); }
+
+private:
+    // Only used for reference when onChanged is called in RenderFeature
+    App::DocumentObject *objRef;
 };
 
 }

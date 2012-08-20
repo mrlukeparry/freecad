@@ -281,7 +281,7 @@ std::vector<RenderMaterial *> Renderer::getRenderPartMaterials(RenderPart *part)
     std::vector<RenderMaterial *> mats;
     for(std::vector<RenderMaterial *>::const_iterator it = materials.begin(); it != materials.end(); ++it) {
 
-        App::DocumentObject *obj = getRenderMaterialLink((*it));
+        App::DocumentObject *obj = (*it)->getObjRef();
         App::DocumentObject *docObj = App::GetApplication().getActiveDocument()->getObject(part->getName());
         if(obj == docObj)
             mats.push_back(*it);

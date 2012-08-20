@@ -26,7 +26,7 @@
 #include <App/PropertyStandard.h>
 #include <App/PropertyFile.h>
 #include <App/FeaturePython.h>
-#include <App/DocumentObject.h>
+#include <App/DocumentObjectGroup.h>
 #include <Base/Axis.h>
 
 #include <Inventor/SbBox3f.h>
@@ -40,13 +40,13 @@
 namespace Raytracing
 {
 
-class RaytracingExport RenderFeature : public App::DocumentObject
+class RaytracingExport RenderFeature : public App::DocumentObjectGroup
 {
     PROPERTY_HEADER(Raytracing::RenderFeature);
 
 public:
     RenderFeature();
-    ~RenderFeature();
+    virtual ~RenderFeature();
 
     /// Properties
     Raytracing::PropertyRenderMaterialList     MaterialsList;
@@ -74,19 +74,19 @@ public:
 
 
     /// Render MaterialsList
-    int  addRenderMaterial(const RenderMaterial *material, DocumentObject *pcObj);
+    int  addRenderMaterial(RenderMaterial *material, DocumentObject *pcObj);
     const RenderMaterial * getRenderMaterial(const char *partName) const;
     int removeRenderMaterialFromPart(const char *partName);
     int setRenderMaterial(const RenderMaterial *material);
     int addMatLink(DocumentObject *Obj, const char* SubName);
     int delMatLink(int linkId);
+    void updateMatLinks();
     DocumentObject * getRenderMaterialLink(RenderMaterial *material);
 
     /// Render getters and setters
     void removeRenderer(void);
     void setRenderer(const char *);
     Renderer * getRenderer(void) const { return renderer; }
-
 
     bool hasRenderer(void) const;
     bool isRendererReady(void) const;

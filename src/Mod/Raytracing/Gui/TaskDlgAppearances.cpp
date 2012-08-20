@@ -160,7 +160,7 @@ void TaskDlgAppearances::materialDropEvent(QDropEvent *ev)
 
     // Selection must be derived from a part feature
 
-    RenderMaterial myMaterial(libMat);
+    RenderMaterial *myMaterial = new RenderMaterial(libMat);
     QString objectName = QString::fromAscii(selection.pObjectName);
 
     App::DocumentObject *docObj = App::GetApplication().getActiveDocument()->getObject(selection.pObjectName);
@@ -188,10 +188,17 @@ void TaskDlgAppearances::materialDropEvent(QDropEvent *ev)
             Gui::Command::doCommand(Gui::Command::Doc,"App.ActiveDocument.ActiveObject.removeRenderMaterialFromPart('%s')", selection.pObjectName);
             Gui::Command::commitCommand();
         }
-        int matLinkIndex = feat->addRenderMaterial(&myMaterial, docObj);
 
-        RenderMaterial *matClone = new RenderMaterial(myMaterial); // Make a copy of the material on the heap
-        matClone->LinkIndex.setValue(matLinkIndex);
+        Gui::Command::openCommand("Add Material");
+        int matLinkIndex = feat->addRenderMaterial(myMaterial, docObj);
+        Gui::Command::commitCommand();
+
+        RenderMaterial *matClone = myMaterial->clone(); // Make a copy of the material on the heap
+
+        delete myMaterial;
+        myMaterial = 0;
+        
+        matClone->setLink(matLinkIndex, docObj);
 
         if(matLinkIndex < 0)
           return; // an error occured
@@ -200,7 +207,7 @@ void TaskDlgAppearances::materialDropEvent(QDropEvent *ev)
         // TODO should params model be put on the heap - likely
         MaterialParametersModel paramsModel;
 
-        QMap<QString, MaterialParameter*> params =  myMaterial.getMaterial()->parameters;
+        QMap<QString, MaterialParameter*> params =  matClone->getMaterial()->parameters;
         QMap<QString, MaterialParameter*>::const_iterator i;
         for (i = params.constBegin(); i != params.constEnd(); ++i) {
             MaterialParameter *param = i.value();
@@ -245,7 +252,10 @@ void TaskDlgAppearances::materialParamSave()
             return; //No Material Data Set
 
         // TODO implement App::Command for undo states
+        Gui::Command::openCommand("Update Material");
         feat->setRenderMaterial(materialData->getRenderMaterial()); //setRenderMaterial will clone the material
+        Gui::Command::commitCommand();
+
         QObject *rootObject = qobject_cast<QObject *>(view->rootObject());
         QMetaObject::invokeMethod(rootObject, "openMaterialLibraryWidget");
         // delete temporary material

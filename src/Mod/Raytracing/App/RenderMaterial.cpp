@@ -43,6 +43,7 @@ RenderMaterial::RenderMaterial(const RenderMaterial& from)
     LinkIndex.setValue(from.LinkIndex.getValue());
     Name.setValue(from.Name.getValue());
     LibMaterialId.setValue(from.LibMaterialId.getValue());
+    objRef = from.getObjRef();
 
     // Copy all the properties. New object must be made
     QMap<QString, MaterialProperty *>::const_iterator it = from.Properties.constBegin();
@@ -112,7 +113,7 @@ void RenderMaterial::Save (Writer &writer) const
     writer.Stream() << writer.ind() << "<RenderMaterial "
     << "Name=\""          <<  Name.getValue()            << "\" "
     << "LibMatId=\""      <<  LibMaterialId.getValue()   << "\" "
-    << "LinkIndex=\""     <<  LinkIndex.getValue()        << "\">\n";
+    << "LinkIndex=\""     <<  LinkIndex.getValue()        << "\" />\n";
 }
 
 void RenderMaterial::Restore(XMLReader &reader)
@@ -123,7 +124,4 @@ void RenderMaterial::Restore(XMLReader &reader)
     Name.setValue(reader.getAttribute("Name"));
     LibMaterialId.setValue(reader.getAttribute("LibMatId"));
     LinkIndex.setValue(reader.getAttributeAsInteger("LinkIndex"));
-
-
-    //TODO what happens if the link wasn't correctly found?
 }

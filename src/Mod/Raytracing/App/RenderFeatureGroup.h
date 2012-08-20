@@ -20,48 +20,36 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef RAYTRACINGGUI_VIEWPROVIDERRENDER_H
-#define RAYTRACINGGUI_VIEWPROVIDERRENDER_H
+#ifndef _RAYTRACING_RENDERFEATUREGROUP_h_
+#define _RAYTRACING_RENDERFEATUREGROUP_h_
 
-#include <Gui/ViewProviderFeature.h>
-#include <Mod/Raytracing/App/RenderFeature.h>
-#include <Gui/ViewProviderDocumentObjectGroup.h>
+#include <App/DocumentObjectGroup.h>
+#include <App/PropertyStandard.h>
+#include <App/PropertyLinks.h>
 
-#include <Gui/View3DInventorViewer.h>
-
-namespace RaytracingGui {
-
-class RaytracingGuiExport ViewProviderRender : public Gui::ViewProviderDocumentObjectGroup
+namespace Raytracing
 {
-    PROPERTY_HEADER(RaytracingGui::ViewProviderRender);
+
+
+/** Base class of all View Features in the drawing module
+ */
+class RaytracingExport RenderFeatureGroup : public App::DocumentObjectGroup
+{
+    PROPERTY_HEADER(RenderFeature::RenderFeatureGroup);
 
 public:
-    /// constructor
-    ViewProviderRender();
-    /// destructor
-    virtual ~ViewProviderRender();
+    /// Constructor
+    RenderFeatureGroup(void);
+    virtual ~RenderFeatureGroup();
 
-    virtual void attach(App::DocumentObject *);
-    virtual void setDisplayMode(const char* ModeName);
+    App::PropertyLinkList Features;
 
-    /// returns a list of all possible modes
-    virtual std::vector<std::string> getDisplayModes(void) const;
-    virtual Raytracing::RenderFeature * getRenderFeature(void) const;
-
-    /// Is called by the tree if the user double click on the object
-    virtual bool doubleClicked(void);
-    void setupContextMenu(QMenu*, QObject*, const char*);
-    virtual void updateData(const App::Property*);
-
-    bool mouseMove(const SbVec3f &pos, const SbVec3f &norm, const SoPickedPoint* pp);
-protected:
-    bool setEdit(int ModNum);
-    void unsetEditViewer(Gui::View3DInventorViewer* viewer);
-    void setEditViewer(Gui::View3DInventorViewer* viewer, int ModNum);
-
+    /// returns the type name of the ViewProvider
+    virtual const char* getViewProviderName(void) const {
+        return "RaytracingGui::ViewProviderRender";
+    }
 };
 
-} // namespace RaytracingGui
 
-#endif // RAYTRACINGGUI_VIEWPROVIDERRENDER_H
-
+} //namespace Raytracing
+#endif

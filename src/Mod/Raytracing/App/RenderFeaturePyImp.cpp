@@ -28,9 +28,9 @@
 
 #include "Mod/Raytracing/App/RenderFeature.h"
 #include "Mod/Raytracing/App/Renderer.h"
-#include <App/DocumentObject.h>
+#include <App/DocumentObjectGroup.h>
 
-// inclusion of the generated files (generated out of SketchObjectSFPy.xml)
+// inclusion of the generated files
 #include "RenderFeaturePy.h"
 #include "RenderFeaturePy.cpp"
 
