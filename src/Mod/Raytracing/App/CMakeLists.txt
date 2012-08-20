@@ -63,15 +63,10 @@ SET(LuxMaterials
     Materials/Lux/materials.xml
     Materials/Lux/Gold/Gold.xml
     Materials/Lux/Gold/gold.lxm
-    Materials/Lux/OrangeSkin/orangeSkin.lbm
-    Materials/Lux/OrangeSkin/orangeSkin.jpg
-    Materials/Lux/OrangeSkin/orangeSkin.xml
-    Materials/Lux/HammeredCopper/hammeredCopper.xml
-    Materials/Lux/HammeredCopper/hammeredCopper.jpg
-    Materials/Lux/HammeredCopper/hammeredCopper.lbm
-    Materials/Lux/DullBrass/dullBrass.xml
-    Materials/Lux/DullBrass/dullBrass.jpg
-    Materials/Lux/DullBrass/dullBrass.lbm
+    Materials/Lux/Gold/preview.png
+    Materials/Lux/BlackLeather/blackLeather.xml
+    Materials/Lux/BlackLeather/blackLeather.lxm
+    Materials/Lux/BlackLeather/preview.jpg
 )
 
 SET(LuxRender_SRCS

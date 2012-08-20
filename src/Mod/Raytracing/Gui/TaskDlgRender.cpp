@@ -24,8 +24,6 @@
 #ifndef _PreComp_
 #endif
 
-#include <Inventor/actions/SoSearchAction.h>
-#include <Inventor/actions/SoGetBoundingBoxAction.h>
 #include <Inventor/events/SoLocation2Event.h>
 #include <Inventor/nodes/SoPerspectiveCamera.h>
 
@@ -39,7 +37,6 @@
 #include <Gui/MainWindow.h>
 #include <Gui/MDIView.h>
 #include <Gui/Selection.h>
-#include <Gui/SoFCBoundingBox.h>
 #include <Gui/View3DInventor.h>
 #include <Gui/View3DInventorViewer.h>
 
@@ -299,7 +296,7 @@ void TaskDlgRender::preview()
     for (std::vector<Part::Feature*>::const_iterator it=DocObjects.begin();it!=DocObjects.end();++it) {
         Gui::ViewProvider* vp = doc->getViewProvider(*it);
         if (vp && vp->isVisible()) {
-          float meshDev = 0.1;
+            float meshDev = 0.1;
 //             App::PropertyColor *pcColor = dynamic_cast<App::PropertyColor *>(vp->getPropertyByName("ShapeColor"));
 //             App::Color col = pcColor->getValue();
 
@@ -310,7 +307,7 @@ void TaskDlgRender::preview()
 
     // Get the Render Scene Bounding box and set it because contents of scene may haved updated
     SbBox3f bbox;
-    getRenderBBox(bbox);
+    this->getRenderView()->getRenderBBox(bbox);
 
     SbVec3f min = bbox.getMin();
     SbVec3f max = bbox.getMax();
@@ -341,32 +338,6 @@ void TaskDlgRender::preview()
     renderView->setWindowTitle(QObject::tr("Render viewer") + QString::fromAscii("[*]"));
     Gui::getMainWindow()->addWindow(renderView);
 
-}
-
-void TaskDlgRender::getRenderBBox(SbBox3f &box)
-{
-    // ensure that we are in sketch only selection mode
-    Gui::MDIView *mdi = Gui::Application::Instance->activeDocument()->getActiveView();
-    Gui::View3DInventorViewer *viewer;
-    viewer = static_cast<Gui::View3DInventor *>(mdi)->getViewer();
-
-    SoNode* root = viewer->getSceneGraph();
-
-    SoSearchAction sa;
-    sa.setType(Gui::SoSkipBoundingGroup::getClassTypeId());
-    sa.setInterest(SoSearchAction::ALL);
-    sa.apply(viewer->getSceneGraph());
-
-    const SoPathList & pathlist = sa.getPaths();
-    for (int i = 0; i < pathlist.getLength(); i++ ) {
-        SoPath * path = pathlist[i];
-        Gui::SoSkipBoundingGroup * group = static_cast<Gui::SoSkipBoundingGroup*>(path->getTail());
-        group->mode = Gui::SoSkipBoundingGroup::EXCLUDE_BBOX;
-    }
-
-    SoGetBoundingBoxAction action(viewer->getViewportRegion());
-    action.apply(viewer->getSceneGraph());
-    box = action.getBoundingBox();
 }
 
 //---------- SLOTS ---------//
@@ -421,7 +392,7 @@ void TaskDlgRender::previewWindow()
 
     // Get the Render Scene Bounding box and set it
     SbBox3f bbox;
-    getRenderBBox(bbox);
+    this->getRenderView()->getRenderBBox(bbox);
 
     SbVec3f min = bbox.getMin();
     SbVec3f max = bbox.getMax();

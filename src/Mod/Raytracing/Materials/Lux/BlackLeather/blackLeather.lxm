@@ -1,0 +1,53 @@
+# BEGIN DB Material 'Black Leather' ID 24
+# Author J the Ninja, Tue, 12 Apr 11 10:17:55 -0700
+# Version 0.8RC2 ; Rated 5 / 5.0 ; 3 Votes
+# interior : 
+# exterior : 
+# previewsamples : 2528
+
+# DB Object ID 167
+Texture "black leather wrink" "float" "wrinkled"
+	# ParamSet ID 56
+	"integer octaves" [8]
+	"float roughness" [0.5]
+	"string coordinates" ["global"]
+	"vector translate" [0 0 0]
+	"vector rotate" [0 0 0]
+	"vector scale" [0.029999999329448 0.029999999329448 0.029999999329448]
+
+# DB Object ID 168
+Texture "black leather crack" "float" "blender_clouds"
+	# ParamSet ID 57
+	"float bright" [1]
+	"float contrast" [1]
+	"string noisetype" ["soft_noise"]
+	"string noisebasis" ["voronoi_crackle"]
+	"float noisesize" [0.10000000149012]
+	"integer noisedepth" [2]
+	"string coordinates" ["global"]
+	"vector translate" [0 0 0]
+	"vector rotate" [0 0 0]
+	"vector scale" [0.050000000745058 0.050000000745058 0.050000000745058]
+
+# DB Object ID 169
+Texture "black leather bump" "float" "multimix"
+	# ParamSet ID 58
+	"texture tex1" ["black leather wrink"]
+	"texture tex2" ["black leather crack"]
+	"float weights" [0.0010000000474975 0.0010000000474975]
+
+# DB Object ID 170
+MakeNamedMaterial "Black Leather" 
+	# ParamSet ID 59
+	"texture bumpmap" ["black leather bump"]
+	"bool multibounce" ["false"]
+	"float d" [0.11999999731779]
+	"color Ka" [0.032999999821186 0.032999999821186 0.032999999821186]
+	"color Kd" [0.0099999997764826 0.0099999997764826 0.0099999997764826]
+	"color Ks" [0.029999999329448 0.029999999329448 0.029999999329448]
+	"float index" [0]
+	"float uroughness" [0.090000003576279]
+	"float vroughness" [0.090000003576279]
+	"string type" ["glossy"]
+
+# END DB Material 'Black Leather' ID 24

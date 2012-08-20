@@ -53,6 +53,7 @@ public:
     void setupContextMenu(QMenu*, QObject*, const char*);
     virtual void updateData(const App::Property*);
 
+    void getRenderBBox(SbBox3f &box);
     bool mouseMove(const SbVec3f &pos, const SbVec3f &norm, const SoPickedPoint* pp);
 protected:
     bool setEdit(int ModNum);

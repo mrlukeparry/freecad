@@ -138,8 +138,6 @@ public:
     ViewProviderRender* getRenderView() const { return renderView; }
     ~TaskDlgRender();
 
-    void getRenderBBox(SbBox3f &box);
-
 Q_SIGNALS:
   void renderStart();
   void renderStop();

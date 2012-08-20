@@ -52,25 +52,24 @@ using namespace Raytracing;
 using namespace Base;
 
 const char* RenderFeature::TypeEnums[]= {"Lux","Povray",NULL};
+const char *group = "Render Feature";
 
 PROPERTY_SOURCE(Raytracing::RenderFeature, App::DocumentObjectGroup)
 
 RenderFeature::RenderFeature()
 {
-    ADD_PROPERTY(RendererType,((long)0));
-    ADD_PROPERTY(Preset,(""));
-    ADD_PROPERTY(SceneTemplate,(""));
-    ADD_PROPERTY(OutputX,(800));
-    ADD_PROPERTY(OutputY,(800));
-    ADD_PROPERTY(UpdateInterval,(3000));
-    ADD_PROPERTY_TYPE(ExternalGeometry,(0,0),"RenderFeature",(App::PropertyType)(App::Prop_None),"External geometry");
-    ADD_PROPERTY_TYPE(MaterialsList,     (0)  ,"RenderFeature",(App::PropertyType)(App::Prop_None),"Render materials");
+    ADD_PROPERTY_TYPE(RendererType,((long)0), group, (App::PropertyType)(App::Prop_Output)  ,"Switch the render backend to be used");
+    ADD_PROPERTY_TYPE(Preset,("")           , group, (App::PropertyType)(App::Prop_ReadOnly),"Render preset used");
+    ADD_PROPERTY_TYPE(SceneTemplate,("")    , group, (App::PropertyType)(App::Prop_ReadOnly),"Render template used");
+    ADD_PROPERTY_TYPE(OutputX,(800)         , group, (App::PropertyType)(App::Prop_Output)  ,"Render output width");
+    ADD_PROPERTY_TYPE(OutputY,(800)         , group, (App::PropertyType)(App::Prop_Output)  ,"Render output height");
+    ADD_PROPERTY_TYPE(UpdateInterval,(3000) , group, (App::PropertyType)(App::Prop_Output)  ,"Render preview update time");
+    ADD_PROPERTY_TYPE(ExternalGeometry,(0,0), group,(App::PropertyType)(App::Prop_None)     ,"External geometry");
+    ADD_PROPERTY_TYPE(MaterialsList,   (0)  , group,(App::PropertyType)(App::Prop_None)     ,"Render materials");
     RendererType.setEnums(TypeEnums);
-    
+
     renderer = 0;
 
-//     ADD_PROPERTY_TYPE(Constraints,     (0)  ,"Sketch",(App::PropertyType)(App::Prop_None),"Sketch constraints");
-//     ADD_PROPERTY_TYPE(ExternalGeometry,(0,0),"Sketch",(App::PropertyType)(App::Prop_None),"Sketch external geometry");
 }
 
 RenderFeature::~RenderFeature()

@@ -23,12 +23,12 @@
 #include "PreCompiled.h"
 
 #ifndef _PreComp_
+#include <Inventor/nodes/SoCamera.h>
+#include <Inventor/actions/SoSearchAction.h>
+#include <Inventor/actions/SoGetBoundingBoxAction.h>
 # endif
 
 /// Here the FreeCAD includes sorted by Base,App,Gui......
-
-#include <Inventor/nodes/SoCamera.h>
-
 #include <Base/Console.h>
 #include <Base/Parameter.h>
 #include <Base/Exception.h>
@@ -43,7 +43,9 @@
 #include <Gui/Selection.h>
 #include <Gui/MainWindow.h>
 #include <Gui/SoFCUnifiedSelection.h>
+#include <Gui/SoFCBoundingBox.h>
 #include <Gui/View3DInventor.h>
+
 #include <QMenu>
 #include <QDropEvent>
 #include <QMimeData>
@@ -145,6 +147,32 @@ bool ViewProviderRender::setEdit(int ModNum)
         Gui::Control().showDialog(new TaskDlgRender(this));
 
     return true;
+}
+
+void ViewProviderRender::getRenderBBox(SbBox3f &box)
+{
+    // ensure that we are in sketch only selection mode
+    Gui::MDIView *mdi = Gui::Application::Instance->activeDocument()->getActiveView();
+    Gui::View3DInventorViewer *viewer;
+    viewer = static_cast<Gui::View3DInventor *>(mdi)->getViewer();
+
+    SoNode* root = viewer->getSceneGraph();
+
+    SoSearchAction sa;
+    sa.setType(Gui::SoSkipBoundingGroup::getClassTypeId());
+    sa.setInterest(SoSearchAction::ALL);
+    sa.apply(viewer->getSceneGraph());
+
+    const SoPathList & pathlist = sa.getPaths();
+    for (int i = 0; i < pathlist.getLength(); i++ ) {
+        SoPath * path = pathlist[i];
+        Gui::SoSkipBoundingGroup * group = static_cast<Gui::SoSkipBoundingGroup*>(path->getTail());
+        group->mode = Gui::SoSkipBoundingGroup::EXCLUDE_BBOX;
+    }
+
+    SoGetBoundingBoxAction action(viewer->getViewportRegion());
+    action.apply(viewer->getSceneGraph());
+    box = action.getBoundingBox();
 }
 
 bool ViewProviderRender::doubleClicked(void)

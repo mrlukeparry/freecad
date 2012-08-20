@@ -54,6 +54,7 @@
 #include <Gui/Selection.h>
 #include <Gui/FileDialog.h>
 #include <Gui/MainWindow.h>
+#include <Gui/SelectionFilter.h>
 #include <Gui/View3DInventor.h>
 #include <Gui/View3DInventorViewer.h>
 
@@ -311,6 +312,262 @@ bool CmdRaytracingCreateRenderFeature::isActive(void)
     return getGuiApplication()->sendHasMsgToActiveView("GetCamera");
 }
 
+//===========================================================================
+// CmdRaytracingCmdRaytracingPreview
+//===========================================================================
+DEF_STD_CMD_A(CmdRaytracingPreview);
+
+CmdRaytracingPreview::CmdRaytracingPreview()
+  :Command("Raytracing_Preview")
+{
+    sAppModule    = "Raytracing";
+    sGroup        = QT_TR_NOOP("Render");
+    sMenuText     = QT_TR_NOOP("Render the Render Feature");
+    sToolTipText  = QT_TR_NOOP("Render the Render Feature");
+    sWhatsThis    = sToolTipText;
+    sStatusTip    = sToolTipText;
+    sPixmap       = "Raytrace_Camera";
+}
+
+void CmdRaytracingPreview::activated(int iMsg)
+{
+    Gui::SelectionFilter RenderFeatureFilter("SELECT Raytracing::RenderFeature COUNT 1");
+
+    if (RenderFeatureFilter.match()) {
+        Raytracing::RenderFeature *feat = static_cast<Raytracing::RenderFeature*>(RenderFeatureFilter.Result[0][0].getObject());
+        feat->reset();
+        RenderCamera *renderCam = feat->getCamera();
+        if(!renderCam) {
+            Base::Console().Error("Please ensure that a camera has been intiailised for the Render Feature");
+            return;
+        }
+
+        if(!feat->hasRenderer()) {
+            Base::Console().Error("Please ensure that a render backend has been intiailised for the Render Feature");
+            return;
+        }
+
+        Gui::Document * doc = Gui::Application::Instance->activeDocument();
+
+        RaytracingGui::ViewProviderRender *vp = getRenderViewprovider(doc);
+
+            // get all objects of the active document
+        std::vector<Part::Feature*> DocObjects = App::GetApplication().getActiveDocument()->getObjectsOfType<Part::Feature>();
+
+        for (std::vector<Part::Feature*>::const_iterator it=DocObjects.begin();it!=DocObjects.end();++it) {
+            Gui::ViewProvider* vp = doc->getViewProvider(*it);
+            if (vp && vp->isVisible()) {
+                float meshDev = 0.1;
+    //             App::PropertyColor *pcColor = dynamic_cast<App::PropertyColor *>(vp->getPropertyByName("ShapeColor"));
+    //             App::Color col = pcColor->getValue();
+
+                RenderPart *part = new RenderPart((*it)->getNameInDocument(), (*it)->Shape.getValue(), meshDev);
+                feat->getRenderer()->addObject(part); //TODO we need to provide an interface in the RenderFeature for adding / storing objects
+            }
+        }
+
+        // Get the Render Scene Bounding box and set it
+        SbBox3f bbox;
+        vp->getRenderBBox(bbox);
+
+        SbVec3f min = bbox.getMin();
+        SbVec3f max = bbox.getMax();
+
+        // set the scene bounding box for the template
+        feat->setBBox(Base::Vector3d(min[0],min[1], min[2]), Base::Vector3d(max[0],max[1], max[2]));
+
+        // Run the preview
+        feat->preview();
+
+        // Get Active Render Process
+        RenderProcess *process = feat->getActiveRenderProcess();
+        if(!process) {
+          Base::Console().Error("Render Process is not available \n");
+          return;
+        }
+
+        RenderView *renderView = new RenderView(doc, Gui::getMainWindow());
+
+        renderView->attachRender(feat->getRenderer());
+        renderView->setWindowTitle(QObject::tr("Render viewer") + QString::fromAscii("[*]"));
+        Gui::getMainWindow()->addWindow(renderView);
+    } else {
+        Base::Console().Log("Please select a Render Feature");
+    }
+
+}
+
+bool CmdRaytracingPreview::isActive(void)
+{
+    if (getActiveGuiDocument())
+            return true;
+        else
+            return false;
+}
+
+//===========================================================================
+// CmdRaytracingCmdRaytracingPreviewWindow
+//===========================================================================
+DEF_STD_CMD_A(CmdRaytracingPreviewWindow);
+
+CmdRaytracingPreviewWindow::CmdRaytracingPreviewWindow()
+  :Command("Raytracing_PreviewWindow")
+{
+    sAppModule    = "Raytracing";
+    sGroup        = QT_TR_NOOP("Render");
+    sMenuText     = QT_TR_NOOP("Render the Window");
+    sToolTipText  = QT_TR_NOOP("Render the window");
+    sWhatsThis    = sToolTipText;
+    sStatusTip    = sToolTipText;
+    sPixmap       = "Raytrace_Camera";
+}
+
+void CmdRaytracingPreviewWindow::activated(int iMsg)
+{
+    Gui::SelectionFilter RenderFeatureFilter("SELECT Raytracing::RenderFeature COUNT 1");
+   
+    if (RenderFeatureFilter.match()) {
+        Raytracing::RenderFeature *feat = static_cast<Raytracing::RenderFeature*>(RenderFeatureFilter.Result[0][0].getObject());
+        feat->reset();
+        RenderCamera *renderCam = feat->getCamera();
+        if(!renderCam) {
+            Base::Console().Error("Please ensure that a camera has been intiailised for the Render Feature");
+            return;
+        }
+
+        if(!feat->hasRenderer()) {
+            Base::Console().Error("Please ensure that a render backend has been intiailised for the Render Feature");
+            return;
+        }
+
+        SoCamera *Cam;
+
+        Gui::MDIView *mdi = Gui::Application::Instance->activeDocument()->getActiveView();
+        if (mdi && mdi->isDerivedFrom(Gui::View3DInventor::getClassTypeId())) {
+            Gui::View3DInventorViewer *viewer = static_cast<Gui::View3DInventor *>(mdi)->getViewer();
+            Cam =  viewer->getCamera();
+        } else {
+            return; //throw Base::Exception("Could Not Read Camera");
+        }
+
+        Gui::Document * doc = Gui::Application::Instance->activeDocument();
+
+        RaytracingGui::ViewProviderRender *vp = getRenderViewprovider(doc);
+        
+            // get all objects of the active document
+        std::vector<Part::Feature*> DocObjects = App::GetApplication().getActiveDocument()->getObjectsOfType<Part::Feature>();
+
+        for (std::vector<Part::Feature*>::const_iterator it=DocObjects.begin();it!=DocObjects.end();++it) {
+            Gui::ViewProvider* vp = doc->getViewProvider(*it);
+            if (vp && vp->isVisible()) {
+                float meshDev = 0.1;
+    //             App::PropertyColor *pcColor = dynamic_cast<App::PropertyColor *>(vp->getPropertyByName("ShapeColor"));
+    //             App::Color col = pcColor->getValue();
+
+                RenderPart *part = new RenderPart((*it)->getNameInDocument(), (*it)->Shape.getValue(), meshDev);
+                feat->getRenderer()->addObject(part); //TODO we need to provide an interface in the RenderFeature for adding / storing objects
+            }
+        }
+
+        // Get the Render Scene Bounding box and set it
+        SbBox3f bbox;
+        vp->getRenderBBox(bbox);
+
+        SbVec3f min = bbox.getMin();
+        SbVec3f max = bbox.getMax();
+
+        // set the scene bounding box for the template
+        feat->setBBox(Base::Vector3d(min[0],min[1], min[2]), Base::Vector3d(max[0],max[1], max[2]));
+
+        // Get the current camera positions
+        SbRotation camrot = Cam->orientation.getValue();
+        SbViewVolume::ProjectionType CamType = Cam->getViewVolume().getProjectionType();
+
+        SbVec3f upvec(0, 1, 0); // init to default up vector
+        camrot.multVec(upvec, upvec);
+
+        SbVec3f lookat(0, 0, -1); // init to default view direction vector
+        camrot.multVec(lookat, lookat);
+
+        SbVec3f pos = Cam->position.getValue();
+        float Dist = Cam->focalDistance.getValue();
+
+        RenderCamera::CamType camType;
+
+        // Get viewport camera type
+        char *camTypeStr;
+        float fov = 0;
+        switch(CamType) {
+          case SbViewVolume::ORTHOGRAPHIC:
+            camTypeStr = "Orthographic";
+            camType = RenderCamera::ORTHOGRAPHIC; break;
+          case SbViewVolume::PERSPECTIVE:
+            camType = RenderCamera::PERSPECTIVE;
+            camTypeStr = "Perspective";
+            fov = static_cast<SoPerspectiveCamera *>(Cam)->heightAngle.getValue();
+            fov *= 180 / M_PI;
+            break;
+        }
+
+            // Calculate Camera Properties
+        Base::Vector3d camPos(pos[0], pos[1], pos[2]);
+        Base::Vector3d camDir(lookat[0],lookat[1], lookat[2]);
+        Base::Vector3d camUp(upvec[0],upvec[1], upvec[2]);
+        Base::Vector3d camLookAt = camDir * Dist + camPos;
+
+        RenderCamera *camClone = renderCam->clone();
+
+        // Set the rendera camera to viewport
+        feat->setCamera(camPos, camDir, camUp, camLookAt, camTypeStr);
+        feat->getCamera()->Fov = fov;
+        // Get the View Provider Height from MDI View
+        int height = static_cast<Gui::View3DInventor *>(mdi)->height();
+        int width  = static_cast<Gui::View3DInventor *>(mdi)->width();
+
+        // Unsure if we should set this temporarily
+        //Store current output size to restore later
+        int tempWidth  = feat->OutputX.getValue();
+        int tempHeight = feat->OutputY.getValue();
+
+        feat->OutputX.setValue(width);
+        feat->OutputY.setValue(height);
+
+        // Run the preview
+        feat->preview();
+
+        // Restore preview sizes
+        feat->OutputX.setValue(tempWidth);
+        feat->OutputY.setValue(tempHeight);
+
+        // Restore previous camera settings
+      // Set the rendera camera back to previous
+        feat->setCamera(camClone);
+
+        delete camClone; // Destroy the clone
+
+        // Get Active Render Process
+        RenderProcess *process = feat->getActiveRenderProcess();
+        if(!process) {
+          Base::Console().Error("Render Process is not available \n");
+          return;
+        }
+
+        RenderView *renderView = new RenderView(doc, Gui::getMainWindow());
+
+        renderView->attachRender(feat->getRenderer());
+        renderView->setWindowTitle(QObject::tr("Render viewer") + QString::fromAscii("[*]"));
+        Gui::getMainWindow()->addWindow(renderView);
+    } else {
+        Base::Console().Log("Please select a Render Feature");
+    }
+
+
+}
+
+bool CmdRaytracingPreviewWindow::isActive(void)
+{
+    return getGuiApplication()->sendHasMsgToActiveView("GetCamera");
+}
 
 void CreateRenderCommands(void)
 {
@@ -318,5 +575,6 @@ void CreateRenderCommands(void)
 
     rcCmdMgr.addCommand(new CmdRaytracingAddAppearances());
     rcCmdMgr.addCommand(new CmdRaytracingCreateRenderFeature());
-
+    rcCmdMgr.addCommand(new CmdRaytracingPreviewWindow());
+    rcCmdMgr.addCommand(new CmdRaytracingPreview());
 }

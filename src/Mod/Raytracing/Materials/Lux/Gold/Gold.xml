@@ -8,6 +8,7 @@
       <label>Shiny Shiny Gold</label>
       <description>Gold</description>
       <filename>gold.lxm</filename>
+      <previewFilename>preview.png</previewFilename>
       <compat>gold</compat>
     </Material>
   </Materials>

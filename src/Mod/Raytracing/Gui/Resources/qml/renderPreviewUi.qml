@@ -24,8 +24,8 @@ Item {
     function viewAll() {
 
         var yScale = previewWidget.height / (previewImage.myHeight);
-        previewImage.zoomAnim.newX = 0;
-        previewImage.zoomAnim.newY = 0;
+        previewImage.zoomAnim.newX = (previewWidget.width - previewImage.myWidth) / 2 ;
+        previewImage.zoomAnim.newY = (previewWidget.height - previewImage.myHeight) / 2 ;
         previewImage.zoomAnim.newZoom = yScale;
         previewImage.zoomAnim.start();
     }

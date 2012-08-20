@@ -28,6 +28,7 @@
 #include <Base/Console.h>
 
 #include <App/Application.h>
+#include <App/Document.h>
 #include <Base/Exception.h>
 
 #include <Gui/Application.h>
@@ -173,93 +174,106 @@ void TaskDlgAppearances::materialDropEvent(QDropEvent *ev)
     std::vector<std::string> sub;
     //sub.push_back(selection.pSubName); //TODO
 
-
-    // Find the RenderFeature object. It must be currently active to add the RenderMaterial
-    App::DocumentObject *activeObj =  App::GetApplication().getActiveDocument()->getActiveObject();
-    if(activeObj && activeObj->getTypeId() == RenderFeature::getClassTypeId()) {
-        RenderFeature *feat = static_cast<RenderFeature *>(activeObj);
-
-        // Remove the previous RenderMaterial if one exists
-        const RenderMaterial *mat = feat->getRenderMaterial(selection.pObjectName);
-
-        if(mat)
-        {
-            Gui::Command::openCommand("Removing Material");
-            Gui::Command::doCommand(Gui::Command::Doc,"App.ActiveDocument.ActiveObject.removeRenderMaterialFromPart('%s')", selection.pObjectName);
-            Gui::Command::commitCommand();
+    RenderFeature *feat  = 0;
+    Gui::Document * doc = Gui::Application::Instance->activeDocument();
+    if (doc->getInEdit() && doc->getInEdit()->isDerivedFrom(ViewProviderRender::getClassTypeId())) {
+        ViewProviderRender *vp = dynamic_cast<ViewProviderRender*>(doc->getInEdit());
+        if(!vp) {
+            Base::Console().Log("An invalid view provider is currently being used");
+            return;
         }
+        feat = vp->getRenderFeature();
+    }
 
-        Gui::Command::openCommand("Add Material");
-        int matLinkIndex = feat->addRenderMaterial(myMaterial, docObj);
+    if(!feat) {
+        Base::Console().Error("A render feature couldn't be found");
+        return;
+    }
+
+    // Remove the previous RenderMaterial if one exists
+    const RenderMaterial *mat = feat->getRenderMaterial(selection.pObjectName);
+
+    if(mat)
+    {
+        Gui::Command::openCommand("Removing Material");
+        Gui::Command::doCommand(Gui::Command::Doc,"App.ActiveDocument.ActiveObject.removeRenderMaterialFromPart('%s')", selection.pObjectName);
         Gui::Command::commitCommand();
+    }
 
-        RenderMaterial *matClone = myMaterial->clone(); // Make a copy of the material on the heap
+    Gui::Command::openCommand("Add Material");
+    int matLinkIndex = feat->addRenderMaterial(myMaterial, docObj);
+    Gui::Command::commitCommand();
 
-        delete myMaterial;
-        myMaterial = 0;
-        
-        matClone->setLink(matLinkIndex, docObj);
+    RenderMaterial *matClone = myMaterial->clone(); // Make a copy of the material on the heap
 
-        if(matLinkIndex < 0)
-          return; // an error occured
+    delete myMaterial;
+    myMaterial = 0;
 
-        // TODO check if we should reload the QML or create a new widget
-        // TODO should params model be put on the heap - likely
-        MaterialParametersModel paramsModel;
+    matClone->setLink(matLinkIndex, docObj);
 
-        QMap<QString, MaterialParameter*> params =  matClone->getMaterial()->parameters;
-        QMap<QString, MaterialParameter*>::const_iterator i;
-        for (i = params.constBegin(); i != params.constEnd(); ++i) {
-            MaterialParameter *param = i.value();
-            paramsModel.addParameter(param); //Add the parameter to model
-        }
+    if(matLinkIndex < 0)
+      return; // an error occured
+
+    // TODO check if we should reload the QML or create a new widget
+    // TODO should params model be put on the heap - likely
+    MaterialParametersModel paramsModel;
+
+    QMap<QString, MaterialParameter*> params =  matClone->getMaterial()->parameters;
+    QMap<QString, MaterialParameter*>::const_iterator i;
+    for (i = params.constBegin(); i != params.constEnd(); ++i) {
+        MaterialParameter *param = i.value();
+        paramsModel.addParameter(param); //Add the parameter to model
+    }
 
 //         QDeclarativeView *paramView = new QDeclarativeView (qobject_cast<QWidget *>(this));
 //         QDeclarativeContext *ctxt = paramView->rootContext();
 //         ctxt->setContextProperty(QString::fromAscii("appearancesModel"), &paramsModel);
-// 
+//
 //         paramView->setResizeMode(QDeclarativeView::SizeRootObjectToView);
 
-      
-        materialData = new RenderMaterialData(matClone); // Assuming this gets deleted with destruction of QDeclartiveContext
-        // TODO delete above
 
-        QDeclarativeContext *ctxt = view->rootContext();
-        ctxt->setContextProperty(QString::fromAscii("materialData"), materialData);
-        ctxt->setContextProperty(QString::fromAscii("materialParametersModel"), &paramsModel);
+    materialData = new RenderMaterialData(matClone); // Assuming this gets deleted with destruction of QDeclartiveContext
+    // TODO delete above
 
-        QObject *rootObject = qobject_cast<QObject *>(view->rootObject());
-        QMetaObject::invokeMethod(rootObject, "openMaterialParametersWidget");
+    QDeclarativeContext *ctxt = view->rootContext();
+    ctxt->setContextProperty(QString::fromAscii("materialData"), materialData);
+    ctxt->setContextProperty(QString::fromAscii("materialParametersModel"), &paramsModel);
 
-       //paramView->setSource(QUrl(QString::fromAscii("qrc:/qml/materialParametersUi.qml"))); // Load the Main QML File
-
-        // Connect an Update Signal when an image is available
-//         QString str = QString::fromAscii("materialParametersWidget");
-//         QObject *rootObject = paramView->rootObject();
-
-        //QObject::connect(rootObject, SIGNAL(cancel()) , paramView , SLOT(close()));
-
-    }
+    QObject *rootObject = qobject_cast<QObject *>(view->rootObject());
+    QMetaObject::invokeMethod(rootObject, "openMaterialParametersWidget");
 }
 
 void TaskDlgAppearances::materialParamSave()
 {
         // Find the RenderFeature object. It must be currently active to add the RenderMaterial
-    App::DocumentObject *activeObj =  App::GetApplication().getActiveDocument()->getActiveObject();
-    if(activeObj->getTypeId() == RenderFeature::getClassTypeId()) {
-        RenderFeature *feat = static_cast<RenderFeature *>(activeObj);
-        if(!materialData)
-            return; //No Material Data Set
-
-        // TODO implement App::Command for undo states
-        Gui::Command::openCommand("Update Material");
-        feat->setRenderMaterial(materialData->getRenderMaterial()); //setRenderMaterial will clone the material
-        Gui::Command::commitCommand();
-
-        QObject *rootObject = qobject_cast<QObject *>(view->rootObject());
-        QMetaObject::invokeMethod(rootObject, "openMaterialLibraryWidget");
-        // delete temporary material
+    RenderFeature *feat  = 0;
+    Gui::Document * doc = Gui::Application::Instance->activeDocument();
+    if (doc->getInEdit() && doc->getInEdit()->isDerivedFrom(ViewProviderRender::getClassTypeId())) {
+        ViewProviderRender *vp = dynamic_cast<ViewProviderRender*>(doc->getInEdit());
+        if(!vp) {
+            Base::Console().Log("An invalid view provider is currently being used");
+            return;
+        }
+        feat = vp->getRenderFeature();
     }
+
+    if(!feat) {
+        Base::Console().Error("A render feature couldn't be found");
+        return;
+    }
+
+    if(!materialData)
+        return; //No Material Data Set
+
+    // TODO implement App::Command for undo states
+    Gui::Command::openCommand("Update Material");
+    feat->setRenderMaterial(materialData->getRenderMaterial()); //setRenderMaterial will clone the material
+    Gui::Command::commitCommand();
+
+    QObject *rootObject = qobject_cast<QObject *>(view->rootObject());
+    QMetaObject::invokeMethod(rootObject, "openMaterialLibraryWidget");
+    // delete temporary material
+
 }
 
 void TaskDlgAppearances::materialParamCancel()
@@ -268,7 +282,6 @@ void TaskDlgAppearances::materialParamCancel()
 }
 void TaskDlgAppearances::materialDragEvent(QDragMoveEvent *ev)
 {
-
     if(!ev)
       return;
 

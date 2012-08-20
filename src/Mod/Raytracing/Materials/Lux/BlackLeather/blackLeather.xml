@@ -7,8 +7,9 @@
     <Material id="lux_extra_blackLeather" type="external" render="lux" version="0.8">
       <label>Shiny Black Leather</label>
       <description>Black Leather Provided by Lux Materials Library</description>
-      <filename>Black Leather.lbm2</filename>
+      <filename>blackLeather.lxm</filename>
       <previewFilename>preview.jpg</previewFilename>
+      <compat>Black Leather</compat>
     </Material>
   </Materials>
 </Document> 

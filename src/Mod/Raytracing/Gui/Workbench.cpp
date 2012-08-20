@@ -61,6 +61,9 @@ Gui::MenuItem* Workbench::setupMenuBar() const
     part->setCommand("Render Feature");
     *part << "Raytracing_CreateRenderFeature"
           << "Separator"
+          << "Raytracing_PreviewWindow"
+          << "Raytracing_Preview"
+          << "Separator"
           << "Raytracing_AddAppearances";
 
     Gui::MenuItem* ray = new Gui::MenuItem;
@@ -82,10 +85,12 @@ Gui::ToolBarItem* Workbench::setupToolBars() const
 {
     Gui::ToolBarItem* root = StdWorkbench::setupToolBars();
 
-
     Gui::ToolBarItem * part = new Gui::ToolBarItem(root);
     part->setCommand("Render Feature");
     *part << "Raytracing_CreateRenderFeature"
+          << "Separator"
+          << "Raytracing_PreviewWindow"
+          << "Raytracing_Preview"
           << "Separator"
           << "Raytracing_AddAppearances";
 
