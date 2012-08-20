@@ -24,6 +24,8 @@
 
 #ifndef _PreComp_
 #include <Inventor/nodes/SoCamera.h>
+#include <Inventor/nodes/SoSeparator.h>
+#include <Inventor/nodes/SoTranslation.h>
 #include <Inventor/actions/SoSearchAction.h>
 #include <Inventor/actions/SoGetBoundingBoxAction.h>
 # endif
@@ -41,6 +43,7 @@
 #include <Gui/Document.h>
 #include <Gui/SoFCSelection.h>
 #include <Gui/Selection.h>
+#include <Gui/SoTextLabel.h>
 #include <Gui/MainWindow.h>
 #include <Gui/SoFCUnifiedSelection.h>
 #include <Gui/SoFCBoundingBox.h>
@@ -52,6 +55,7 @@
 #include <Gui/BitmapFactory.h>
 #include <Gui/ViewProviderDocumentObjectGroup.h>
 
+#include <Mod/Part/App/PartFeature.h>
 #include <Mod/Raytracing/App/RenderCamera.h>
 #include "ViewProviderRender.h"
 #include "TaskDlgRender.h"
@@ -69,11 +73,13 @@ ViewProviderRender::ViewProviderRender()
 {
     sPixmap = "Page";
     // ensure that we are in sketch only selection mode
+    editRoot = new SoSeparator;
+    pcRoot->addChild(editRoot);
 }
 
 ViewProviderRender::~ViewProviderRender()
 {
-
+    editRoot->removeAllChildren();
 }
 
 void ViewProviderRender::attach(App::DocumentObject *pcFeat)
@@ -103,7 +109,55 @@ std::vector<std::string> ViewProviderRender::getDisplayModes(void) const
 
 void ViewProviderRender::updateData(const App::Property* prop)
 {
+    ViewProviderDocumentObjectGroup::updateData(prop);
 
+    if (prop == &(getRenderFeature()->MaterialsList)) {
+        draw();
+    }
+}
+
+void ViewProviderRender::createInventorNodes()
+{
+
+}
+
+void ViewProviderRender::draw()
+{
+    RenderFeature *feat = getRenderFeature();
+
+    const std::vector<RenderMaterial *> mats = feat->MaterialsList.getValues();
+
+    editRoot->renderCaching = SoSeparator::OFF ;
+    editRoot->removeAllChildren();
+
+    SoGroup *labelGroup = new SoGroup();
+
+    for(std::vector<RenderMaterial *>::const_iterator it = mats.begin(); it != mats.end(); ++it){
+        App::DocumentObject *obj = feat->getRenderMaterialLink((*it));
+        if(!obj || !obj->getTypeId().isDerivedFrom(Part::Feature::getClassTypeId()))
+            continue;
+
+        Part::Feature *part = dynamic_cast<Part::Feature *>(obj);
+
+        if(!part)
+            continue;
+
+        Base::Placement placement = part->Placement.getValue();
+        Base::Vector3d pos = placement.getPosition();
+
+        SoSeparator *sep = new SoSeparator();
+        SoTranslation *tran = new SoTranslation();
+        tran->translation.setValue(SbVec3f(pos.x, pos.y, pos.z));
+
+        Gui::SoFrameLabel *label = new Gui::SoFrameLabel();
+        label->string.setValue((*it)->getMaterial()->label.toAscii());
+
+        sep->addChild(tran);
+        sep->addChild(label);
+        labelGroup->addChild(sep);
+
+    }
+    editRoot->addChild(labelGroup);
 }
 
 bool ViewProviderRender::mouseMove(const SbVec3f &pos, const SbVec3f &norm, const SoPickedPoint* pp) {
@@ -146,6 +200,7 @@ bool ViewProviderRender::setEdit(int ModNum)
     else
         Gui::Control().showDialog(new TaskDlgRender(this));
 
+    createInventorNodes();
     return true;
 }
 
@@ -204,4 +259,5 @@ void ViewProviderRender::unsetEditViewer(Gui::View3DInventorViewer* viewer)
 {
     viewer->setEditing(FALSE);
 }
+
 

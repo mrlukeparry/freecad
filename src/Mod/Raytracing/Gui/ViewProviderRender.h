@@ -29,6 +29,8 @@
 
 #include <Gui/View3DInventorViewer.h>
 
+class SoSeparator;
+
 namespace RaytracingGui {
 
 class RaytracingGuiExport ViewProviderRender : public Gui::ViewProviderDocumentObjectGroup
@@ -53,12 +55,15 @@ public:
     void setupContextMenu(QMenu*, QObject*, const char*);
     virtual void updateData(const App::Property*);
 
+    void createInventorNodes();
+    void draw();
     void getRenderBBox(SbBox3f &box);
     bool mouseMove(const SbVec3f &pos, const SbVec3f &norm, const SoPickedPoint* pp);
 protected:
     bool setEdit(int ModNum);
     void unsetEditViewer(Gui::View3DInventorViewer* viewer);
     void setEditViewer(Gui::View3DInventorViewer* viewer, int ModNum);
+    SoSeparator *editRoot;
 
 };
 
