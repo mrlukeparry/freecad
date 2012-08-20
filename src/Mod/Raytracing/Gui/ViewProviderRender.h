@@ -60,11 +60,14 @@ public:
     void getRenderBBox(SbBox3f &box);
     bool mouseMove(const SbVec3f &pos, const SbVec3f &norm, const SoPickedPoint* pp);
 protected:
-    bool setEdit(int ModNum);
-    void unsetEditViewer(Gui::View3DInventorViewer* viewer);
-    void setEditViewer(Gui::View3DInventorViewer* viewer, int ModNum);
-    SoSeparator *editRoot;
 
+    virtual bool setEdit(int ModNum);
+    virtual void unsetEdit(int ModNum);
+    virtual void setEditViewer(Gui::View3DInventorViewer*, int ModNum);
+    virtual void unsetEditViewer(Gui::View3DInventorViewer*);
+
+    SoSeparator *editRoot;
+    bool edit;
 };
 
 } // namespace RaytracingGui

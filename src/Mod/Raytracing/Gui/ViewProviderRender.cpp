@@ -69,7 +69,7 @@ PROPERTY_SOURCE(RaytracingGui::ViewProviderRender, Gui::ViewProviderDocumentObje
 //**************************************************************************
 // Construction/Destruction
 
-ViewProviderRender::ViewProviderRender()
+ViewProviderRender::ViewProviderRender() : edit(false)
 {
     sPixmap = "Page";
     // ensure that we are in sketch only selection mode
@@ -111,7 +111,7 @@ void ViewProviderRender::updateData(const App::Property* prop)
 {
     ViewProviderDocumentObjectGroup::updateData(prop);
 
-    if (prop == &(getRenderFeature()->MaterialsList)) {
+    if (edit && (prop == &(getRenderFeature()->MaterialsList))) {
         draw();
     }
 }
@@ -200,7 +200,9 @@ bool ViewProviderRender::setEdit(int ModNum)
     else
         Gui::Control().showDialog(new TaskDlgRender(this));
 
+    edit = true;
     createInventorNodes();
+    draw();
     return true;
 }
 
@@ -238,10 +240,11 @@ bool ViewProviderRender::doubleClicked(void)
 
 void ViewProviderRender::setEditViewer(Gui::View3DInventorViewer* viewer, int ModNum)
 {
-    RenderCamera *cam = getRenderFeature()->getCamera();
-    Base::Vector3d lookAt =  cam->LookAt;
-    Base::Vector3d pos =  cam->CamPos;
-    Base::Vector3d camUp =  cam->Up;
+    RenderCamera *cam     = getRenderFeature()->getCamera();
+
+    Base::Vector3d lookAt = cam->LookAt;
+    Base::Vector3d pos    = cam->CamPos;
+    Base::Vector3d camUp  = cam->Up;
 
     SoCamera *myCam = viewer->getCamera();
 
@@ -260,4 +263,18 @@ void ViewProviderRender::unsetEditViewer(Gui::View3DInventorViewer* viewer)
     viewer->setEditing(FALSE);
 }
 
+void ViewProviderRender::unsetEdit(int ModNum)
+{
+    edit = false;
+    editRoot->removeAllChildren();
+    pcRoot->removeChild(editRoot);
 
+    // clear the selection and set the new/edited sketch(convenience)
+    Gui::Selection().clearSelection();
+    std::string ObjName = getRenderFeature()->getNameInDocument();
+    std::string DocName = getRenderFeature()->getDocument()->getName();
+    Gui::Selection().addSelection(DocName.c_str(),ObjName.c_str());
+
+    // when pressing ESC make sure to close the dialog
+    Gui::Control().closeDialog();
+}
