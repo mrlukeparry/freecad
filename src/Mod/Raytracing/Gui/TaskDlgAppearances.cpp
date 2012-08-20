@@ -71,11 +71,17 @@ TaskDlgAppearances::TaskDlgAppearances()
     : TaskDialog()
 {
     // A Render Feature MUST be active to open the appearances dialog
-    RenderFeature *feat;
-    App::DocumentObject *activeObj =  App::GetApplication().getActiveDocument()->getActiveObject();
-    if(activeObj && activeObj->getTypeId() == RenderFeature::getClassTypeId())
-      feat = static_cast<RenderFeature *>(activeObj);
+    RenderFeature *feat  = 0;
+    Gui::Document * doc = Gui::Application::Instance->activeDocument();
 
+    if (doc->getInEdit() && doc->getInEdit()->isDerivedFrom(ViewProviderRender::getClassTypeId())) {
+        ViewProviderRender *vp = dynamic_cast<ViewProviderRender*>(doc->getInEdit());
+        if(!vp) {
+            Base::Console().Log("An invalid view provider is currently being used");
+            return;
+        }
+        feat = vp->getRenderFeature();
+    }
 
     if(!feat || !feat->hasRenderer())
         throw Base::Exception("The currently active object must be a render feature and have a render backend");
