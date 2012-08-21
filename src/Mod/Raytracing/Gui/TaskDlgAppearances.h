@@ -33,7 +33,9 @@
 
 namespace RaytracingGui {
 
-  class RaytracingGuiExport RenderMaterialData : public QObject
+class MaterialParametersModel;
+
+class RaytracingGuiExport RenderMaterialData : public QObject
 {
     Q_OBJECT
 public:
@@ -70,7 +72,11 @@ public:
         case Raytracing::MaterialParameter::COLOR:{
               Raytracing::MaterialColorProperty *myProp = static_cast<Raytracing::MaterialColorProperty *>(prop);
               float *colorArray = myProp->getValue();
-              return QVariant(QColor(colorArray[0], colorArray[0], colorArray[0]));
+              QList<QVariant> color;
+              color.append(colorArray[0]);
+              color.append(colorArray[1]);
+              color.append(colorArray[2]);
+              return QVariant(color);
         } break;
       }
     }
@@ -162,6 +168,7 @@ class RaytracingGuiExport TaskDlgAppearances : public Gui::TaskView::TaskDialog
 public:
     TaskDlgAppearances();
     ~TaskDlgAppearances();
+    virtual void clearParamsData();
 
 public Q_SLOTS:
   void dragInit(QString id);
@@ -183,6 +190,7 @@ public:
     virtual bool isAllowedAlterDocument(void) const
     { return false; }
 
+    void openEditMaterialDialog(RenderMaterial *mat);
     /// returns for Close and Help button 
 //     virtual QDialogButtonBox::StandardButtons getStandardButtons(void) const
 //     { return 0; }
@@ -192,11 +200,9 @@ protected:
     void materialDropEvent(QDropEvent *);
     AppearancesModel *model;
     QDeclarativeView *view;
-    QDeclarativeView *paramView;
     RenderMaterialData *materialData;
+    MaterialParametersModel *paramsModel;
 };
-
-
 
 } //namespace RaytracingGui
 

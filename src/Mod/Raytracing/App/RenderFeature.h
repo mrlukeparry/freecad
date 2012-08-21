@@ -74,7 +74,8 @@ public:
 
 
     /// Render MaterialsList
-    int  addRenderMaterial(RenderMaterial *material, DocumentObject *pcObj);
+    int addRenderMaterial(RenderMaterial *material, DocumentObject *pcObj);
+    int removeRenderMaterial(int index);
     const RenderMaterial * getRenderMaterial(const char *partName) const;
     int removeRenderMaterialFromPart(const char *partName);
     int setRenderMaterial(const RenderMaterial *material);

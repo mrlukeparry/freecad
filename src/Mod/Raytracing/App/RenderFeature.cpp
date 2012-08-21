@@ -144,12 +144,25 @@ int RenderFeature::setRenderMaterial(const RenderMaterial *material)
     return idx;
 }
 
+int RenderFeature::removeRenderMaterial(int index)
+{
+    assert(index >= 0);
+
+    const std::vector< RenderMaterial * > &vals = this->MaterialsList.getValues();
+
+    std::vector< RenderMaterial * > newVals(vals);
+    newVals.erase(newVals.begin() + index);
+    this->MaterialsList.setValues(newVals);
+
+    return 1;
+}
+
 int RenderFeature::addRenderMaterial(RenderMaterial *material, DocumentObject *pcObj)
 {
     // Find the actual link for the Render Material
     // get the actual lists of the externals
-    std::vector<DocumentObject*> Objects     = ExternalGeometry.getValues();
-    std::vector<std::string>     SubElements = ExternalGeometry.getSubValues();
+    std::vector<DocumentObject*> Objects            = ExternalGeometry.getValues();
+    std::vector<std::string>     SubElements        = ExternalGeometry.getSubValues();
     const std::vector< RenderMaterial * > &vals     = MaterialsList.getValues();
 
     if(!pcObj) {
@@ -591,7 +604,7 @@ void RenderFeature::onChanged(const App::Property* prop)
 
 void RenderFeature::onDocumentRestored()
 {
-
+    updateMatLinks();
 }
 
 void RenderFeature::onFinishDuplicating()

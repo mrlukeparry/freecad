@@ -72,10 +72,13 @@ Item {
                         } else if(mod.type == "color") {
                             var colorComp = Qt.createComponent("ColorWidget.qml")
                             if(colorComp.status == Component.Ready) {
-                                var colorValue = (materialData.getPropertyValue(mod.id) === undefined) ? "": materialData.getPropertyValue(mod.id);
-                                var colour = Qt.rgba(0,0.5,0.5,255)
-                                console.log(colour)
+                                var colorValue = materialData.getPropertyValue(mod.id);
                                 var colorInput = colorComp.createObject(row,  {'label': mod.label});
+                                if(colorValue !== undefined) {
+                                    colorValue[0] *= 255;
+                                    colorValue[1] *= 255;
+                                    colorValue[2] *= 255;
+                                    colorInput.setColor(colorValue);}
                                 row.height = colorInput.height + 10
                                 colorInput.valueChanged.connect(function(val){ console.log("colour is" + val); materialData.setProperty(mod.id, val);});
                                 colorInput.pickColor.connect(function(){ var colorPicked = materialData.pickColor(); colorInput.setColor(colorPicked);});

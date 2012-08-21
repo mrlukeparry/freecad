@@ -27,12 +27,15 @@
 #include <Inventor/events/SoLocation2Event.h>
 #include <Inventor/nodes/SoPerspectiveCamera.h>
 
+#include <boost/bind.hpp>
+
 #include <Base/Console.h>
 
 #include <App/Application.h>
 
 #include <Gui/Application.h>
 #include <Gui/Command.h>
+#include <Gui/Control.h>
 #include <Gui/Document.h>
 #include <Gui/MainWindow.h>
 #include <Gui/MDIView.h>
@@ -44,10 +47,12 @@
 #include <QDeclarativeEngine>
 #include <QGraphicsObject>
 #include <QGLWidget>
+#include <QTimer>
 #include <QDragMoveEvent>
 
 #include <Mod/Part/App/PartFeature.h>
 
+#include "TaskDlgAppearances.h"
 #include "TaskDlgRender.h"
 #include "RenderView.h"
 
@@ -185,6 +190,68 @@ QVariant TemplatesModel::get(int row)
     return QVariant(itemData);
 }
 
+// ====== Contains List of Render Materials in model for QML ============ //
+MaterialsModel::MaterialsModel(QObject *parent)
+    : QAbstractListModel(parent)
+{
+    QHash<int, QByteArray> roles;
+    roles[IdRole] = "id";
+    roles[LabelRole] = "label";
+    roles[DescriptionRole] = "description";
+    roles[LinkLabelRole] = "linkLabel";
+    roles[SelectedRole] = "selected";
+    setRoleNames(roles);
+}
+
+void MaterialsModel::addRenderMaterial(RenderMaterial *mat)
+{
+    beginInsertRows(QModelIndex(), rowCount(), rowCount());
+    m_rendMats << mat;
+    selectList.push_back(false);
+    endInsertRows();
+}
+
+int MaterialsModel::rowCount(const QModelIndex & parent) const {
+    return m_rendMats.count();
+}
+
+QVariant MaterialsModel::data(const QModelIndex & index, int role) const {
+    if (index.row() < 0 || index.row() > m_rendMats.count())
+        return QVariant();
+
+    const RenderMaterial *mat = m_rendMats[index.row()];
+
+    if (role == IdRole)
+        return index.row();
+    else if (role == LabelRole)
+        return mat->getMaterial()->label;
+    else if (role == DescriptionRole)
+        return mat->getMaterial()->description;
+    else if (role == LinkLabelRole)
+        return QString::fromAscii(mat->getObjRef()->getNameInDocument());
+    else if (role == SelectedRole) {
+        return selectList[index.row()];
+    } else
+    return QVariant();
+}
+
+void MaterialsModel::clearSelection()
+{
+  for(std::vector<bool>::iterator it = selectList.begin(); it != selectList.end(); ++it)
+  {
+      (*it) = false;
+  }
+}
+
+bool MaterialsModel::setState(int row, const QVariant & value) {
+   if (row < 0 ||row > m_rendMats.count())
+      return false;
+
+   selectList[row] = value.toBool();
+   reset();
+  return true;
+}
+
 //**************************************************************************
 //**************************************************************************
 // TaskDialog
@@ -220,6 +287,13 @@ TaskDlgRender::TaskDlgRender(ViewProviderRender *vp)
             templatesModel->addRenderTemplate(*it);
     }
 
+    materialsModel = new MaterialsModel();
+
+    const std::vector<RenderMaterial *> renderMaterials = feat->MaterialsList.getValues();
+    for (std::vector<RenderMaterial *>::const_iterator it= renderMaterials.begin(); it!= renderMaterials.end(); ++it) {
+        materialsModel->addRenderMaterial(*it);
+    }
+
     // Create the QDeclartiveView for loading the QML UI
     view = new QDeclarativeView (qobject_cast<QWidget *>(this));
 
@@ -228,9 +302,10 @@ TaskDlgRender::TaskDlgRender(ViewProviderRender *vp)
 
     ctxt->setContextProperty(QString::fromAscii("presetsModel")  , presetsModel); // Render Presets
     ctxt->setContextProperty(QString::fromAscii("templatesModel"), templatesModel); // Render Templates
+    ctxt->setContextProperty(QString::fromAscii("materialsModel"), materialsModel); // Render Materials
     ctxt->setContextProperty(QString::fromAscii("renderFeature") , featViewData);
 
-
+   
     view->setResizeMode(QDeclarativeView::SizeRootObjectToView);
     view->setSource(QUrl(QString::fromAscii("qrc:/qml/renderUi.qml"))); // Load the Main QML File
 
@@ -242,10 +317,17 @@ TaskDlgRender::TaskDlgRender(ViewProviderRender *vp)
     QObject::connect(rootObject, SIGNAL(saveCamera()), this , SLOT(saveCamera()));
     QObject::connect(rootObject, SIGNAL(previewWindow()), this , SLOT(previewWindow()));
 
+    // Material Signals
+    QObject::connect(rootObject, SIGNAL(materialSelectionChanged(int)), this , SLOT(onMaterialSelectionChanged(int)));
+    QObject::connect(rootObject, SIGNAL(editMaterial(int)), this , SLOT(onEditMaterial(int)));
+
     QObject::connect(this, SIGNAL(renderStop()), rootObject , SLOT(renderStopped()));
     QObject::connect(this, SIGNAL(renderStart()), rootObject , SLOT(renderRunning()));
 
-    // Check if a Render is currently active for this RenderFeature
+    // Create Boost Signal to update materialsModel when property changes in Render Feature
+    connectionMaterialsChanged = getRenderView()->signalMaterialsChanged.connect(boost::bind(&RaytracingGui::TaskDlgRender::slotMaterialsChanged, this));
+
+    // Check if a Render Process is currently active for this RenderFeature and connect to it
     if(isRenderActive()) {
         QMetaObject::invokeMethod(rootObject, "renderRunning");
 
@@ -256,11 +338,13 @@ TaskDlgRender::TaskDlgRender(ViewProviderRender *vp)
         QObject::connect(renderProcQObj , SIGNAL(finished()), rootObject , SLOT(renderStopped())); // Connect Render Process Signal when stopped by user
     }
 
+
     this->Content.push_back(view);
 }
 
 TaskDlgRender::~TaskDlgRender()
 {
+    view->deleteLater();
     // These models only stopy copy of data or act as references so we can just remove from heap
     delete featViewData;
     featViewData = 0;
@@ -268,8 +352,13 @@ TaskDlgRender::~TaskDlgRender()
     delete presetsModel;
     presetsModel = 0;
 
+    delete materialsModel;
+    materialsModel = 0;
+
     delete templatesModel;
     templatesModel = 0;
+
+    connectionMaterialsChanged.disconnect();
 }
 
 bool TaskDlgRender::isRenderActive()
@@ -352,7 +441,89 @@ void TaskDlgRender::renderStarted()
     Q_EMIT renderStart();
 }
 
+void TaskDlgRender::slotMaterialsChanged()
+{
+    materialsModel->clear();
+    // Repopulate materials model
 
+    RenderFeature *feat = this->getRenderView()->getRenderFeature();
+
+    const std::vector<RenderMaterial *> renderMaterials = feat->MaterialsList.getValues();
+    for (std::vector<RenderMaterial *>::const_iterator it= renderMaterials.begin(); it!= renderMaterials.end(); ++it) {
+        materialsModel->addRenderMaterial(*it);
+    }
+}
+
+void TaskDlgRender::onEditMaterial(int index)
+{
+    RenderFeature *feat = getRenderView()->getRenderFeature();
+    std::string doc_name = feat->getDocument()->getName();
+    std::string obj_name = feat->getNameInDocument();
+
+    bool block = this->blockConnection(true); // avoid to be notified by itself
+    Gui::Selection().clearSelection();
+    std::stringstream ss;
+    ss << "RenderMaterial" << index;
+    Gui::Selection().addSelection(doc_name.c_str(), obj_name.c_str(), ss.str().c_str());
+
+    this->blockConnection(block);
+    // Open the Materials Dialog
+
+
+    const std::vector<RenderMaterial *> mats = feat->MaterialsList.getValues();
+    RenderMaterial *myMat = mats[index];
+
+    if(!myMat || !(myMat->getMaterial()->parameters.size() > 0)) {
+        // Material Doens't have any params to edit
+        // For now don't accept any further action
+        return;
+    }
+
+    RenderMaterial *matClone = (mats[index])->clone();
+
+    view->deleteLater();
+    Content.clear();  // Must clear contents to prevent seg fault
+
+    // Open the appearances edit dialog
+    TaskDlgAppearances *dlg = new TaskDlgAppearances();
+
+    dlg->openEditMaterialDialog(matClone);
+    Gui::Control().closeDialog();
+    Gui::Control().showDialog(dlg);
+  
+}
+
+void TaskDlgRender::onSelectionChanged(const Gui::SelectionChanges& msg)
+{
+
+}
+
+void TaskDlgRender::onMaterialSelectionChanged(int idx)
+{
+    RenderFeature *feat = getRenderView()->getRenderFeature();
+    std::string doc_name = feat->getDocument()->getName();
+    std::string obj_name = feat->getNameInDocument();
+
+    bool block = this->blockConnection(true); // avoid to be notified by itself
+    Gui::Selection().clearSelection();
+
+    QVariant retVal;
+
+    QMetaObject::invokeMethod(view->rootObject(), "getMaterialSelection", Q_RETURN_ARG(QVariant, retVal));
+
+    int i = 0;
+    const std::vector<bool> selectList = materialsModel->getSelection();
+    for (std::vector<bool>::const_iterator it = selectList.begin(); it != selectList.end(); ++it, i++) {
+        if(!(*it))
+            continue; // List Model index not selected
+        std::stringstream ss;
+        ss << "RenderMaterial" << i;
+        Gui::Selection().addSelection(doc_name.c_str(), obj_name.c_str(), ss.str().c_str());
+    }
+    this->blockConnection(block);
+}
+
+//----------- COMMANDS ---------/
 void TaskDlgRender::previewWindow()
 {
 

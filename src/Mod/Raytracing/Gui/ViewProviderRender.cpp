@@ -39,6 +39,7 @@
 #include <App/Document.h>
 #include <App/DocumentObject.h>
 #include <Gui/Application.h>
+#include <Gui/Command.h>
 #include <Gui/Control.h>
 #include <Gui/Document.h>
 #include <Gui/SoFCSelection.h>
@@ -73,13 +74,11 @@ ViewProviderRender::ViewProviderRender() : edit(false)
 {
     sPixmap = "Page";
     // ensure that we are in sketch only selection mode
-    editRoot = new SoSeparator;
-    pcRoot->addChild(editRoot);
 }
 
 ViewProviderRender::~ViewProviderRender()
 {
-    editRoot->removeAllChildren();
+
 }
 
 void ViewProviderRender::attach(App::DocumentObject *pcFeat)
@@ -113,12 +112,14 @@ void ViewProviderRender::updateData(const App::Property* prop)
 
     if (edit && (prop == &(getRenderFeature()->MaterialsList))) {
         draw();
+        signalMaterialsChanged();
     }
 }
 
 void ViewProviderRender::createInventorNodes()
 {
-
+    editRoot = new SoSeparator();
+    pcRoot->addChild(editRoot);
 }
 
 void ViewProviderRender::draw()
@@ -128,7 +129,8 @@ void ViewProviderRender::draw()
     const std::vector<RenderMaterial *> mats = feat->MaterialsList.getValues();
 
     editRoot->renderCaching = SoSeparator::OFF ;
-    editRoot->removeAllChildren();
+    if(editRoot->getNumChildren() > 0)
+        editRoot->removeAllChildren();
 
     SoGroup *labelGroup = new SoGroup();
 
@@ -164,6 +166,23 @@ bool ViewProviderRender::mouseMove(const SbVec3f &pos, const SbVec3f &norm, cons
 
     return true;
 }
+
+bool ViewProviderRender::keyPressed(bool pressed, int key)
+{
+    switch (key)
+    {
+    case SoKeyboardEvent::ESCAPE:
+        {
+
+        }
+    default:
+        {
+        }
+    }
+
+    return true; // handle all other key events
+}
+
 
 void ViewProviderRender::setupContextMenu(QMenu *menu, QObject *receiver, const char *member)
 {
@@ -277,4 +296,40 @@ void ViewProviderRender::unsetEdit(int ModNum)
 
     // when pressing ESC make sure to close the dialog
     Gui::Control().closeDialog();
+}
+
+bool ViewProviderRender::onDelete(const std::vector<std::string> &subList)
+{
+    //FIXME use the selection subelements instead of the Sel Sets...
+    if (edit) {
+//         this->blockConnection(true);
+        for(std::vector<std::string>::const_reverse_iterator it=subList.rbegin(); it != subList.rend(); ++it)
+        {
+            QRegExp rx(QString::fromAscii("^RenderMaterial(\\d+)$"));
+            QString expr = QString::fromStdString((*it));
+            int pos = expr.indexOf(rx);
+            if (pos > -1) {
+                bool ok;
+                int index = rx.cap(1).toInt(&ok);
+                if (!ok)
+                  continue;
+
+                // Remove the Given Render Material
+                try {
+                    Gui::Command::doCommand(Gui::Command::Doc,"App.ActiveDocument.%s.removeRenderMaterial(%i)",getObject()->getNameInDocument(), index);
+                }
+                catch (const Base::Exception& e) {
+                    Base::Console().Error("%s\n", e.what());
+                }
+            }
+        }
+//         this->blockConnection(false);
+
+        Gui::Selection().clearSelection();
+        draw();
+        // if in edit not delete the object
+        return false;
+    }
+    // if not in edit delete the whole object
+    return true;
 }

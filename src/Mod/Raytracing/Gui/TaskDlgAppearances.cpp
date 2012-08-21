@@ -68,7 +68,11 @@ using namespace RaytracingGui;
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 TaskDlgAppearances::TaskDlgAppearances()
-    : TaskDialog()
+    : TaskDialog(),
+      model(0),
+      materialData(0),
+      view(0),
+      paramsModel(0)
 {
     // A Render Feature MUST be active to open the appearances dialog
     RenderFeature *feat  = 0;
@@ -106,6 +110,8 @@ TaskDlgAppearances::TaskDlgAppearances()
      // Connect an Update Signal when an image is available
     QObject *rootObject = view->rootObject();
     QObject::connect(rootObject, SIGNAL(materialDrag(QString)), this , SLOT(dragInit(QString)));
+
+    QObject::connect(rootObject, SIGNAL( materialPropsCancel())  , this , SLOT(materialParamCancel())); // Initiated when a Material Properties is Saved
     QObject::connect(rootObject, SIGNAL( materialPropsAccepted()), this , SLOT(materialParamSave())); // Initiated when a Material Properties is Saved
 
     this->Content.push_back(view);
@@ -115,6 +121,18 @@ TaskDlgAppearances::~TaskDlgAppearances()
 {
     delete model;
     model = 0;
+
+    clearParamsData();
+}
+
+void TaskDlgAppearances::clearParamsData()
+{
+    // delete maerial properties
+    delete materialData;
+    materialData = 0;
+
+    delete paramsModel;
+    paramsModel = 0;
 }
 
 void TaskDlgAppearances::dragInit(QString str)
@@ -199,51 +217,52 @@ void TaskDlgAppearances::materialDropEvent(QDropEvent *ev)
     // Remove the previous RenderMaterial if one exists
     const RenderMaterial *mat = feat->getRenderMaterial(selection.pObjectName);
 
+    Gui::Command::openCommand("Add Material");
     if(mat)
     {
-        Gui::Command::openCommand("Removing Material");
+        // Replace the current material if there is one
         Gui::Command::doCommand(Gui::Command::Doc,"App.ActiveDocument.ActiveObject.removeRenderMaterialFromPart('%s')", selection.pObjectName);
-        Gui::Command::commitCommand();
     }
 
-    Gui::Command::openCommand("Add Material");
     int matLinkIndex = feat->addRenderMaterial(myMaterial, docObj);
     Gui::Command::commitCommand();
 
-    RenderMaterial *matClone = myMaterial->clone(); // Make a copy of the material on the heap
+    if(matLinkIndex < 0)
+        throw new Base::Exception("Error: the material couldn't be assigned an index");
 
+    // TODO check if we should reload the QML or create a new widget
+
+    RenderMaterial *matClone = myMaterial->clone(); // Make a copy of the material on the heap
+    matClone->setLink(matLinkIndex, docObj);
     delete myMaterial;
     myMaterial = 0;
 
-    matClone->setLink(matLinkIndex, docObj);
+    // Open the Editor
+    openEditMaterialDialog(matClone);
+}
 
-    if(matLinkIndex < 0)
-      return; // an error occured
+void TaskDlgAppearances::openEditMaterialDialog(RenderMaterial *mat)
+{
+    paramsModel = new MaterialParametersModel();
 
-    // TODO check if we should reload the QML or create a new widget
-    // TODO should params model be put on the heap - likely
-    MaterialParametersModel paramsModel;
+    QMap<QString, MaterialParameter*> params =  mat->getMaterial()->parameters;
 
-    QMap<QString, MaterialParameter*> params =  matClone->getMaterial()->parameters;
+    if(params.isEmpty()) {
+        // There are no parameters to be set so we don't need to open the material parameters
+        return;
+    }
+
     QMap<QString, MaterialParameter*>::const_iterator i;
     for (i = params.constBegin(); i != params.constEnd(); ++i) {
         MaterialParameter *param = i.value();
-        paramsModel.addParameter(param); //Add the parameter to model
+        paramsModel->addParameter(param); //Add the parameter to model
     }
 
-//         QDeclarativeView *paramView = new QDeclarativeView (qobject_cast<QWidget *>(this));
-//         QDeclarativeContext *ctxt = paramView->rootContext();
-//         ctxt->setContextProperty(QString::fromAscii("appearancesModel"), &paramsModel);
-//
-//         paramView->setResizeMode(QDeclarativeView::SizeRootObjectToView);
-
-
-    materialData = new RenderMaterialData(matClone); // Assuming this gets deleted with destruction of QDeclartiveContext
-    // TODO delete above
+    materialData = new RenderMaterialData(mat);
 
     QDeclarativeContext *ctxt = view->rootContext();
     ctxt->setContextProperty(QString::fromAscii("materialData"), materialData);
-    ctxt->setContextProperty(QString::fromAscii("materialParametersModel"), &paramsModel);
+    ctxt->setContextProperty(QString::fromAscii("materialParametersModel"), paramsModel);
 
     QObject *rootObject = qobject_cast<QObject *>(view->rootObject());
     QMetaObject::invokeMethod(rootObject, "openMaterialParametersWidget");
@@ -272,19 +291,23 @@ void TaskDlgAppearances::materialParamSave()
         return; //No Material Data Set
 
     // TODO implement App::Command for undo states
-    Gui::Command::openCommand("Update Material");
+    Gui::Command::openCommand("Update Material Properties");
     feat->setRenderMaterial(materialData->getRenderMaterial()); //setRenderMaterial will clone the material
     Gui::Command::commitCommand();
 
-    QObject *rootObject = qobject_cast<QObject *>(view->rootObject());
-    QMetaObject::invokeMethod(rootObject, "openMaterialLibraryWidget");
-    // delete temporary material
+    //Paramaters house keeping
+    clearParamsData();
 
+    accept();
 }
 
 void TaskDlgAppearances::materialParamCancel()
 {
+    //Paramaters house keeping
+    clearParamsData();
+    Gui::Command::abortCommand();
 
+    reject();
 }
 void TaskDlgAppearances::materialDragEvent(QDragMoveEvent *ev)
 {
@@ -301,7 +324,6 @@ void TaskDlgAppearances::materialDragEvent(QDragMoveEvent *ev)
     locEv->setPosition(pos);
 
     //Send the Mouse Position to the viewer
-    char buf[255];
     static_cast<Gui::View3DInventor *>(mdi)->getViewer()->sendSoEvent(locEv);
 }
 
@@ -321,12 +343,14 @@ void TaskDlgAppearances::clicked(int)
 
 bool TaskDlgAppearances::accept()
 {
-        // We load the TaskDlgRender, since this is the active
+    // We load the TaskDlgRender, since this is the active
     Gui::Document * doc = Gui::Application::Instance->activeDocument();
     if (doc) {
         if (doc->getInEdit() && doc->getInEdit()->isDerivedFrom(ViewProviderRender::getClassTypeId())) {
             ViewProviderRender *vp = dynamic_cast<ViewProviderRender*>(doc->getInEdit());
 
+            view->deleteLater();
+            Content.clear();  // Must clear contents to prevent seg fault
             Gui::Control().closeDialog();
             Gui::Selection().clearSelection();
             Gui::Control().showDialog(new TaskDlgRender(vp));
@@ -338,13 +362,15 @@ bool TaskDlgAppearances::accept()
 
 bool TaskDlgAppearances::reject()
 {
-
+    Gui::Command::abortCommand();
     // We load the TaskDlgRender, since this is the active 
     Gui::Document * doc = Gui::Application::Instance->activeDocument();
     if (doc) {
         if (doc->getInEdit() && doc->getInEdit()->isDerivedFrom(ViewProviderRender::getClassTypeId())) {
             ViewProviderRender *vp = dynamic_cast<ViewProviderRender*>(doc->getInEdit());
 
+            view->deleteLater();
+            Content.clear();  // Must clear contents to prevent seg fault
             Gui::Control().closeDialog();
             Gui::Selection().clearSelection();
             Gui::Control().showDialog(new TaskDlgRender(vp));

@@ -90,6 +90,16 @@ PyObject* RenderFeaturePy::setRenderSize(PyObject *args)
     Py_Return;
 }
 
+PyObject* RenderFeaturePy::removeRenderMaterial(PyObject *args)
+{
+    int index;
+    if (!PyArg_ParseTuple(args, "i", &index))
+        return 0;
+
+    this->getRenderFeaturePtr()->removeRenderMaterial(index);
+    Py_Return;
+}
+
 PyObject* RenderFeaturePy::setUpdateInterval(PyObject *args)
 {
     int interval;

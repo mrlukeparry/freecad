@@ -8,9 +8,19 @@ Item {
     signal render()
     signal saveCamera()
 
+    // Material Signals
+    signal materialSelectionChanged(int val)
+    signal editMaterial(int index)
+
     // Slots
     function renderRunning() { renderActive = true }
     function renderStopped() { renderActive = false }
+
+    // Material Slots
+    function getMaterialSelection()
+    {
+        return materialListView.selection
+    }
 
     // Properties
     property bool renderActive: false
@@ -247,7 +257,94 @@ Item {
 
 
                 } // Column End
-            }
+            } // End Material Params Row
+            Row {
+                width: parent.width
+                Column {
+                    width: parent.width
+                    spacing: 10
+                    Text {
+                        color: "#f9f9f9"
+                        text: qsTr("Render Materials")
+                        font.pointSize: 12
+                    }
+                    Rectangle {
+                        id: materialListBorder
+                        border.width: 2
+                        border.color: "#ffffff"
+                        clip: true
+                        radius: 2
+                        color: "#ccc"
+
+                        width: parent.width
+                        height: renderTaskWidget.height * 0.3
+                        ListView {
+                            property variant selection: []
+                            id:materialListView
+                            clip: true
+                            anchors.fill: parent
+                            anchors.margins: 1
+                            snapMode: ListView.SnapToItem
+                            model: materialsModel
+                            flickDeceleration: 7000
+
+                            function clearSelection(){
+                                model.clearSelection();
+                            }
+
+                            function find(idx) {
+                                var i = materialListView.selection.length;
+                                var fndIndex = -1;
+                                while (i--) {
+                                   if (materialListView.selection[i] === idx) {
+                                       fndIndex = i;
+                                   }
+                                }
+                                return fndIndex;
+                            }
+
+                            onFocusChanged: {materialListView.clearSelection()}
+                            delegate: Item {
+
+                                id: delg
+                                height: 30
+                                width: materialListView.width
+
+                                Rectangle {
+                                    id: delgBackground
+                                    width: parent.width
+                                    height: parent.height
+                                    color: (index % 2) ? "#ccc" : "#ddd"
+                                    states: [State {
+                                        name: "hover"; when: mouseArea.containsMouse
+                                        PropertyChanges { target: delgBackground;  color: "orange" }
+                                    }, State {
+                                            name: "selected"; when: selected
+                                        PropertyChanges { target: delgBackground;  color: "blue" }
+                                    }]
+                                }
+                                Text { id: matLabel; text: label  }
+                                Text { id: matLinkLabel; anchors.top: matLabel.bottom; text: linkLabel }
+                                MouseArea {
+                                    id: mouseArea
+                                    anchors.fill: parent
+                                    onDoubleClicked: renderTaskWidget.editMaterial(index)
+
+                                    onClicked: {
+                                        if(!(mouse.modifiers & Qt.ShiftModifier)) { materialListView.clearSelection()}
+                                        materialListView.model.setState(index, !selected);
+                                        renderTaskWidget.materialSelectionChanged(index);
+                                    }
+                                    hoverEnabled: true
+
+
+                                }
+                            }
+                        }
+                    }
+
+                } // End Column
+            } // End Render Materials Row
         }
     }
 }

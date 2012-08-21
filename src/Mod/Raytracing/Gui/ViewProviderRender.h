@@ -23,6 +23,8 @@
 #ifndef RAYTRACINGGUI_VIEWPROVIDERRENDER_H
 #define RAYTRACINGGUI_VIEWPROVIDERRENDER_H
 
+#include <boost/signals.hpp>
+
 #include <Gui/ViewProviderFeature.h>
 #include <Mod/Raytracing/App/RenderFeature.h>
 #include <Gui/ViewProviderDocumentObjectGroup.h>
@@ -54,11 +56,16 @@ public:
     virtual bool doubleClicked(void);
     void setupContextMenu(QMenu*, QObject*, const char*);
     virtual void updateData(const App::Property*);
-
+    virtual bool onDelete(const std::vector<std::string> &);
+    bool keyPressed(bool pressed, int key);
+    
     void createInventorNodes();
     void draw();
     void getRenderBBox(SbBox3f &box);
     bool mouseMove(const SbVec3f &pos, const SbVec3f &norm, const SoPickedPoint* pp);
+
+    /// signals if the Render Material List has changed
+    boost::signal<void ()> signalMaterialsChanged;
 protected:
 
     virtual bool setEdit(int ModNum);

@@ -24,11 +24,12 @@ Item {
     // Signals
     signal materialDrag(string  matId)
     signal materialPropsAccepted()
+    signal materialPropsCancel()
 
     //Connections to Material Paremeters Panel
     Connections {
              target: parametersUiLoader.item
-             onCancel: { parametersUiLoader.visible = false; appearancesTaskWidget.state = ""; }
+             onCancel: {  appearancesTaskWidget.materialPropsCancel() }
              onAccepted: appearancesTaskWidget.materialPropsAccepted()
 
     }

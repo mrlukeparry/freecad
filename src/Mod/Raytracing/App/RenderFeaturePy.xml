@@ -53,6 +53,11 @@
         <UserDocu>Attach a render camera to the Renderer</UserDocu>
       </Documentation>
     </Methode>
+    <Methode Name="removeRenderMaterial">
+      <Documentation>
+        <UserDocu>Remove a render material given an index</UserDocu>
+      </Documentation>
+    </Methode>
     <Methode Name="setRenderTemplate">
       <Documentation>
         <UserDocu>Set the render template to be used</UserDocu>

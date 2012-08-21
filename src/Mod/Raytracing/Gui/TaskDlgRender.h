@@ -24,15 +24,18 @@
 #ifndef RAYTRACINGGUI_TaskDlgRender_H
 #define RAYTRACINGGUI_TaskDlgRender_H
 
+#include <boost/signals.hpp>
+
 #include <QDeclarativeView>
 #include <QAbstractListModel>
 
 #include <Mod/Raytracing/App/RenderFeature.h>
+#include <Gui/Selection.h>
 #include <Gui/TaskView/TaskDialog.h>
-
 
 #include <Mod/Raytracing/App/RenderPreset.h>
 #include "ViewProviderRender.h"
+
 class SbBox3f;
 
 namespace RaytracingGui {
@@ -103,6 +106,47 @@ private:
     int count;
 };
 
+class RaytracingGuiExport MaterialsModel : public QAbstractListModel
+{
+    Q_OBJECT
+    Q_PROPERTY( int count READ getCount() NOTIFY countChanged())
+
+Q_SIGNALS:
+    void countChanged();
+
+public:
+    enum AppearancesRoles {
+         IdRole = Qt::UserRole + 1,
+         DescriptionRole,
+         LabelRole,
+         LinkLabelRole,
+         SelectedRole
+     };
+
+    MaterialsModel(QObject *parent = 0);
+    ~MaterialsModel(){}
+
+//     Q_INVOKABLE QVariant getById(QString id);
+//     Q_INVOKABLE QVariant get(int row);
+
+    Q_INVOKABLE void clearSelection();
+    const std::vector<bool> & getSelection() const { return selectList; }
+    Q_INVOKABLE bool setState(int row, const QVariant & value);
+    
+    void addRenderMaterial(Raytracing::RenderMaterial *mat);
+    int getCount() { this->count = this->rowCount(); return count; }
+    int rowCount(const QModelIndex & parent = QModelIndex()) const;
+
+
+    void clear() { m_rendMats.clear(); selectList.clear(); reset(); }
+    QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
+
+private:
+    QList<Raytracing::RenderMaterial *> m_rendMats;
+    std::vector<bool> selectList;
+    int count;
+};
+
 class RaytracingGuiExport RenderFeatureData : public QObject
 {
     Q_OBJECT
@@ -129,7 +173,7 @@ private:
 };
 
 /// simulation dialog for the TaskView
-class RaytracingGuiExport TaskDlgRender : public Gui::TaskView::TaskDialog
+class RaytracingGuiExport TaskDlgRender : public Gui::TaskView::TaskDialog, public Gui::SelectionObserver
 {
     Q_OBJECT
 
@@ -149,7 +193,15 @@ public Q_SLOTS:
   void renderStarted();
   void renderStopped();
   void saveCamera();
+  // Materials Slots
+  void onMaterialSelectionChanged(int index);
+  void onEditMaterial(int index);
 public:
+
+    void slotMaterialsChanged();
+
+    /// Observer message from the Selection
+    void onSelectionChanged(const Gui::SelectionChanges& msg);
 
     /// is called the TaskView when the dialog is opened
     virtual void open();
@@ -169,12 +221,16 @@ public:
     { return QDialogButtonBox::Close|QDialogButtonBox::Help; }
 
 protected:
+  typedef boost::BOOST_SIGNALS_NAMESPACE::connection Connection;
+  Connection connectionMaterialsChanged;
+
   bool isRenderActive();
   ViewProviderRender *renderView;
   QDeclarativeView   *view ;
   RenderFeatureData  *featViewData;
   PresetsModel       *presetsModel;
   TemplatesModel     *templatesModel;
+  MaterialsModel     *materialsModel;
 };
 
 
