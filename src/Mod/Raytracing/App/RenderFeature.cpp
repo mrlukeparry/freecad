@@ -56,7 +56,7 @@ const char *group = "Render Feature";
 
 PROPERTY_SOURCE(Raytracing::RenderFeature, App::DocumentObjectGroup)
 
-RenderFeature::RenderFeature()
+RenderFeature::RenderFeature() : camera(0), renderer(0)
 {
     ADD_PROPERTY_TYPE(RendererType,((long)0), group, (App::PropertyType)(App::Prop_Output)  ,"Switch the render backend to be used");
     ADD_PROPERTY_TYPE(Preset,("")           , group, (App::PropertyType)(App::Prop_ReadOnly),"Render preset used");
@@ -67,9 +67,6 @@ RenderFeature::RenderFeature()
     ADD_PROPERTY_TYPE(ExternalGeometry,(0,0), group,(App::PropertyType)(App::Prop_None)     ,"External geometry");
     ADD_PROPERTY_TYPE(MaterialsList,   (0)  , group,(App::PropertyType)(App::Prop_None)     ,"Render materials");
     RendererType.setEnums(TypeEnums);
-
-    renderer = 0;
-
 }
 
 RenderFeature::~RenderFeature()
@@ -79,12 +76,11 @@ RenderFeature::~RenderFeature()
 
 void RenderFeature::attachRenderCamera(RenderCamera *cam)
 {
-  if(!renderer)
-    return;
-
-  if(renderer->hasCamera())
-      Base::Console().Error("A camera is already set\n");
-  renderer->addCamera(cam);
+  if(camera) {
+      Base::Console().Log("A camera is already set. Removing previous attached camera\n");
+      delete camera;
+  }
+  camera = cam;
 }
 
 void RenderFeature::setRenderer(const char *rendererType)
@@ -279,23 +275,23 @@ RenderProcess * RenderFeature::getActiveRenderProcess() const
 /// Methods
 void RenderFeature::setCamera(const Base::Vector3d &v1, const Base::Vector3d &v2, const Base::Vector3d &v3, const Base::Vector3d &v4, const char *camType)
 {
-    if(!hasRenderer())
-        return;
-
-    if(!renderer->hasCamera()) {
-        Base::Console().Error("Renderer doesn't have a camera set\n");
+    if(!camera) {
+        Base::Console().Error("A Camera hasn't been attached\n");
         return;
     }
 
-    renderer->getCamera()->setType(camType);
-    renderer->setCamera(v1, v2, v3, v4);
+    camera->setType(camType);
+    camera->CamPos  = v1;
+    camera->CamDir  = v2;
+    camera->Up      = v3;
+    camera->LookAt  = v4;
 }
 
 void RenderFeature::setCamera(RenderCamera *cam)
 {
     // Delete the previous camera
-    RenderCamera *originalCamera = renderer->getCamera();
-    *originalCamera = *cam;
+    delete camera;
+    camera = cam->clone();
 }
 
 bool RenderFeature::hasRenderer() const
@@ -319,10 +315,7 @@ void RenderFeature::setBBox(const Base::Vector3d &min, const Base::Vector3d &max
 
 RenderCamera * RenderFeature::getCamera(void)
 {
-    if(!hasRenderer())
-        return 0;
-
-    return renderer->getCamera();
+    return camera;
 }
 
 void RenderFeature::preview(int x1, int y1, int x2, int y2)
@@ -334,6 +327,7 @@ void RenderFeature::preview(int x1, int y1, int x2, int y2)
 
     PropertyRenderMaterialList *matListCopy = static_cast<PropertyRenderMaterialList *> (MaterialsList.Copy());
     // Argument Variables are temporary
+    renderer->attachCamera(camera);
     renderer->setRenderTemplate(SceneTemplate.getValue());
     renderer->attachRenderMaterials(matListCopy->getValues(), ExternalGeometry.getValues());
     renderer->setUpdateInteval(UpdateInterval.getValue());
@@ -358,7 +352,7 @@ void RenderFeature::preview()
 //     light->setPlacement(lightPos, lightRot);
 // 
 //     renderer->addLight(light);
-
+    renderer->attachCamera(camera);
     renderer->setRenderTemplate(SceneTemplate.getValue());
     renderer->attachRenderMaterials(MaterialsList.getValues(), ExternalGeometry.getValues());
     renderer->setRenderPreset(Preset.getValue());
@@ -421,6 +415,7 @@ void RenderFeature::render()
     if(!isRendererReady())
         return;
 
+    renderer->attachCamera(camera);
     renderer->attachRenderMaterials(MaterialsList.getValues(), ExternalGeometry.getValues());
     renderer->setRenderTemplate(SceneTemplate.getValue());
     renderer->setRenderPreset(Preset.getValue());
@@ -454,7 +449,7 @@ bool RenderFeature::isRendererReady() const
     if(!hasRenderer())
         return false;
 
-    if(!this->renderer->hasCamera()) {
+    if(!camera) {
         Base::Console().Error("Camera has not been set for the render\n");
         return false;
     }
@@ -565,7 +560,7 @@ void RenderFeature::Restore(XMLReader &reader)
     RenderCamera *cam = new RenderCamera();
     cam->Restore(reader);
 
-    renderer->addCamera(cam);
+    camera = cam;
 }
 
 void RenderFeature::updateMatLinks()

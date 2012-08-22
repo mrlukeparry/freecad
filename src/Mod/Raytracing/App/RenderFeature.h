@@ -58,6 +58,7 @@ public:
     App::PropertyInteger                       UpdateInterval;
     App::PropertyLinkSubList                   ExternalGeometry;
 
+
 //     Part    ::PropertyGeometryList   Geometry;
 //     Sketcher::PropertyConstraintList Constraints;
 //     App     ::PropertyLinkSubList    ExternalGeometry;
@@ -93,7 +94,6 @@ public:
     bool isRendererReady(void) const;
     void attachRenderCamera(RenderCamera *cam);
 
-
     RenderProcess * getActiveRenderProcess(void) const; // Should this be a const method?
     void finish();
     void preview();
@@ -103,6 +103,7 @@ public:
     void setCamera(const Base::Vector3d &v1, const Base::Vector3d &v2, const Base::Vector3d &v3, const Base::Vector3d &v4, const char *camType);
     void setCamera(RenderCamera *cam);
     void setBBox(const Base::Vector3d &min, const Base::Vector3d &max);
+
     RenderCamera * getCamera(void);
     void setRenderPreset(const char * presetName);
     void setRenderTemplate(const char * templateName);
@@ -124,6 +125,7 @@ protected:
 
     SbBox3f bbox;
     Renderer *renderer;
+    RenderCamera *camera;
 
     static const char* TypeEnums[];
 };

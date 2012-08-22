@@ -422,7 +422,7 @@ QString LuxRender::genRenderTemplate()
 
     // Get Bounding box centered
     Base::Vector3d center = (bbMax + bbMin) / 2;  // Translate the middle of the scene to center of bounding box
-    
+
     Base::Vector3d camPos = getCamera()->CamPos;
     float camLength = (getCamera()->CamPos - center).Length();
     camLength *= 2;

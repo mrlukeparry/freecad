@@ -54,18 +54,17 @@ using namespace Raytracing;
 TYPESYSTEM_SOURCE_ABSTRACT(Raytracing::Renderer, Base::BaseClass)
 
 Renderer::Renderer(void)
+          : process(0),
+            camera(0),
+            xRes(0),
+            yRes(0)
 {
-    this->process = 0;
-    this->camera  = 0;
-    this->xRes = 0;
-    this->yRes = 0;
-
 }
 Renderer::~Renderer(void)
 {
-    this->clear();
-    delete this->camera;
-    this->camera = 0;
+    clear();
+    delete camera;
+    camera = 0;
 
     clearPresets();
     clearTemplates();
@@ -73,7 +72,7 @@ Renderer::~Renderer(void)
 
 void Renderer::clear()
 {
-    delete this->process;
+    delete process;
     this->process = 0;
     for (std::vector<RenderLight *>::iterator it = lights.begin(); it != lights.end(); ++it) {
       delete *it;
@@ -82,16 +81,21 @@ void Renderer::clear()
       delete *it;
     }
 
-    bbMin.Set(0.f , 0.f, 0.f);
-    bbMax.Set(0.f , 0.f, 0.f);
+    bbMin.Set(0.f, 0.f, 0.f);
+    bbMax.Set(0.f, 0.f, 0.f);
 
     materials.empty(); // We don't delete these because they are only list of RenderMaterial references
     lights.clear();
     parts.clear();
 }
 
-void Renderer::addCamera(RenderCamera *cam) {
-    this->camera = cam;
+void Renderer::attachCamera(RenderCamera *cam) {
+    // TODO should we clone the camera
+    if(!cam)
+        return;
+
+    delete camera;
+    camera = cam->clone();
 }
 
 void Renderer::addLight(RenderLight *light) {

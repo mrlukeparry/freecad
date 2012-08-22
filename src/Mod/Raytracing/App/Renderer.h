@@ -77,7 +77,7 @@ public:
 
     Renderer(void);
     ~Renderer(void);
-    void addCamera(RenderCamera *cam);
+    void attachCamera(RenderCamera *cam);
     void addLight(RenderLight *light);
     void addObject(const char *PartName, const TopoDS_Shape &Shape, float meshDeviation);
     void addObject(RenderPart *part);

@@ -261,16 +261,18 @@ void ViewProviderRender::setEditViewer(Gui::View3DInventorViewer* viewer, int Mo
 {
     RenderCamera *cam     = getRenderFeature()->getCamera();
 
-    Base::Vector3d lookAt = cam->LookAt;
-    Base::Vector3d pos    = cam->CamPos;
-    Base::Vector3d camUp  = cam->Up;
+    if(cam) {
+        Base::Vector3d lookAt = cam->LookAt;
+        Base::Vector3d pos    = cam->CamPos;
+        Base::Vector3d camUp  = cam->Up;
 
-    SoCamera *myCam = viewer->getCamera();
+        SoCamera *myCam = viewer->getCamera();
 
-    // Set to render feature's camera
-    myCam->position.setValue(SbVec3f(pos.x, pos.y, pos.z));
-    myCam->pointAt(SbVec3f(lookAt.x, lookAt.y, lookAt.z), SbVec3f(camUp.x, camUp.y, camUp.z));
-    myCam->focalDistance.setValue((lookAt - pos).Length());
+        // Set to render feature's camera
+        myCam->position.setValue(SbVec3f(pos.x, pos.y, pos.z));
+        myCam->pointAt(SbVec3f(lookAt.x, lookAt.y, lookAt.z), SbVec3f(camUp.x, camUp.y, camUp.z));
+        myCam->focalDistance.setValue((lookAt - pos).Length());
+    }
 
     viewer->setEditing(TRUE);
     SoNode* root = viewer->getSceneGraph();

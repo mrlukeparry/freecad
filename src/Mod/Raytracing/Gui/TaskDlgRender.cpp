@@ -667,10 +667,6 @@ void TaskDlgRender::saveCamera()
     // Check if a renderer camera exists
     RenderFeature *feat = this->getRenderView()->getRenderFeature();
 
-    RenderCamera *renderCam = feat->getCamera();
-    if(!renderCam)
-        return;
-
     SoCamera *Cam;
 
     Gui::MDIView *mdi = Gui::Application::Instance->activeDocument()->getActiveView();
@@ -719,9 +715,20 @@ void TaskDlgRender::saveCamera()
     Base::Vector3d camUp(upvec[0],upvec[1], upvec[2]);
     Base::Vector3d camLookAt = camDir * Dist + camPos;
 
-    // Set the rendera camera to viewport - TODO make undo compatible
-    feat->setCamera(camPos, camDir, camUp, camLookAt, camTypeStr);
-    feat->getCamera()->Fov = fov;
+    // TODO make undo compatible - Requires making RenderCamera a document object
+
+    // Create a new camera and attach specific properties if needed
+    Gui::Command::doCommand(Gui::Command::Doc,"renderCam = Raytracing.RenderCamera(App.Vector(%f,%f,%f), App.Vector(%f,%f,%f), App.Vector(%f,%f,%f), App.Vector(%f,%f,%f), '%s')",
+                   camPos.x, camPos.y, camPos.z,
+                   camDir.x, camDir.y, camDir.z,
+                   camUp.x, camUp.y, camUp.z,
+                   camLookAt.x, camLookAt.y, camLookAt.z, camTypeStr);
+
+    if(camType == RenderCamera::PERSPECTIVE)
+        Gui::Command::doCommand(Gui::Command::Doc, "renderCam.Fov = %f", fov);
+
+    // Attach this temporary camera to the Render Feature
+    Gui::Command::doCommand(Gui::Command::Doc,"App.ActiveDocument.%s.attachRenderCamera(renderCam)", feat->getNameInDocument());
 }
 
 //==== calls from the TaskView ===============================================================
