@@ -420,8 +420,11 @@ QString LuxRender::genRenderTemplate()
     if(!renderTemplate)
       return outStr; // Throw exception?
 
+    // Get Bounding box centered
+    Base::Vector3d center = (bbMax + bbMin) / 2;  // Translate the middle of the scene to center of bounding box
+    
     Base::Vector3d camPos = getCamera()->CamPos;
-    float camLength = getCamera()->CamPos.Length();
+    float camLength = (getCamera()->CamPos - center).Length();
     camLength *= 2;
 
     Base::Vector3d delta = (bbMax - bbMin) ; 
@@ -430,12 +433,11 @@ QString LuxRender::genRenderTemplate()
         return outStr; // Throw exception MUST BE SET?
     }
 
-    // Get Bounding box centered
-    Base::Vector3d center = (bbMax + bbMin) / 2;  // Translate the middle of the scene to center of bounding box
     float planePos = 0; // Set the z-value for the plane
     // Find largest delta length
     float bbBoxsize = (delta.y > delta.x) ? ((delta.z > delta.y) ? delta.z : delta.y ): (delta.z > delta.x) ? delta.z : delta.x;
-    
+    bbBoxsize *= 2;
+
     float scale = (camLength > bbBoxsize) ? camLength : bbBoxsize;
     scale *= exp(ceil(log(std::abs(scale)))) * 1.2;
     out << "\n# Scene Template" << endl
