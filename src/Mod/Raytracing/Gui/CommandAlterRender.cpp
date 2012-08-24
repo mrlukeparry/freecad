@@ -110,7 +110,7 @@ CmdRaytracingAddAppearances::CmdRaytracingAddAppearances()
     sToolTipText    = QT_TR_NOOP("Add appearances");
     sWhatsThis      = "Raytracing_Add Appearancest";
     sStatusTip      = sToolTipText;
-    sPixmap         = "Raytrace_New";
+    sPixmap         = "Raytrace_AddMaterial";
     eType           = ForEdit;
 }
 
@@ -145,7 +145,7 @@ CmdRaytracingCreateRenderFeature::CmdRaytracingCreateRenderFeature()
     sToolTipText  = QT_TR_NOOP("Create a new Render Feature");
     sWhatsThis    = sToolTipText;
     sStatusTip    = sToolTipText;
-    sPixmap       = "Raytrace_Export";
+    sPixmap       = "Raytrace_NewRenderFeature";
 }
 
 void CmdRaytracingCreateRenderFeature::activated(int iMsg)
@@ -326,7 +326,7 @@ CmdRaytracingPreview::CmdRaytracingPreview()
     sToolTipText  = QT_TR_NOOP("Render the Render Feature");
     sWhatsThis    = sToolTipText;
     sStatusTip    = sToolTipText;
-    sPixmap       = "Raytrace_Camera";
+    sPixmap       = "Raytrace_Preview";
 }
 
 void CmdRaytracingPreview::activated(int iMsg)
@@ -419,7 +419,7 @@ CmdRaytracingPreviewWindow::CmdRaytracingPreviewWindow()
     sToolTipText  = QT_TR_NOOP("Render the window");
     sWhatsThis    = sToolTipText;
     sStatusTip    = sToolTipText;
-    sPixmap       = "Raytrace_Camera";
+    sPixmap       = "Raytrace_PreviewWindow";
 }
 
 void CmdRaytracingPreviewWindow::activated(int iMsg)
