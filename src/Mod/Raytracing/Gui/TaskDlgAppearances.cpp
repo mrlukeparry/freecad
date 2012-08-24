@@ -221,7 +221,7 @@ void TaskDlgAppearances::materialDropEvent(QDropEvent *ev)
     if(mat)
     {
         // Replace the current material if there is one
-        Gui::Command::doCommand(Gui::Command::Doc,"App.ActiveDocument.ActiveObject.removeRenderMaterialFromPart('%s')", selection.pObjectName);
+        Gui::Command::doCommand(Gui::Command::Doc,"App.ActiveDocument.%s.removeRenderMaterialFromPart('%s')", feat->getNameInDocument(), selection.pObjectName);
     }
 
     int matLinkIndex = feat->addRenderMaterial(myMaterial, docObj);
