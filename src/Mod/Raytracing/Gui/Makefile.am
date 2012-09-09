@@ -8,16 +8,31 @@ BUILT_SOURCES=\
 		qrc_Raytracing.cpp 
 
 libRaytracingGui_la_SOURCES=\
-		AppRaytracingGuiPy.cpp \
+		AppRaytracingGui.cpp  \
+		AppRaytracingGuiPy.cpp  \
+		AppearancesModel.cpp  \
+		AppearancesModel.h  \
 		Command.cpp \
+		CommandAlterRender.cpp  \
+		DlgSettingsRay.ui \
 		DlgSettingsRayImp.cpp \
 		DlgSettingsRayImp.h \
+		MaterialParametersModel.cpp \
+		MaterialParametersModel.h \
 		PovrayHighlighter.cpp \
 		PovrayHighlighter.h \
-		PreCompiled.cpp \
+		PreCompiled.cpp  \
 		PreCompiled.h \
+		RenderView.cpp \
+		RenderView.h \
+		TaskDlgAppearances.cpp \
+		TaskDlgAppearances.h \
+		TaskDlgRender.cpp \
+		TaskDlgRender.h \
 		Workbench.cpp \
-		Workbench.h
+		Workbench.h \
+		ViewProviderRender.cpp \
+		ViewProviderRender.h
 
 # the library search path.
 libRaytracingGui_la_LDFLAGS = -L../../../Base -L../../../App -L../../../Gui -L../../Part/App -L../App -L$(OCC_LIB) \
@@ -97,6 +112,10 @@ EXTRA_DIST = \
 		Resources/icons/Raytrace_New.svg \
 		Resources/icons/Raytrace_Part.svg \
 		Resources/icons/Raytrace_NewPartSegment.svg \
+		Resources/icons/Raytrace_NewRenderFeature.svg \
+		Resources/icons/Raytrace_Preview.svg \
+		Resources/icons/Raytrace_PreviewWindow.svg \
+		Resources/icons/Raytrace_AddMaterial.svg \
 		DlgSettingsRay.ui \
 		FreeCADpov \
 		Resources/Raytracing.qrc \
@@ -130,4 +149,15 @@ EXTRA_DIST = \
 		Resources/translations/Raytracing_uk.ts \
 		Resources/translations/Raytracing_zh.qm \
 		Resources/translations/Raytracing_zh.ts \
+		Resources/qml/appearancesUi.qml \
+		Resources/qml/Button.qml \
+		Resources/qml/ColorWidget.qml \
+		Resources/qml/ComboBox.qml \
+		Resources/qml/Loading.qml \
+		Resources/qml/materialParametersUi.qml \
+		Resources/qml/NumberInput.qml \
+		Resources/qml/renderPreviewUi.qml \
+		Resources/qml/renderUi.qml \
+		Resources/qml/ScrollBar.qml \
+		Resources/qml/Slider.qml \
 		CMakeLists.txt

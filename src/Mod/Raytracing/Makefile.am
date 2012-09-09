@@ -1,4 +1,4 @@
-SUBDIRS=App Gui Templates
+SUBDIRS=App Gui Materials Presets Templates
 
 # Change data dir from default ($(prefix)/share) to $(prefix)
 datadir = $(prefix)/Mod/Raytracing

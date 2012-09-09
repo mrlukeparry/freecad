@@ -2,14 +2,26 @@
 lib_LTLIBRARIES=libRaytracing.la Raytracing.la
 
 BUILT_SOURCES=\
-		FreeCADpov.h
+		FreeCADpov.h \
+		RenderCameraPy.cpp \
+		RenderFeaturePy.cpp \
+
+libRaytracing_la_BUILT=\
+		RenderCameraPy.h \
+		RenderFeaturePy.h
 
 libRaytracing_la_SOURCES=\
 		AppRaytracingPy.cpp \
-		LuxRender.cpp \
-		LuxRender.h \
-		LuxRenderProcess.cpp \
-		LuxRenderProcess.h \
+		Appearances.cpp \
+		Appearances.h \
+		LibraryMaterial.cpp \
+		LibraryMaterial.h \
+		renderer/lux/LuxRender.cpp \
+		renderer/lux/LuxRender.h \
+		renderer/lux/LuxRenderProcess.cpp \
+		renderer/lux/LuxRenderProcess.h \
+		PropertyRenderMaterialList.cpp \
+		PropertyRenderMaterialList.h \
 		PovTools.cpp \
 		PovTools.h \
 		PreCompiled.cpp \
@@ -22,8 +34,19 @@ libRaytracing_la_SOURCES=\
 		RaySegment.h \
 		Renderer.cpp \
 		Renderer.h \
-		RendererProcess.cpp \
-		RendererProcess.h \
+		RenderCamera.cpp \
+		RenerCamera.h \
+		RenderCamerPyImp.cpp
+		RenderLights.h \
+		RenderMaterial.cpp \
+		RenderMaterial.h \
+		RenderFeature.cpp \
+		RenderFeature.h \
+		RenderFeaturePyImp.cpp \
+		Renderer.cpp \
+		Renderer.h \
+		RenderProcess.cpp \
+		RenderProcess.h
 
 
 FreeCADpov.h: FreeCADpov
@@ -52,6 +75,9 @@ libRaytracing_la_LIBADD   = \
 		-lTKMesh \
 		-lPart
 
+%.cpp: %.xml $(top_srcdir)/src/Tools/generateTemplates/templateClassPyExport.py
+	$(PYTHON) $(top_srcdir)/src/Tools/generate.py --outputPath $(@D) $<
+
 #--------------------------------------------------------------------------------------
 # Loader of libRaytracing
 
@@ -75,13 +101,17 @@ AM_CXXFLAGS = -I$(top_srcdir)/src -I$(top_builddir)/src $(all_includes) -I$(OCC_
 
 
 libdir = $(prefix)/Mod/Raytracing
+datadir = $(prefix)/Mod/Raytracing
 
-CLEANFILES = $(BUILT_SOURCES)
+CLEANFILES = $(BUILT_SOURCES) $(libRaytracing_la_BUILT)
 
 EXTRA_DIST = \
+		$(data_DATA) \
 		resources/FCAnimation.inc \
 		resources/FCAnimation.ini \
 		resources/FCAnimation.pov \
 		resources/FCSimple.pov \
 		CMakeLists.txt \
-		FreeCADpov
+		FreeCADpov \
+		RenderFeaturePy.xml \
+		RenderCameraPy.xml
