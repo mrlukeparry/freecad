@@ -20,80 +20,24 @@
  *                                                                         *
  ***************************************************************************/
 
-#ifndef _RAYTRACING_RENDERPROCESS_h_
-#define _RAYTRACING_RENDERPROCESS_h_
+#include "PreCompiled.h"
+#ifndef _PreComp_
+#endif
 
-#include <QProcess>
-#include <QBasicTimer>
-#include <QTimerEvent>
 #include <QString>
+#include "RenderPreset.h"
 
-#include <TopoDS.hxx>
-#include <gp_Vec.hxx>
-#include <TopoDS_Face.hxx>
-#include <vector>
+using namespace Raytracing;
 
-namespace Raytracing
+RenderPreset::RenderPreset(QString id, QString label, QString filename, QString description, QString provider)
+            : id(id),
+              label(label),
+              filename(filename),
+              description(description),
+              provider(provider)
 {
-
-class RaytracingExport RenderProcess : public QProcess
-{
-  Q_OBJECT
-
-public:
-  RenderProcess(void);
-  ~RenderProcess(void);
-
-  enum State {
-    INVALID,
-    VALID,
-    STARTED,
-    RUNNING,
-    FINISHED,
-    TERMINATED,
-    ERROR,
-  };
-
-  void addArguments(const QString &arg);
-  void timerEvent(QTimerEvent *event);
-
-  State getState() { return status; };
-
-  bool isActive();
-  bool isExecPathValid(void);
-  virtual bool isInputAvailable();
-  virtual bool isOutputAvailable();
-
-  virtual void initialiseSettings() = 0; // This sets the argument list for the process and is renderer dependant
-  void setArguments(const QStringList &args);
-  void setExecPath(const QString &str);
-  void setInputPath(const QString &str);
-  void setOutputPath(const QString &str);
-  void setUpdateInterval(int msecs);
-
-public Q_SLOTS:
-    void processError(void);
-    void setStatusAsRunning(void) { status = RUNNING; }
-    void begin(void);
-    void stop(void);
-
-Q_SIGNALS:
-    void updateOutput();
-    void finished();
-
-protected:
-  QStringList args;
-  QString execPath;
-  QString inputPath;
-  QString tmpPath;
-  QString outputPath;
-  State status;
-
-private:
-  int updateInterval;
-  QBasicTimer timer;
-};
-
 }
 
-#endif //_RAYTRACING_RENDERPROCESS_h_
+RenderPreset::~RenderPreset()
+{
+}

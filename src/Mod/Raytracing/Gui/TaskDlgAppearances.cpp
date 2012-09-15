@@ -363,7 +363,7 @@ bool TaskDlgAppearances::accept()
 bool TaskDlgAppearances::reject()
 {
     Gui::Command::abortCommand();
-    // We load the TaskDlgRender, since this is the active 
+    // We load the TaskDlgRender, since this is the active
     Gui::Document * doc = Gui::Application::Instance->activeDocument();
     if (doc) {
         if (doc->getInEdit() && doc->getInEdit()->isDerivedFrom(ViewProviderRender::getClassTypeId())) {
@@ -383,6 +383,5 @@ void TaskDlgAppearances::helpRequested()
 {
 
 }
-
 
 #include "moc_TaskDlgAppearances.cpp"

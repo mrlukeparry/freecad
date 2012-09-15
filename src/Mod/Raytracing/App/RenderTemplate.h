@@ -21,29 +21,22 @@
  ***************************************************************************/
 
 
-#ifndef _RenderTemplate_h_
-#define _RenderTemplate_h_
+#ifndef _RAYTRACING_RENDERTEMPLATE_h_
+#define _RAYTRACING_RENDERTEMPLATE_h_
 
 #include <QString>
+
 namespace Raytracing
 {
-
-class RenderTemplate
+class RaytracingExport RenderTemplate
 {
 public:
-    enum TemplateSource {
-    BUILTIN,
-    EXTERNAL};
+  enum TemplateSource {
+  BUILTIN,
+  EXTERNAL};
 
-  RenderTemplate(QString id, QString label, QString filename, QString description, QString provider, TemplateSource tempType)
-             : id(id),
-               label(label),
-               filename(filename),
-               description(description),
-               provider(provider),
-               source(tempType)
-               {}
-  ~RenderTemplate(){}
+  RenderTemplate(QString id, QString label, QString filename, QString description, QString provider, TemplateSource tempType);
+  ~RenderTemplate();
 
   QString getId() const { return id;}
   QString getFilename() const { return filename;}
@@ -63,4 +56,4 @@ private:
 
 }
 
-#endif //_RenderTemplate_h_
+#endif //_RAYTRACING_RENDERLIGHTS_h_

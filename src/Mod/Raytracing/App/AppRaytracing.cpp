@@ -32,13 +32,14 @@
 
 #include "RenderCameraPy.h"
 
-#include "RenderFeature.h"
+
 #include "RayFeature.h"
 #include "RayProject.h"
 #include "RaySegment.h"
 
 #include "RenderFeatureGroup.h"
 #include "renderer/lux/LuxRender.h"
+#include "RenderFeature.h"
 #include "Appearances.h"
 
 extern struct PyMethodDef Raytracing_methods[];

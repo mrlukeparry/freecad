@@ -21,11 +21,9 @@
  ***************************************************************************/
 
 #include "PreCompiled.h"
-
 #ifndef _PreComp_
 #endif
 
-#include <QWidget>
 #include <QFile>
 #include <Base/Exception.h>
 #include <Base/Console.h>
@@ -79,43 +77,44 @@ bool RenderProcess::isExecPathValid()
 
 bool RenderProcess::isActive()
 {
-    return (this->status == STARTED || this->status == RUNNING); 
+    return (this->status == STARTED || this->status == RUNNING);
 }
 
-bool RenderProcess::getOutput(QImage &img)
+bool RenderProcess::isOutputAvailable()
 {
-  QFile file(outputPath);
+    // Load the output File
+    QFile file(outputPath);
 
-  if(!file.open(QIODevice::ReadOnly) || file.size() == 0)
-    return false; // empty file
+    if(!file.open(QIODevice::ReadOnly) || file.size() == 0)
+        return false; // empty file
 
-  // Emit a signal
-  Base::Console().Log("Render Output Update\n");
-  Q_EMIT updateOutput();
-
-  return true;
+    // Emit a signal
+    Base::Console().Log("Render Output Update\n");
+    Q_EMIT updateOutput();
+    return true;
 }
+
 bool RenderProcess::isInputAvailable()
 {
     // Load the Input File
     QFile inputFile(this->inputPath);
     if(inputFile.open(QIODevice::ReadOnly))
-      return true;
+        return true;
     else
-      return false;
+        return false;
 }
 
 void RenderProcess::addArguments(const QString &arg)
 {
-  this->args.push_back(arg);
+    this->args.push_back(arg);
 }
 
 void RenderProcess::setArguments(const QStringList &Args) {
-  this->args = Args;
+    this->args = Args;
 }
 
 void RenderProcess::setInputPath(const QString &input) {
-  this->inputPath = input;
+    this->inputPath = input;
 }
 
 void RenderProcess::begin()
@@ -125,45 +124,43 @@ void RenderProcess::begin()
     {
         this->status = VALID;
         this->start(execPath, args);
+
         this->status = STARTED;
         this->timer.start(this->updateInterval, this);
-        std::string inputFilestr = this->inputPath.toStdString();
-        bool test = true;
-        std::string str = this->errorString().toStdString();
-        test = false;
     }
 }
 
 void RenderProcess::processError(void)
 {
-  if(this->timer.isActive()) {
-      this->timer.stop();
-  }
-  this->status = ERROR;
+    if(this->timer.isActive()) {
+        this->timer.stop();
+    }
+    this->status = ERROR;
 }
 
 void RenderProcess::stop()
 {
-  this->status = FINISHED;
-  this->terminate();
-  this->timer.stop();
-  Q_EMIT finished();
+    this->status = FINISHED;
+    this->terminate();
+    this->timer.stop();
+    Q_EMIT finished();
 }
 
-void RenderProcess::setUpdateInterval(float time)
+void RenderProcess::setUpdateInterval(int msecs)
 {
-  this->updateInterval = time;
-  if(this->timer.isActive()) {
-      this->timer.stop();
-      this->timer.start(this->updateInterval, this);
-  }
+    this->updateInterval = msecs;
+    if(this->timer.isActive()) {
+        this->timer.stop();
+        this->timer.start(this->updateInterval, this);
+    }
 }
 
 void RenderProcess::timerEvent(QTimerEvent *event)
 {
     if (event->timerId() == timer.timerId()) {
-      getOutput(imageOutput);
-    } else {
+        isOutputAvailable();
+    } else
         QProcess::timerEvent(event);
-    }
- }
+}
+
+#include "moc_RenderProcess.cpp"

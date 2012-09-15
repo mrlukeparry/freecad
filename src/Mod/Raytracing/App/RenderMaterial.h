@@ -125,7 +125,7 @@ public:
 
 //   virtual PyObject *getPyObject(void);    
   QMap<QString, MaterialProperty *> Properties;
-  const LibraryMaterial * getMaterial() const { Appearances().getMaterialById(LibMaterialId.getValue()); }
+  const LibraryMaterial * getMaterial() const { return Appearances().getMaterialById(LibMaterialId.getValue()); }
 
 private:
     // Only used for reference when onChanged is called in RenderFeature

@@ -20,23 +20,25 @@
  *                                                                         *
  ***************************************************************************/
 
-
-#ifndef _RendererLights_h_
-#define _RendererLights_h_
+#ifndef _RAYTRACING_RENDERLIGHTS_h_
+#define _RAYTRACING_RENDERLIGHTS_h_
 
 #include <Base/Vector3D.h>
 #include <Base/Placement.h>
 
-# include <gp_Vec.hxx>
+#include <gp_Vec.hxx>
+
 #include <vector>
 
 namespace Raytracing
 {
 
-
-class RenderLight
+class RaytracingExport RenderLight
 {
 public:
+    RenderLight();
+    ~RenderLight();
+
     enum LightingType {
     AREA,
     DISTANT,
@@ -45,37 +47,18 @@ public:
     POINT,
     SPOT };
 
-    RenderLight()
-    {
-      Color[0] = 1.f;
-      Color[1] = 1.f;
-      Color[2] = 1.f;
-
-      Power = 100.;
-    }
-    ~RenderLight(){}
-
-    void setPlacement(const Base::Vector3d &pos, const Base::Rotation &rot) {
-        Placement = Base::Placement(pos, rot);
-    }
-    void setColor(int r, int g, int b)
-    {
-      Color[0] = (float) r / 255;
-      Color[1] = (float) g / 255;
-      Color[2] = (float) b / 255;
-    }
+    void setPlacement(const Base::Vector3d &pos, const Base::Rotation &rot) { Placement = Base::Placement(pos, rot); }
+    void setColor(int r, int g, int b);
 
     Base::Vector3d  Pos;
     LightingType LightType;
     Base::Placement Placement;
     float Power;
     float Color[3];
-
 };
 
-
 // An area light is a rectangular or square planar light source
-class RenderAreaLight : public RenderLight
+class RaytracingExport RenderAreaLight : public RenderLight
 {
 public:
     RenderAreaLight(){ LightType = AREA; }
@@ -105,4 +88,5 @@ public:
     }
 };
 }
-#endif //_RendererLights_h_
+
+#endif //_RAYTRACING_RENDERLIGHTS_h_

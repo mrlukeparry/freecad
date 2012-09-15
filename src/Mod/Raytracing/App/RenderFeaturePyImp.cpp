@@ -72,10 +72,11 @@ PyObject* RenderFeaturePy::attachRenderCamera(PyObject *args)
     if (!PyArg_ParseTuple(args, "O", &pcObj))
         return 0;
 
-    if (PyObject_TypeCheck(pcObj, &(Raytracing::RenderCameraPy::Type))) {
-        Raytracing::RenderCamera *cam = static_cast<Raytracing::RenderCameraPy*>(pcObj)->getRenderCameraPtr();
-        this->getRenderFeaturePtr()->attachRenderCamera(cam);
-    }
+    if (!PyObject_TypeCheck(pcObj, &(Raytracing::RenderCameraPy::Type)))
+        return 0;
+
+    Raytracing::RenderCamera *cam = static_cast<Raytracing::RenderCameraPy*>(pcObj)->getRenderCameraPtr();
+    this->getRenderFeaturePtr()->attachRenderCamera(cam);
     Py_Return;
 }
 
@@ -118,7 +119,8 @@ PyObject* RenderFeaturePy::setRenderer(PyObject *args)
         return 0;
 
     if(!renderer)
-      return 0;
+        return 0;
+
     this->getRenderFeaturePtr()->setRenderer(renderer);
     Py_Return;
 }
@@ -167,17 +169,17 @@ PyObject* RenderFeaturePy::setCamera(PyObject *args)
     PyObject *pcObj1, *pcObj2, *pcObj3, *pcObj4;
     char * camType;
      // Two Lines, radius
-    if (PyArg_ParseTuple(args, "O!O!O!O!s", &(Base::VectorPy::Type), &pcObj1, &(Base::VectorPy::Type), &pcObj2,
-                                           &(Base::VectorPy::Type), &pcObj3, &(Base::VectorPy::Type), &pcObj4, &camType )) {
+    if (!PyArg_ParseTuple(args, "O!O!O!O!s", &(Base::VectorPy::Type), &pcObj1, &(Base::VectorPy::Type), &pcObj2,
+                                             &(Base::VectorPy::Type), &pcObj3, &(Base::VectorPy::Type), &pcObj4, &camType ))
+        return 0;
 
-        Base::Vector3d v1 = static_cast<Base::VectorPy*>(pcObj1)->value(); // CamPos
-        Base::Vector3d v2 = static_cast<Base::VectorPy*>(pcObj2)->value(); // CamDir
-        Base::Vector3d v3 = static_cast<Base::VectorPy*>(pcObj3)->value(); // Up
-        Base::Vector3d v4 = static_cast<Base::VectorPy*>(pcObj4)->value(); // LookAt
+    Base::Vector3d v1 = static_cast<Base::VectorPy*>(pcObj1)->value(); // CamPos
+    Base::Vector3d v2 = static_cast<Base::VectorPy*>(pcObj2)->value(); // CamDir
+    Base::Vector3d v3 = static_cast<Base::VectorPy*>(pcObj3)->value(); // Up
+    Base::Vector3d v4 = static_cast<Base::VectorPy*>(pcObj4)->value(); // LookAt
 
-        this->getRenderFeaturePtr()->setCamera(v1, v2, v3, v4, camType);
-        Py_Return;
-    }
+    this->getRenderFeaturePtr()->setCamera(v1, v2, v3, v4, camType);
+    Py_Return;
 }
 
 PyObject* RenderFeaturePy::setBBox(PyObject *args)
@@ -185,14 +187,14 @@ PyObject* RenderFeaturePy::setBBox(PyObject *args)
     PyObject *pcObj1, *pcObj2;
 
      // Two Lines, radius
-    if (PyArg_ParseTuple(args, "O!O!", &(Base::VectorPy::Type), &pcObj1, &(Base::VectorPy::Type), &pcObj2)) {
+    if (!PyArg_ParseTuple(args, "O!O!", &(Base::VectorPy::Type), &pcObj1, &(Base::VectorPy::Type), &pcObj2))
+        return 0;
 
-        Base::Vector3d min = static_cast<Base::VectorPy*>(pcObj1)->value(); // CamPos
-        Base::Vector3d max = static_cast<Base::VectorPy*>(pcObj2)->value(); // CamDir
+    Base::Vector3d min = static_cast<Base::VectorPy*>(pcObj1)->value(); // CamPos
+    Base::Vector3d max = static_cast<Base::VectorPy*>(pcObj2)->value(); // CamDir
 
-        this->getRenderFeaturePtr()->setBBox(min, max);
-        Py_Return;
-    }
+    this->getRenderFeaturePtr()->setBBox(min, max);
+    Py_Return;
 }
 
 PyObject* RenderFeaturePy::clear(PyObject *args)

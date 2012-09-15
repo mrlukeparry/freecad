@@ -8,6 +8,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_CURRENT_BINARY_DIR}
     ${Boost_INCLUDE_DIRS}
+    ${QT_INCLUDE_DIR}
     ${OCC_INCLUDE_DIR}
     ${PYTHON_INCLUDE_PATH}
     ${XERCESC_INCLUDE_DIR}
@@ -96,7 +97,6 @@ SET(RenderModulePov_SRCS
 SOURCE_GROUP("RenderModulePov" FILES ${RenderModulePov_SRCS})
 
 SET(RenderModule_SRCS
-    ${Raytracing_MOC_SRCS}
     ${RenderModulePov_SRCS}
     Appearances.cpp
     Appearances.h
@@ -110,11 +110,16 @@ SET(RenderModule_SRCS
     PropertyRenderMaterialList.h
     RenderCamera.cpp
     RenderCamera.h
+    RenderLights.cpp
     RenderLights.h
     RenderMaterial.cpp
     RenderMaterial.h
+    RenderPreset.cpp
+    RenderPreset.h
     RenderProcess.cpp
     RenderProcess.h
+    RenderTemplate.cpp
+    RenderTemplate.h
     RenderFeature.cpp
     RenderFeature.h
     RenderFeatureGroup.cpp
@@ -134,8 +139,8 @@ SOURCE_GROUP("Python" FILES ${Python_SRCS})
 
 
 SET(Raytracing_SRCS
-    ${RendererPlugins_SRCS}
     ${RenderModule_SRCS}
+    ${RendererPlugins_SRCS}
     ${Python_SRCS}
 )
 
@@ -163,13 +168,13 @@ SET(Raytracing_Templates
 add_library(Raytracing SHARED ${Raytracing_SRCS})
 target_link_libraries(Raytracing ${Raytracing_LIBS})
 
-fc_target_copy_resource(Raytracing 
+fc_target_copy_resource(Raytracing
     ${CMAKE_SOURCE_DIR}/src/Mod/Raytracing
     ${CMAKE_BINARY_DIR}/Mod/Raytracing
     ${Raytracing_Scripts}
     )
 
-fc_target_copy_resource(Raytracing 
+fc_target_copy_resource(Raytracing
     ${CMAKE_SOURCE_DIR}/src/Mod/Raytracing
     ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_DATADIR}/Mod/Raytracing
     ${Raytracing_RenderMaterials}

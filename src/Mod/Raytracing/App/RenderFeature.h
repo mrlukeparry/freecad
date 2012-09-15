@@ -28,14 +28,10 @@
 #include <App/FeaturePython.h>
 #include <App/DocumentObjectGroup.h>
 #include <Base/Axis.h>
-
-#include <Inventor/SbBox3f.h>
+#include <Base/BoundBox.h>
 
 #include "Renderer.h"
 #include "PropertyRenderMaterialList.h"
-// #include <Mod/Part/App/Part2DObject.h>
-// #include <Mod/Part/App/PropertyGeometryList.h>
-// #include <Mod/Sketcher/App/PropertyConstraintList.h>
 
 namespace Raytracing
 {
@@ -123,7 +119,7 @@ protected:
     virtual void onDocumentRestored();
     virtual void onFinishDuplicating();
 
-    SbBox3f bbox;
+    Base::BoundBox3f bbox;
     Renderer *renderer;
     RenderCamera *camera;
 

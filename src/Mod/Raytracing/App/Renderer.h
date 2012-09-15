@@ -21,8 +21,8 @@
  ***************************************************************************/
 
 
-#ifndef _Renderer_h_
-#define _Renderer_h_
+#ifndef _RAYTRACING_RENDERER_H
+#define _RAYTRACING_RENDERER_H
 
 #include <QTemporaryFile>
 #include <QTextStream>
@@ -30,7 +30,7 @@
 #include <Base/Vector3D.h>
 #include <Base/BaseClass.h>
 
-# include <gp_Vec.hxx>
+#include <gp_Vec.hxx>
 #include <vector>
 
 #include "Appearances.h"
@@ -41,16 +41,14 @@
 #include "RenderProcess.h"
 #include "RenderTemplate.h"
 
-#include <3rdParty/salomesmesh/inc/Rn.h>
-
 class TopoDS_Shape;
 class TopoDS_Face;
 
 namespace Raytracing
-{ 
+{
 
  /// Just a helper class
-class RenderPart
+class RaytracingExport RenderPart
 {
 public:
     RenderPart(const char *partName, const TopoDS_Shape &shape, float meshDev)
@@ -70,13 +68,14 @@ class RaytracingExport Renderer : public Base::BaseClass
 {
     TYPESYSTEM_HEADER();
 public:
+    Renderer(void);
+    ~Renderer(void);
+
     enum RenderMode {
       PREVIEW_AREA,
       PREVIEW,
-      RENDER};
+      RENDER };
 
-    Renderer(void);
-    ~Renderer(void);
     void attachCamera(RenderCamera *cam);
     void addLight(RenderLight *light);
     void addObject(const char *PartName, const TopoDS_Shape &Shape, float meshDeviation);
@@ -126,7 +125,7 @@ public:
     void setOutputPath(const char *loc) { outputPath = loc; }
     void setRenderSize(int x, int y) { xRes = x; yRes = y;}
     void setUpdateInteval(int msecs) { updateInterval = msecs; }
-    void setBBox(const Base::Vector3d &min, const Base::Vector3d &max) { bbMin = min; bbMax = max; } 
+    void setBBox(const Base::Vector3d &min, const Base::Vector3d &max) { bbMin = min; bbMax = max; }
 
     //virtual void loadSceneDefinition(const char *file);
     //virtual void Restore(Base::XMLReader &/*reader*/);
@@ -153,9 +152,9 @@ protected:
     void transferToArray(const TopoDS_Face& aFace,gp_Vec** vertices,gp_Vec** vertexnormals, long** cons,int &nbNodesInFace,int &nbTriInFace );
 
     /// Common Properties
-    RenderCamera *camera;
-    RenderProcess *process;
-    RenderPreset *preset;
+    RenderCamera   *camera;
+    RenderProcess  *process;
+    RenderPreset   *preset;
     RenderTemplate *renderTemplate;
 
     std::vector<RenderLight *> lights;
@@ -164,7 +163,7 @@ protected:
     std::vector<RenderPart *> parts;
 
     /// Library Collections
-    std::vector<RenderPreset *> libraryPresets;
+    std::vector<RenderPreset *>   libraryPresets;
     std::vector<RenderTemplate *> libraryTemplates;
 
     /// Path storage
@@ -185,4 +184,4 @@ protected:
 };
 
 }
-#endif //_Renderer_h_ 
+#endif //_RAYTRACING_RENDERER_H

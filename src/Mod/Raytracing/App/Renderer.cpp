@@ -29,14 +29,15 @@
 # include <Poly_Triangulation.hxx>
 # include <TopExp_Explorer.hxx>
 # include <sstream>
-# include <QString>
-# include <QFile>
-# include <QDir>
-# include <QXmlStreamReader>
 # include <TopoDS.hxx>
 # include <TopoDS_Face.hxx>
 #endif
- 
+
+# include <QDir>
+# include <QFile>
+# include <QString>
+# include <QXmlStreamReader>
+
 #include <Base/Console.h>
 #include <Base/Exception.h>
 #include <Base/Sequencer.h>
@@ -47,6 +48,7 @@
 
 #include <Base/Writer.h>
 #include <Base/Reader.h>
+
 #include "Renderer.h"
 
 using namespace Raytracing;
@@ -60,6 +62,7 @@ Renderer::Renderer(void)
             yRes(0)
 {
 }
+
 Renderer::~Renderer(void)
 {
     clear();
@@ -74,11 +77,13 @@ void Renderer::clear()
 {
     delete process;
     this->process = 0;
+
     for (std::vector<RenderLight *>::iterator it = lights.begin(); it != lights.end(); ++it) {
-      delete *it;
+        delete *it;
     }
+
     for (std::vector<RenderPart *>::iterator it = parts.begin(); it != parts.end(); ++it) {
-      delete *it;
+        delete *it;
     }
 
     bbMin.Set(0.f, 0.f, 0.f);
@@ -452,7 +457,7 @@ std::vector<RenderTemplate *> Renderer::getRenderTemplates(void) const
 }
 
 
-    
+
 void Renderer::finish()
 {
   if(!process || !process->isActive())
@@ -510,7 +515,7 @@ void Renderer::reset(void)
      // Clear the previous contents and regenerate
 
     this->clear();
-    
+
     previewCoords[0] = -1;
     previewCoords[1] = -1;
     previewCoords[2] = -1;
@@ -548,7 +553,7 @@ void Renderer::initRender(RenderMode renderMode)
 void Renderer::setCamera(const Base::Vector3d &camPos, const Base::Vector3d &camDir, const Base::Vector3d &up, const Base::Vector3d &lookAt) {
   if(!camera)
     return;
-  
+
     camera->CamPos = camPos;
     camera->CamDir = camDir;
     camera->LookAt = lookAt;
@@ -572,7 +577,7 @@ void Renderer::transferToArray(const TopoDS_Face& aFace,gp_Vec** vertices,gp_Vec
     // geting the transformation of the shape/face
     gp_Trsf myTransf;
     bool identity = true;
-    
+
     if (!aLoc.IsIdentity())  {
         identity = false;
         myTransf = aLoc.Transformation();
@@ -584,7 +589,7 @@ void Renderer::transferToArray(const TopoDS_Face& aFace,gp_Vec** vertices,gp_Vec
     nbTriInFace    = aPoly->NbTriangles();
     *vertices      = new gp_Vec[nbNodesInFace];
     *vertexnormals = new gp_Vec[nbNodesInFace];
-    
+
     for (i=0; i < nbNodesInFace; i++) {
         (*vertexnormals)[i]= gp_Vec(0.0,0.0,0.0);
     }

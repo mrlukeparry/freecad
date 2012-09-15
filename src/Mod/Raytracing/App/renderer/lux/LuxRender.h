@@ -24,9 +24,10 @@
 #ifndef _LuxRender_h_
 #define _LuxRender_h_
 
-#include <Mod/Raytracing/App/Renderer.h>
 #include <vector>
 #include <QString>
+
+#include <Mod/Raytracing/App/Renderer.h>
 
 namespace Raytracing
 {

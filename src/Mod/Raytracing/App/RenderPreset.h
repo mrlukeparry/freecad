@@ -21,31 +21,26 @@
  ***************************************************************************/
 
 
-#ifndef _RendererPreset_h_
-#define _RendererPreset_h_
+#ifndef _RAYTRACING_RENDERPRESET_h_
+#define _RAYTRACING_RENDERPRESET_h_
 
 #include <QString>
+
 namespace Raytracing
 {
 
-class RenderPreset
+class RaytracingExport RenderPreset
 {
 public:
-  RenderPreset(QString id, QString label, QString filename, QString description, QString provider)
-             : id(id),
-               label(label),
-               filename(filename),
-               description(description),
-               provider(provider)
-               {}
-  ~RenderPreset(){}
+  RenderPreset(QString id, QString label, QString filename, QString description, QString provider);
+  ~RenderPreset();
 
   QString getId() const { return id;}
   QString getFilename() const { return filename;}
   QString getLabel() const { return label;}
   QString getDescription() const { return description;}
   QString getProvider() const { return provider;}
-  
+
 private:
   QString id;
   QString filename;
@@ -56,4 +51,4 @@ private:
 
 }
 
-#endif //_RendererPreset_h_
+#endif //_RAYTRACING_RENDERPRESET_h_

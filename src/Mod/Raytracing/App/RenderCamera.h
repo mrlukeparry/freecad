@@ -51,7 +51,7 @@ public:
                    Type(cType)
     {
         Autofocus = false;
-        Focaldistance = (cLookAt - cCamPos).Length();
+        Focaldistance = (float) (cLookAt - cCamPos).Length();
         Fov = 45; // TODO should we set this to 45 automatically?
     }
 
@@ -74,7 +74,7 @@ public:
     float Fov;
     float Focaldistance;
     bool Autofocus;
-}; 
+};
 
 }
 #endif //_RAYTRACING_RENDERCAMERA_h_

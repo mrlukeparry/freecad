@@ -33,13 +33,14 @@
 // Each Render Plugin listed below
 #include "renderer/lux/LuxRender.h"
 
+#include "Appearances.h"
 #include "Renderer.h"
 #include "RenderProcess.h"
 
 #include "RenderFeature.h"
 #include "RenderFeaturePy.h"
 
-#include "Appearances.h"
+
 
 // Exists for testing purposes
 #include <App/Application.h>
@@ -76,11 +77,11 @@ RenderFeature::~RenderFeature()
 
 void RenderFeature::attachRenderCamera(RenderCamera *cam)
 {
-  if(camera) {
-      Base::Console().Log("A camera is already set. Removing previous attached camera\n");
-      delete camera;
-  }
-  camera = cam;
+    if(camera) {
+        Base::Console().Log("A camera is already set. Removing previous attached camera\n");
+        delete camera;
+    }
+    camera = cam;
 }
 
 void RenderFeature::setRenderer(const char *rendererType)
@@ -236,7 +237,7 @@ const RenderMaterial * RenderFeature::getRenderMaterial(const char *partName) co
 
     const std::vector<DocumentObject*> originalObjects = Objects;
     const std::vector<std::string>     originalSubElements = SubElements;
-    
+
     const std::vector< RenderMaterial * > &vals = this->MaterialsList.getValues();
 
     int i = 0, idx = -1;
@@ -346,11 +347,11 @@ void RenderFeature::preview()
 //     light->setColor(255, 255, 255);
 //     light->Height = 100;
 //     light->Width = 100;
-// 
+//
 //     Base::Rotation lightRot = Base::Rotation(Base::Vector3d(0, 1, 0), 0.);
 //     Base::Vector3d lightPos = Base::Vector3d(-50., -50., 200);
 //     light->setPlacement(lightPos, lightRot);
-// 
+//
 //     renderer->addLight(light);
     renderer->attachCamera(camera);
     renderer->setRenderTemplate(SceneTemplate.getValue());
