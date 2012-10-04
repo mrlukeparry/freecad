@@ -117,7 +117,7 @@ public:
               Raytracing::MaterialFloatProperty *myProp = static_cast<Raytracing::MaterialFloatProperty *>(prop);
               myProp->setValue(variant.toFloat());
           }
-          
+
         } break;
         case Raytracing::MaterialParameter::COLOR:{
           if(!variant.canConvert<QColor>())
@@ -174,6 +174,7 @@ public Q_SLOTS:
   void dragInit(QString id);
   void materialParamSave();
   void materialParamCancel();
+  void materialLibraryCancel();
 
 public:
     virtual bool eventFilter(QObject *obj, QEvent *event);
@@ -185,15 +186,15 @@ public:
     virtual bool accept();
     /// is called by the framework if the dialog is rejected (Cancel)
     virtual bool reject();
-    /// is called by the framework if the user presses the help button 
+    /// is called by the framework if the user presses the help button
     virtual void helpRequested();
     virtual bool isAllowedAlterDocument(void) const
     { return false; }
 
     void openEditMaterialDialog(RenderMaterial *mat);
-    /// returns for Close and Help button 
-//     virtual QDialogButtonBox::StandardButtons getStandardButtons(void) const
-//     { return 0; }
+    /// returns for Close and Help button
+     virtual QDialogButtonBox::StandardButtons getStandardButtons(void) const
+     { return 0; }
 
 protected:
     void materialDragEvent(QDragMoveEvent *);

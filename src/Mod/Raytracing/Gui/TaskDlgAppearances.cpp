@@ -87,8 +87,10 @@ TaskDlgAppearances::TaskDlgAppearances()
         feat = vp->getRenderFeature();
     }
 
-    if(!feat || !feat->hasRenderer())
-        throw Base::Exception("The currently active object must be a render feature and have a render backend");
+    if(!feat || !feat->hasRenderer()) {
+        Base::Console().Error("The currently active object must be a render feature and have a render backend");
+        return;
+    }
 
     model = new AppearancesModel();
 
@@ -109,10 +111,14 @@ TaskDlgAppearances::TaskDlgAppearances()
 
      // Connect an Update Signal when an image is available
     QObject *rootObject = view->rootObject();
-    QObject::connect(rootObject, SIGNAL(materialDrag(QString)), this , SLOT(dragInit(QString)));
 
+    // Create the Connections
+    QObject::connect(rootObject, SIGNAL( materialDrag(QString))  , this , SLOT(dragInit(QString)));
+    QObject::connect(rootObject, SIGNAL( materialLibraryCancel()), this , SLOT(materialLibraryCancel())); // Initiated when a Material Properties is Saved
     QObject::connect(rootObject, SIGNAL( materialPropsCancel())  , this , SLOT(materialParamCancel())); // Initiated when a Material Properties is Saved
     QObject::connect(rootObject, SIGNAL( materialPropsAccepted()), this , SLOT(materialParamSave())); // Initiated when a Material Properties is Saved
+
+    QMetaObject::invokeMethod(rootObject, "openMaterialLibraryWidget");
 
     this->Content.push_back(view);
 }
@@ -145,6 +151,7 @@ void TaskDlgAppearances::dragInit(QString str)
     mimeData->setText(str);
     drag->setMimeData(mimeData);
     QPixmap pixmap(dragMaterial->previewFilename);
+    pixmap = pixmap.scaled(64, 64);
     drag->setPixmap(pixmap);
     drag->setHotSpot(QPoint(drag->pixmap().width()/2,
                             drag->pixmap().height()));
@@ -309,6 +316,14 @@ void TaskDlgAppearances::materialParamCancel()
 
     reject();
 }
+
+void TaskDlgAppearances::materialLibraryCancel()
+{
+    //Paramaters house keeping
+    Gui::Command::abortCommand();
+    reject();
+}
+
 void TaskDlgAppearances::materialDragEvent(QDragMoveEvent *ev)
 {
     if(!ev)
@@ -333,6 +348,7 @@ void TaskDlgAppearances::materialDragEvent(QDragMoveEvent *ev)
 
 void TaskDlgAppearances::open()
 {
+
 
 }
 

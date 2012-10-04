@@ -1,6 +1,6 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
-    <qresource> 
+    <qresource>
         <file>icons/preferences-raytracing.svg</file>
         <file>icons/Raytrace_Camera.svg</file>
         <file>icons/Raytrace_Export.svg</file>
@@ -29,6 +29,7 @@
         <file>translations/Raytracing_zh.qm</file>
         <file>qml/appearancesUi.qml</file>
         <file>qml/materialParametersUi.qml</file>
+        <file>qml/materialLibraryUi.qml</file>
         <file>qml/renderPreviewUi.qml</file>
         <file>qml/renderUi.qml</file>
         <file>qml/PreviewImage.qml</file>
@@ -40,4 +41,4 @@
         <file>qml/Slider.qml</file>
         <file>qml/ColorWidget.qml</file>
     </qresource>
-</RCC> 
+</RCC>

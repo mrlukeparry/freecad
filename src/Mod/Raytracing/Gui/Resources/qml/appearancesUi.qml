@@ -2,14 +2,15 @@
 import QtQuick 1.1
 Item {
     id: appearancesTaskWidget
-
     height: 800
-    clip: true;
+    width: 300
     anchors.fill: parent
 
     // Slots
     function openMaterialLibraryWidget()
     {
+        materialLibraryLoader.source = "";
+        materialLibraryLoader.source = "materialLibraryUi.qml";
         parametersUiLoader.visible = false;
         appearancesTaskWidget.state = "";
     }
@@ -22,96 +23,42 @@ Item {
     }
 
     // Signals
-    signal materialDrag(string  matId)
+    signal materialDrag(string matId)
     signal materialPropsAccepted()
+    signal materialLibraryCancel()
     signal materialPropsCancel()
 
-    //Connections to Material Paremeters Panel
+    //Connections to Material Parameters Panel
     Connections {
              target: parametersUiLoader.item
-             onCancel: {  appearancesTaskWidget.materialPropsCancel() }
+             onCancel: appearancesTaskWidget.materialPropsCancel()
              onAccepted: appearancesTaskWidget.materialPropsAccepted()
-
     }
-    Component {
-         id: libMatDelegate
-         Item {
-             width: parent.width
-             height: 180
-             id: libMat
 
-             property string matId: materialId
+    //Connections to Material Library Panel
+    Connections {
+             target: materialLibraryLoader.item
+             onCancel: appearancesTaskWidget.materialLibraryCancel()
+    }
 
-            Image {
-              id: materialPreview
-              source: (previewFilename == "") ? "": "file:/" + previewFilename
-              width: 150
-              height: 150
-              anchors.horizontalCenter: parent.horizontalCenter
-            }
-            Rectangle {
-              anchors.fill: materialPreview
-              border.color: "grey"
-              border.width: 2
-              radius: 3
-              color: "transparent"
-            }
+    Rectangle {
+        width: 100
+        height: 62
+        color: "#403d3d"
+        anchors.fill: parent
 
-            Text {
-              id: matLabel
-              text: label
-              horizontalAlignment: Text.AlignHCenter
-              anchors.topMargin: 3
-              anchors.top: materialPreview.bottom
-              anchors.horizontalCenter: parent.horizontalCenter
-            }
-            MouseArea {
-
-                property variant startPos
-                property bool dragInit: false
-
-                function startDrag(mouse, matId) {
-                    var dist = Math.sqrt( Math.pow((mouse.x-startPos.x), 2) + Math.pow((mouse.y-startPos.y), 2))
-                    if(dist > 4) {
-                        materialDrag(matId);
-                        dragInit = true;
-                    }
-                }
-                function setStartPos(mouse) {startPos = Qt.point(mouse.x, mouse.y)}
-
-                id: dragMouseArea
-                anchors.fill: materialPreview
-                preventStealing: true
-                onPressed: setStartPos(mouse)
-                onMousePositionChanged: startDrag(mouse, matId)
-                onReleased: dragInit = false;
-            }
-         }
-     }
-    ListView {
-        id: materialList
-        width: 300
-        height: 700
-        snapMode: ListView.SnapToItem
-        flickDeceleration: 7000
-        focus: true
-        model: appearancesModel
-        delegate: libMatDelegate
-
-        clip: true
-        ScrollBar {
-            flickable: parent
-            vertical: true
+        Loader {
+            id: materialLibraryLoader
+            anchors.horizontalCenter: parent.horizontalCenter
+            visible: true
         }
 
+        Loader {
+            id: parametersUiLoader
+            anchors.horizontalCenter: parent.horizontalCenter
+            visible: false
+        }
     }
-
-    Loader {
-        id: parametersUiLoader
-        anchors.left: materialList.right
-        visible: false
-    }
-
     transitions: Transition {
         //NumberAnimation {properties: "x";  duration: 400;}
     }
@@ -119,8 +66,7 @@ Item {
     states: [
         State {
         name: "viewProperties"
-        PropertyChanges {target: materialList;
-                         x: -materialList.width}
+        PropertyChanges {target: materialLibraryLoader; visible: false}
         PropertyChanges {target: parametersUiLoader; visible: true}
         }
     ]
