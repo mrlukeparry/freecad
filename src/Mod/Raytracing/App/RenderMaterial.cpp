@@ -221,7 +221,4 @@ void RenderMaterial::Restore(XMLReader &reader)
         } else {
         }
     }
-
-    reader.readEndElement("Properties");
-    reader.readEndElement("RenderMaterialList");
 }
