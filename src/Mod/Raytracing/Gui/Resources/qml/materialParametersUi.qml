@@ -80,7 +80,7 @@ Item {
                                     colorValue[2] *= 255;
                                     colorInput.setColor(colorValue);}
                                 row.height = colorInput.height + 10
-                                colorInput.valueChanged.connect(function(val){ console.log("colour is" + val); materialData.setProperty(mod.id, val);});
+                                colorInput.valueChanged.connect(function(val){ materialData.setProperty(mod.id, val);});
                                 colorInput.pickColor.connect(function(){ var colorPicked = materialData.pickColor(); colorInput.setColor(colorPicked);});
                             }
                         }

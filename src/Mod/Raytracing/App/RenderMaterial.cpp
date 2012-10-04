@@ -113,15 +113,115 @@ void RenderMaterial::Save (Writer &writer) const
     writer.Stream() << writer.ind() << "<RenderMaterial "
     << "Name=\""          <<  Name.getValue()            << "\" "
     << "LibMatId=\""      <<  LibMaterialId.getValue()   << "\" "
-    << "LinkIndex=\""     <<  LinkIndex.getValue()        << "\" />\n";
+    << "LinkIndex=\""     <<  LinkIndex.getValue()        << "\" >\n";
+
+    writer.incInd();
+
+    // Save the Material Properties by iterating through properties
+    // TODO should we make individual methods for save
+
+    QMap<QString, MaterialProperty *>::const_iterator it = Properties.begin();
+
+
+    writer.Stream() << writer.ind() << "<Properties "
+    << "Count=\""   << Properties.size()      << "\">\n";
+
+    writer.incInd();
+
+    while (it != Properties.end()) {
+        switch(it.value()->getType()) {
+          case MaterialParameter::COLOR: {
+            MaterialColorProperty *prop = static_cast<MaterialColorProperty*>(it.value());
+
+            float *colorVal = prop->getValue();
+
+            writer.Stream() <<  writer.ind()                << "<Property "
+            << "Name=\""    <<  it.key().toStdString()      << "\" "
+            << "Type=\""    <<  "Color"                     << "\" "
+            << "r=\""       <<  colorVal[0]                 << "\" "
+            << "g=\""       <<  colorVal[1]                 << "\" "
+            << "b=\""       <<  colorVal[2]                 << "\" />\n";
+          } break;
+          case MaterialParameter::BOOL: {
+            MaterialBoolProperty *prop = static_cast<MaterialBoolProperty*>(it.value());
+
+            std::string val = (prop->getValue()) ? "true" : "false";
+
+            writer.Stream() <<  writer.ind()              << "<Property "
+            << "Name=\""    <<  it.key().toStdString()    << "\" "
+            << "Type=\""    <<  "Bool"                    << "\" "
+            << "Value=\""   <<  val                       << "\" />\n";
+          } break;
+          case MaterialParameter::FLOAT: {
+            MaterialFloatProperty *prop = static_cast<MaterialFloatProperty*>(it.value());
+
+            float val = prop->getValue();
+            writer.Stream() <<  writer.ind()             << "<Property "
+            << "Name=\""    <<  it.key().toStdString()   << "\" "
+            << "Type=\""    <<  "Float"                  << "\" "
+            << "Value=\""   <<  val                      << "\" />\n";
+          } break;
+          default:
+            break;
+        }
+        ++it;
+    }
+
+    writer.decInd();
+    writer.Stream() << writer.ind() << "</Properties>\n";
+
+    writer.decInd();
+    writer.Stream() << writer.ind() << "</RenderMaterial>\n";
 }
 
 void RenderMaterial::Restore(XMLReader &reader)
 {
-
     reader.readElement("RenderMaterial");
 
     Name.setValue(reader.getAttribute("Name"));
     LibMaterialId.setValue(reader.getAttribute("LibMatId"));
     LinkIndex.setValue(reader.getAttributeAsInteger("LinkIndex"));
+
+    reader.readElement("Properties");
+    // get the value of my attribute
+    int count = reader.getAttributeAsInteger("Count");
+
+    for (int i = 0; i < count; i++) {
+        reader.readElement("Property");
+        if(!reader.getAttribute("Type"))
+            continue;
+
+        QString name = QString::fromAscii(reader.getAttribute("Name"));
+        if(name.length() == 0)
+            continue;
+
+        std::string type = reader.getAttribute("Type");
+        if(type == "Bool") {
+            std::string b = reader.getAttribute("Value");
+            bool val = (b == "true") ? true : false;
+
+            MaterialBoolProperty *prop = new MaterialBoolProperty(val);
+            Properties.insert(name, prop);
+
+        } else if(type == "Float") {
+            float val = reader.getAttributeAsFloat("Value");
+            MaterialFloatProperty *prop = new MaterialFloatProperty(val);
+
+            Properties.insert(name, prop);
+
+        } else if(type == "Color") {
+            float color[3];
+            color[0] = reader.getAttributeAsFloat("r");
+            color[1] = reader.getAttributeAsFloat("g");
+            color[2] = reader.getAttributeAsFloat("b");
+
+            MaterialColorProperty *prop = new MaterialColorProperty(color);
+
+            Properties.insert(name, prop);
+        } else {
+        }
+    }
+
+    reader.readEndElement("Properties");
+    reader.readEndElement("RenderMaterialList");
 }

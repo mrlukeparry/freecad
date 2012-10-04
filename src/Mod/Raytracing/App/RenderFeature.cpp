@@ -65,8 +65,8 @@ RenderFeature::RenderFeature() : camera(0), renderer(0)
     ADD_PROPERTY_TYPE(OutputX,(800)         , group, (App::PropertyType)(App::Prop_Output)  ,"Render output width");
     ADD_PROPERTY_TYPE(OutputY,(800)         , group, (App::PropertyType)(App::Prop_Output)  ,"Render output height");
     ADD_PROPERTY_TYPE(UpdateInterval,(3000) , group, (App::PropertyType)(App::Prop_Output)  ,"Render preview update time");
-    ADD_PROPERTY_TYPE(ExternalGeometry,(0,0), group,(App::PropertyType)(App::Prop_None)     ,"External geometry");
-    ADD_PROPERTY_TYPE(MaterialsList,   (0)  , group,(App::PropertyType)(App::Prop_None)     ,"Render materials");
+    ADD_PROPERTY_TYPE(ExternalGeometry,(0,0), group, (App::PropertyType)(App::Prop_None)    ,"External geometry");
+    ADD_PROPERTY_TYPE(MaterialsList,   (0)  , group, (App::PropertyType)(App::Prop_None)    ,"Render materials");
     RendererType.setEnums(TypeEnums);
 }
 
@@ -298,10 +298,8 @@ void RenderFeature::setCamera(RenderCamera *cam)
 bool RenderFeature::hasRenderer() const
 {
     if(!renderer) {
-        Base::Console().Error("Renderer is not available\n");
         return false;
     }
-
     return true;
 }
 
@@ -530,7 +528,9 @@ unsigned int RenderFeature::getMemSize(void) const
 void RenderFeature::Save(Writer &writer) const
 {
     App::DocumentObject::Save(writer);
-    renderer->getCamera()->Save(writer);
+
+    assert(camera);
+    camera->Save(writer);
 }
 
 void RenderFeature::Restore(XMLReader &reader)
@@ -558,10 +558,8 @@ void RenderFeature::Restore(XMLReader &reader)
     MaterialsList.setValues(newVals);
 
     // Update the Render Camera
-    RenderCamera *cam = new RenderCamera();
-    cam->Restore(reader);
-
-    camera = cam;
+    camera = new RenderCamera();
+    camera->Restore(reader);
 }
 
 void RenderFeature::updateMatLinks()

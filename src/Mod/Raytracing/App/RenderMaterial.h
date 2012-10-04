@@ -31,7 +31,7 @@
 #include "LibraryMaterial.h"
 
 namespace Raytracing {
-  
+
 // These are for storing actual material properties within a hash and are designed to be lightweight
 class MaterialProperty
 {
@@ -123,7 +123,7 @@ public:
   virtual void Save(Base::Writer &/*writer*/) const;
   virtual void Restore(Base::XMLReader &/*reader*/);
 
-//   virtual PyObject *getPyObject(void);    
+//   virtual PyObject *getPyObject(void);
   QMap<QString, MaterialProperty *> Properties;
   const LibraryMaterial * getMaterial() const { return Appearances().getMaterialById(LibMaterialId.getValue()); }
 
