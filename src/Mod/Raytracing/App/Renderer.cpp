@@ -685,6 +685,7 @@ void Renderer::transferToArray(const TopoDS_Face& aFace,gp_Vec** vertices,gp_Vec
                 (*vertexnormals)[i] = temp;
             }
             catch (...) {
+                continue;
             }
         }
 

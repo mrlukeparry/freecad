@@ -24,6 +24,7 @@
 
 #ifndef _PreComp_
 #include <Inventor/nodes/SoCamera.h>
+#include <Inventor/nodes/SoDepthBuffer.h>
 #include <Inventor/nodes/SoSeparator.h>
 #include <Inventor/nodes/SoTranslation.h>
 #include <Inventor/actions/SoSearchAction.h>
@@ -133,6 +134,9 @@ void ViewProviderRender::draw()
         editRoot->removeAllChildren();
 
     SoGroup *labelGroup = new SoGroup();
+    SoDepthBuffer *depthBuffer = new SoDepthBuffer();
+
+    depthBuffer->test.setValue((SbBool) false);
 
     for(std::vector<RenderMaterial *>::const_iterator it = mats.begin(); it != mats.end(); ++it){
         App::DocumentObject *obj = feat->getRenderMaterialLink((*it));
@@ -143,6 +147,27 @@ void ViewProviderRender::draw()
 
         if(!part)
             continue;
+
+        Gui::MDIView *mdi = Gui::Application::Instance->activeDocument()->getActiveView();
+        Gui::View3DInventorViewer *viewer;
+        viewer = static_cast<Gui::View3DInventor *>(mdi)->getViewer();
+
+        SoNode* root = viewer->getSceneGraph();
+
+        SoSearchAction sa;
+        sa.setType(Gui::SoSkipBoundingGroup::getClassTypeId());
+        sa.setInterest(SoSearchAction::ALL);
+        sa.apply(viewer->getSceneGraph());
+
+        const SoPathList & pathlist = sa.getPaths();
+        for (int i = 0; i < pathlist.getLength(); i++ ) {
+            SoPath * path = pathlist[i];
+            Gui::SoSkipBoundingGroup * group = static_cast<Gui::SoSkipBoundingGroup*>(path->getTail());
+            group->mode = Gui::SoSkipBoundingGroup::EXCLUDE_BBOX;
+        }
+
+        SoGetBoundingBoxAction action(viewer->getViewportRegion());
+        action.apply(viewer->getSceneGraph());
 
         Base::Placement placement = part->Placement.getValue();
         Base::Vector3d pos = placement.getPosition();
@@ -156,9 +181,11 @@ void ViewProviderRender::draw()
 
         sep->addChild(tran);
         sep->addChild(label);
+
         labelGroup->addChild(sep);
 
     }
+    editRoot->addChild(depthBuffer);
     editRoot->addChild(labelGroup);
 }
 
